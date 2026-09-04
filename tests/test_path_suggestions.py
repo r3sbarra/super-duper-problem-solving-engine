@@ -6,7 +6,6 @@ novel, ranked paths forward for both:
 2. Scientific and engineering trade-offs (TRIZ, Polya, Gentner, and Platt).
 """
 
-import pytest
 from super_solver.engine import SuperDuperProblemSolvingEngine
 
 

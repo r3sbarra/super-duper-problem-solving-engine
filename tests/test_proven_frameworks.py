@@ -1,15 +1,13 @@
 """Unit tests for the 7 proven problem-solving frameworks in super_solver."""
 
-import pytest
-import numpy as np
 
 from super_solver.core.types import CrucialExperiment, Hypothesis, HypothesisStatus, KTBoundary
-from super_solver.frameworks.platt_inference import StrongInferenceEngine
 from super_solver.frameworks.kepner_tregoe import KepnerTregoeEngine
-from super_solver.frameworks.triz_engine import TRIZEngine
-from super_solver.frameworks.toc_cloud import TOCEngine
 from super_solver.frameworks.peirce_inquiry import PeirceanInquiryEngine
+from super_solver.frameworks.platt_inference import StrongInferenceEngine
 from super_solver.frameworks.polya_heuristics import PolyaHeuristicsEngine
+from super_solver.frameworks.toc_cloud import TOCEngine
+from super_solver.frameworks.triz_engine import TRIZEngine
 
 
 def test_platt_strong_inference_entropy_and_pruning():

@@ -8,11 +8,9 @@ falsification and noise-tolerant Bayesian updating.
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional, Tuple
-import numpy as np
+from typing import Dict, List, Tuple
 
 from super_solver.core.types import CrucialExperiment, Hypothesis, HypothesisStatus
-from super_solver.core.embeddings import embedding_service
 
 
 class StrongInferenceEngine:
@@ -110,7 +108,7 @@ class StrongInferenceEngine:
             return 0.0
 
         cond_entropy = 0.0
-        for outcome, group in outcome_groups.items():
+        for group in outcome_groups.values():
             group_weight = sum(h.current_confidence for h in group)
             p_outcome = group_weight / total_weight
             if p_outcome <= 0:

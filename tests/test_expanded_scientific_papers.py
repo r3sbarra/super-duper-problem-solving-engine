@@ -7,7 +7,6 @@ Validates:
 4. Self-Referential Engine Improvement & Auto-Tuning Loop
 """
 
-import pytest
 from super_solver.core.types import VerificationStatus
 from super_solver.engine import SuperDuperProblemSolvingEngine
 
@@ -108,7 +107,7 @@ def test_self_improvement_auto_tuning_loop():
     # 1. Run baseline diagnostic
     diag_before = engine.run_self_diagnostic()
     assert diag_before["status"] == "HEALTHY"
-    initial_proximity = diag_before["active_parameters"]["proximity_threshold"]
+    diag_before["active_parameters"]["proximity_threshold"]
 
     # 2. Engine solves the problem of improving itself
     improvement_path = engine.improve_self()
@@ -116,7 +115,7 @@ def test_self_improvement_auto_tuning_loop():
     assert "CONFIRMED" in improvement_path.final_breakthrough
 
     # 3. Verify auto-tuned parameter updates
-    diag_after = engine.run_self_diagnostic()
+    engine.run_self_diagnostic()
     assert len(engine.self_improver.improvement_history) >= 1
     latest_update = engine.self_improver.improvement_history[-1]
     assert "updates_applied" in latest_update

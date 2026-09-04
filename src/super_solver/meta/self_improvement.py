@@ -9,8 +9,8 @@ Enables SuperDuperProblemSolvingEngine to improve its own reasoning substrate:
 
 from __future__ import annotations
 
-import math
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List
+
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service

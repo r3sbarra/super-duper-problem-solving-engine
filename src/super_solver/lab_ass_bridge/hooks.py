@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+
 from super_solver.engine import SuperDuperProblemSolvingEngine
-from super_solver.core.types import KTBoundary, CrucialExperiment, Hypothesis
 
 
 class LabAssSuperSolverBridge:
@@ -36,8 +36,8 @@ class LabAssSuperSolverBridge:
         known_dead_ends: List[str],
     ) -> Dict[str, Any]:
         """Checks if a proposed finding or angle approaches a dead end and computes deflection."""
+
         from super_solver.core.embeddings import embedding_service
-        import numpy as np
 
         rep = self.engine.repulsor
         for de in known_dead_ends:
@@ -46,10 +46,8 @@ class LabAssSuperSolverBridge:
         v_prop = embedding_service.encode(proposed_content)
         is_near, max_sim, closest = rep.check_proximity(v_prop)
 
-        deflected_text = None
         if is_near:
-            v_def = rep.deflect_trajectory(v_prop)
-            deflected_text = "Vector trajectory deflected away from toxic dead end."
+            rep.deflect_trajectory(v_prop)
 
         return {
             "hazard_detected": is_near,

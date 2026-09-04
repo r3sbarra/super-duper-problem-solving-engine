@@ -9,13 +9,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional
+
 import numpy as np
 
-from super_solver.core.embeddings import embedding_service
 from super_solver.core.dpll_solver import DPLLSolver, dpll_solver
+from super_solver.core.embeddings import embedding_service
+from super_solver.frameworks.math_verification import (
+    LakatosProofVerificationEngine,
+    VerificationStatus,
+)
 from super_solver.search.negative_manifold import NegativeManifoldRepulsor
-from super_solver.frameworks.math_verification import LakatosProofVerificationEngine, VerificationStatus
 
 
 class TournamentVerdict(str, Enum):
@@ -133,7 +137,7 @@ class DialecticalTournamentEngine:
 
         # Round 3: Boundary & Consistency Refutation
         if max_rounds >= 3:
-            advocate_claim = f"Hypothesis holds under constraints with high explanatory coherence."
+            advocate_claim = "Hypothesis holds under constraints with high explanatory coherence."
             refuter_response = "Refuter verifies internal constraint satisfaction."
             round_score = 0.90
 

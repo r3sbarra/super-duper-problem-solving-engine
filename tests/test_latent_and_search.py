@@ -1,13 +1,12 @@
 """Tests for continuous latent reasoning, thought diffusion, and negative manifold search."""
 
-import pytest
 import numpy as np
 
+from super_solver.core.embeddings import embedding_service
 from super_solver.latent.continuous_thought import ContinuousThoughtController
 from super_solver.latent.thought_diffusion import ThoughtDiffusionRefiner
-from super_solver.search.negative_manifold import NegativeManifoldRepulsor
 from super_solver.search.mcts_prm import LatentMCTSEngine, ProcessRewardModel
-from super_solver.core.embeddings import embedding_service
+from super_solver.search.negative_manifold import NegativeManifoldRepulsor
 
 
 def test_coconut_continuous_latent_rollout_and_bfs():

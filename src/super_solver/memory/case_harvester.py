@@ -6,12 +6,11 @@ across different scientific and technical domains.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
-import numpy as np
+from typing import Any, Dict, List, Optional
 
+from super_solver.core.embeddings import embedding_service
 from super_solver.core.types import DiscoveryPath
 from super_solver.memory.episodic_store import EpisodicVectorStore
-from super_solver.core.embeddings import embedding_service
 
 
 class CaseHarvester:

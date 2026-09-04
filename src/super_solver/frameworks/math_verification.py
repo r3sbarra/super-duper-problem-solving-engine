@@ -19,7 +19,8 @@ combined with George Pólya's heuristics and continuous vector-space barrier aud
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service
@@ -362,7 +363,7 @@ class LakatosProofVerificationEngine:
     ) -> List[SuggestedPath]:
         """Synthesizes valid alternative mathematical research paths based on vector barrier alignment."""
         paths = []
-        violations_str = " ".join(result.barrier_violations).lower()
+        " ".join(result.barrier_violations).lower()
 
         # Check barrier IDs dynamically
         if any("tardos" in v or "relativization" in v or "natural" in v for v in result.barrier_violations):

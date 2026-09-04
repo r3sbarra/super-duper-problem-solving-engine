@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
+
 from pydantic import BaseModel, Field
-import numpy as np
 
 
 class HypothesisStatus(str, Enum):

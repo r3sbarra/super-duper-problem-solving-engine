@@ -6,7 +6,6 @@ with ZERO hard-coded hypotheses or experiments, and autonomously synthesize the
 correct scientific path.
 """
 
-import pytest
 from super_solver.engine import SuperDuperProblemSolvingEngine
 
 

@@ -10,21 +10,22 @@ into continuous high-dimensional vector representations:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, Union
-from pydantic import BaseModel, Field
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple
 
-from super_solver.core.embeddings import embedding_service
-from super_solver.core.vsa import VSAEngine
-from super_solver.core.vector_operators import (
-    VectorContradictionTensor,
-    NullSpaceAssumptionProjector,
-    ContinuousBoundaryDiagnosticKernel,
-)
-from super_solver.frameworks.triz_engine import TRIZ_PRINCIPLES
-from super_solver.core.dpll_solver import DPLLSolver
+import numpy as np
+from pydantic import BaseModel, Field
+
 from super_solver.core.causal_vsa import VectorizedCausalModel
-from super_solver.frameworks.boed_designer import BOEDDesigner, CandidateExperimentDesign
+from super_solver.core.dpll_solver import DPLLSolver
+from super_solver.core.embeddings import embedding_service
+from super_solver.core.vector_operators import (
+    ContinuousBoundaryDiagnosticKernel,
+    NullSpaceAssumptionProjector,
+    VectorContradictionTensor,
+)
+from super_solver.core.vsa import VSAEngine
+from super_solver.frameworks.boed_designer import BOEDDesigner
+from super_solver.frameworks.triz_engine import TRIZ_PRINCIPLES
 
 
 class VectorizedSolution(BaseModel):
@@ -132,7 +133,6 @@ class UniversalVectorizedSolver:
         assumption_vecs = [embedding_service.encode(a) for a in underlying_assumptions]
         projector = NullSpaceAssumptionProjector(assumption_vecs, dim=embedding_service.dim)
 
-        best_inj = None
         best_score = -float("inf")
         rankings = []
 
@@ -160,7 +160,6 @@ class UniversalVectorizedSolver:
 
             if score > best_score:
                 best_score = score
-                best_inj = inj
 
         rankings.sort(key=lambda x: x["net_score"], reverse=True)
         top = rankings[0] if rankings else {"injection": candidate_injections[0] if candidate_injections else "Default synthesis", "net_score": 0.5}
@@ -196,7 +195,6 @@ class UniversalVectorizedSolver:
         kernel = ContinuousBoundaryDiagnosticKernel(is_manifestations=v_is, is_not_manifestations=v_not)
 
         rankings = []
-        best_cause = None
         best_score = -float("inf")
 
         for cause in candidate_causes:
@@ -213,7 +211,6 @@ class UniversalVectorizedSolver:
 
             if diag["net_score"] > best_score:
                 best_score = diag["net_score"]
-                best_cause = cause
 
         rankings.sort(key=lambda x: x["net_score"], reverse=True)
         top = rankings[0] if rankings else {"candidate": candidate_causes[0], "net_score": 0.0}

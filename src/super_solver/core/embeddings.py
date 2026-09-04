@@ -10,8 +10,8 @@ import hashlib
 import math
 import re
 from typing import List, Union
-import numpy as np
 
+import numpy as np
 
 STOPWORDS = {
     "for", "using", "the", "a", "an", "in", "on", "and", "or", "to", "of",
@@ -67,7 +67,7 @@ class PolarityAwareEmbeddingService:
         vec = np.zeros(self.dim, dtype=np.float32)
         polarity_score = 0.0
 
-        for i, tok in enumerate(tokens):
+        for tok in tokens:
             weight = 0.15 if tok in STOPWORDS else 1.0
             if tok in self.NEGATION_TERMS:
                 polarity_score -= 1.0

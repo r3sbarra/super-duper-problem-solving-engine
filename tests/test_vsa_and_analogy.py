@@ -1,10 +1,8 @@
 """Tests for VSA hypervector algebra and Gentner Structure Mapping Engine."""
 
-import pytest
-import numpy as np
 
 from super_solver.core.vsa import VSAEngine
-from super_solver.frameworks.gentner_sme import StructureMappingEngine, RelationalStatement
+from super_solver.frameworks.gentner_sme import RelationalStatement, StructureMappingEngine
 
 
 def test_vsa_binding_and_unbinding():

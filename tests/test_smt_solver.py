@@ -1,7 +1,7 @@
 """Tests for Pure-Python SMT Solver (EUF + QF_LRA)."""
 
-from super_solver.engine import SuperDuperProblemSolvingEngine
 from super_solver.core.smt_solver import SMTSolver
+from super_solver.engine import SuperDuperProblemSolvingEngine
 
 
 def test_smt_euf_congruence_closure():

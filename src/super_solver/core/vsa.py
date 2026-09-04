@@ -10,7 +10,8 @@ Implements algebraic operators over high-dimensional vector representations:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 
 
@@ -88,7 +89,7 @@ class VSAEngine:
             weights = [1.0] * len(vectors)
 
         acc = np.zeros(self.dim)
-        for w, v in zip(weights, vectors):
+        for w, v in zip(weights, vectors, strict=False):
             acc += w * v
         norm = np.linalg.norm(acc)
         return acc / (norm + 1e-12) if norm > 0 else acc
@@ -107,7 +108,7 @@ class VSAEngine:
 
     def solve_analogy(self, a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarray:
         """Solves analogical proportion A : B :: C : ?
-        
+
         Relation R = B \\otimes A^(-1)
         Target D = R \\otimes C
         """

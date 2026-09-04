@@ -6,9 +6,8 @@ scientific reasoning and experimental trajectory for landmark recent discoveries
 2. AlphaFold2 (2020-2021): Resolving protein folding via Evoformer pair representations and Invariant Point Attention.
 """
 
-import pytest
+from super_solver.core.types import CrucialExperiment, KTBoundary
 from super_solver.engine import SuperDuperProblemSolvingEngine
-from super_solver.core.types import KTBoundary, CrucialExperiment, HypothesisStatus
 
 
 def test_deduce_lk99_superconductivity_demarcation_path():

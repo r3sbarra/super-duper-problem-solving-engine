@@ -7,6 +7,7 @@ Classifier-Free Guidance (CFG) pulling toward goals and repelling from dead ends
 from __future__ import annotations
 
 from typing import List, Optional
+
 import numpy as np
 
 
@@ -35,7 +36,7 @@ class ThoughtDiffusionRefiner:
         refined = [v.copy() for v in trajectory]
         neg_repulsors = negative_repulsors or []
 
-        for step in range(diffusion_steps):
+        for _step in range(diffusion_steps):
             for i in range(len(refined)):
                 # 1. Temporal smoothness
                 temporal_target = refined[i].copy()

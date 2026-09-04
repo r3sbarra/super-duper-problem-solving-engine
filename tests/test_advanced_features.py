@@ -2,15 +2,13 @@
 VSA Cleanup Memory, Bayesian updating, and Mermaid Diagram export.
 """
 
-import pytest
-import numpy as np
 
+from super_solver.core.types import CrucialExperiment, Hypothesis, KTBoundary
 from super_solver.core.vsa import VSAEngine
-from super_solver.frameworks.triz_engine import TRIZEngine
+from super_solver.engine import SuperDuperProblemSolvingEngine
 from super_solver.frameworks.kepner_tregoe import KepnerTregoeEngine
 from super_solver.frameworks.platt_inference import StrongInferenceEngine
-from super_solver.core.types import KTBoundary, CrucialExperiment, Hypothesis
-from super_solver.engine import SuperDuperProblemSolvingEngine
+from super_solver.frameworks.triz_engine import TRIZEngine
 
 
 def test_triz_contradiction_matrix_lookup():
@@ -46,7 +44,7 @@ def test_kepner_tregoe_4d_dimensional_diagnostics():
 def test_vsa_cleanup_memory():
     vsa = VSAEngine(dim=2048, seed=999)
     v_dog = vsa.random_hypervector(symbol="DOG")
-    v_cat = vsa.random_hypervector(symbol="CAT")
+    vsa.random_hypervector(symbol="CAT")
 
     # Add 15% unit noise
     noise = vsa.random_hypervector()

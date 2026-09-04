@@ -8,11 +8,11 @@ Level 3: Counterfactuals (Abduction of exogenous background, intervention, count
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
+
 import numpy as np
 
 from super_solver.core.vsa import VSAEngine
-from super_solver.core.embeddings import embedding_service
 
 
 class CausalNode:
@@ -79,7 +79,7 @@ class VectorizedCausalModel:
         consequence_target: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Performs graph surgery do(target_variable = clamped_value).
-        
+
         Severs incoming edges to target_variable (Pearl's do-calculus Level 2),
         propagates interventional effect forward, and measures causal divergence.
         """
@@ -88,7 +88,7 @@ class VectorizedCausalModel:
 
         # 1. Graph Surgery: Sever all incoming edges into target_variable
         severed_parents = list(self.nodes[target_variable].parents)
-        
+
         # 2. Forward propagate downstream causal impacts
         # Topological / BFS traversal from target_variable to descendants
         simulated_values: Dict[str, float] = {k: node.baseline_value for k, node in self.nodes.items()}

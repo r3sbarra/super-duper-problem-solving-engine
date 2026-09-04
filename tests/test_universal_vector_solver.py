@@ -85,7 +85,6 @@ def test_macroeconomics_nullspace_assumption_evaporation():
     engine = SuperDuperProblemSolvingEngine()
 
     domain = "Macroeconomics & Monetary Policy"
-    objective = "Achieve sustainable economic growth and widespread prosperity"
     requirement_a = "Maintain strict price stability and suppress consumer inflation"
     requirement_b = "Stimulate full employment and high-wage capital investment"
 

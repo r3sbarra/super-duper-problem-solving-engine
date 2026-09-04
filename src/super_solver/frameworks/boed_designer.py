@@ -6,9 +6,8 @@ EIG(d) = H(H) - E_{y ~ p(y|d)} [ H(H | y, d) ]
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
 import math
-import numpy as np
+from typing import Any, Dict, List
 
 
 class CandidateExperimentDesign:
@@ -51,7 +50,7 @@ class BOEDDesigner:
         # outcome_likelihoods: {outcome_name: {hypothesis_id: P(outcome | hyp, design)}}
     ) -> Dict[str, Any]:
         """Calculates the Expected Information Gain (EIG) for a candidate experimental design.
-        
+
         EIG = H_prior - sum_{y} P(y) * H_posterior(y)
         """
         hyp_names = list(hypothesis_priors.keys())

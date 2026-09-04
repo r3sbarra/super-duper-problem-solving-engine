@@ -9,11 +9,9 @@ Implements high-dimensional continuous operators for:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, Union
-import numpy as np
+from typing import Dict, List
 
-from super_solver.core.embeddings import embedding_service
-from super_solver.core.vsa import VSAEngine
+import numpy as np
 
 
 class VectorContradictionTensor:
@@ -37,14 +35,14 @@ class VectorContradictionTensor:
 
     def evaluate_principle_alignment(self, principle_vector: np.ndarray) -> float:
         """Evaluates how effectively an inventive operator resolves the contradiction.
-        
+
         A breakthrough operator aligns positively with the improvement direction
         while acting orthogonal or restorative to the worsening gradient.
         """
         p = principle_vector / (np.linalg.norm(principle_vector) + 1e-12)
         sim_imp = float(np.dot(p, self.v_imp))
         sim_worse = float(np.dot(p, self.v_worse))
-        
+
         # Reward improvement alignment; penalize worsening alignment; reward gradient synthesis
         alignment = (1.2 * sim_imp) - (0.8 * sim_worse) + (0.5 * float(np.dot(p, self.directional_gradient)))
         return float(alignment)

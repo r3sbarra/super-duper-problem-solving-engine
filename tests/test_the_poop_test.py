@@ -7,7 +7,6 @@ Validates that SuperDuperProblemSolvingEngine:
 4. Confirms that picking up the bulk solid phase is the correct first prerequisite action.
 """
 
-import pytest
 from super_solver.core.types import CrucialExperiment, KTBoundary
 from super_solver.engine import SuperDuperProblemSolvingEngine
 

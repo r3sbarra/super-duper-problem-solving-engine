@@ -6,7 +6,8 @@ hypotheses, and natural language statements for scientific auditability.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
+
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service

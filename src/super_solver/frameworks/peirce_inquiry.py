@@ -8,11 +8,12 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional
+from typing import List, Optional
+
 import numpy as np
 
-from super_solver.core.types import Hypothesis, HypothesisStatus
 from super_solver.core.embeddings import embedding_service
+from super_solver.core.types import Hypothesis, HypothesisStatus
 
 
 class PeirceanInquiryEngine:
@@ -70,7 +71,7 @@ class PeirceanInquiryEngine:
             focus = focus / norm_f
 
         hypotheses = []
-        for i, frame in enumerate(frames):
+        for _i, frame in enumerate(frames):
             desc = frame["template"]
             v_cand = embedding_service.encode(desc)
             fit = embedding_service.cosine_similarity(v_cand, focus)

@@ -7,6 +7,7 @@ in vector space, mathematically deflecting active search trajectories away from 
 from __future__ import annotations
 
 from typing import List, Optional, Tuple
+
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service
@@ -47,7 +48,7 @@ class NegativeManifoldRepulsor:
         max_sim = -1.0
         closest_desc = None
 
-        for d_vec, desc in zip(self.dead_ends, self.dead_end_descriptions):
+        for d_vec, desc in zip(self.dead_ends, self.dead_end_descriptions, strict=False):
             sim = embedding_service.cosine_similarity(state_vector, d_vec)
             if sim > max_sim:
                 max_sim = sim

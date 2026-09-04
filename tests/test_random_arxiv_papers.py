@@ -4,8 +4,8 @@ Ensures the engine does not rely on hardcoded strings and generalizes to arbitra
 mathematical problems, conjectures, and preprints across different mathematical fields.
 """
 
-from super_solver.engine import SuperDuperProblemSolvingEngine
 from super_solver.core.types import VerificationStatus
+from super_solver.engine import SuperDuperProblemSolvingEngine
 
 
 def test_verify_random_arxiv_zhi_wei_sun_catalan_irrationality():
@@ -67,7 +67,7 @@ def test_verify_random_arxiv_pratim_mitra_subconvexity():
 
     # Verify that dynamic bound extraction caught the subconvex exponent
     lemmas = engine.math_verifier.extract_or_synthesize_lemmas(paper_title, paper_abstract)
-    bounds = [l.claimed_bound for l in lemmas if l.claimed_bound]
+    bounds = [lem.claimed_bound for lem in lemmas if lem.claimed_bound]
     assert len(bounds) > 0
     assert any("1/168" in b or "<<" in b for b in bounds)
 
@@ -106,4 +106,4 @@ def test_verify_random_arxiv_noga_alon_packing_progressions():
 
     # Check that bound extraction captured the inequality/asymptotic bound
     lemmas = engine.math_verifier.extract_or_synthesize_lemmas(paper_title, paper_abstract)
-    assert any(l.claimed_bound is not None for l in lemmas)
+    assert any(lem.claimed_bound is not None for lem in lemmas)

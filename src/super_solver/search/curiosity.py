@@ -6,7 +6,8 @@ to autonomously suggest breakthrough hypotheses.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
+from typing import List
+
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service
@@ -24,7 +25,7 @@ class CuriosityEngine:
         known_finding_vectors: List[np.ndarray],
     ) -> float:
         """Computes epistemic novelty: distance to nearest known cluster of findings.
-        
+
         High novelty means the candidate explores an under-researched latent region.
         """
         if not known_finding_vectors:

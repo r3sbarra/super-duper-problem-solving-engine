@@ -1,13 +1,13 @@
 """Command-line interface for Super-Duper-Problem-Solving-Engine."""
 
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional
+
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
 from super_solver.engine import SuperDuperProblemSolvingEngine
-
 
 console = Console()
 
@@ -25,7 +25,7 @@ def solve(problem_title: str, spec: str):
     """Solve or deduce the path for a given problem."""
     console.print(Panel(f"[bold cyan]{problem_title}[/bold cyan]\n{spec}", title="Problem Formulation"))
     engine = SuperDuperProblemSolvingEngine()
-    prob = engine.formulate_problem(title=problem_title, specification=spec)
+    engine.formulate_problem(title=problem_title, specification=spec)
 
     triz_matches = engine.triz.suggest_principles(spec, top_k=3)
     t = Table(title="Suggested TRIZ Inventive Operators")
@@ -44,7 +44,7 @@ def self_improve_cmd():
     console.print(Panel("[bold yellow]Initiating Autonomous Engine Self-Improvement Cycle[/bold yellow]", title="Meta-Optimization"))
     engine = SuperDuperProblemSolvingEngine()
     audit = engine.run_self_audit_and_optimization()
-    
+
     t = Table(title="Self-Audit & Formal Invariant Results")
     t.add_column("Module", style="cyan")
     t.add_column("Verification / Metric", style="green")
@@ -75,7 +75,7 @@ def consolidate_memory_cmd(threshold: float):
 @click.option("--context", default=None, help="Background context or paper abstract")
 def tournament_cmd(hypotheses: List[str], context: Optional[str]):
     """Runs an adversarial Red Team vs Blue Team dialectical tournament across hypotheses."""
-    console.print(Panel(f"[bold red]Red Team[/bold red] vs [bold blue]Blue Team[/bold blue] Dialectical Tournament", title="Adversarial Cross-Examination"))
+    console.print(Panel("[bold red]Red Team[/bold red] vs [bold blue]Blue Team[/bold blue] Dialectical Tournament", title="Adversarial Cross-Examination"))
     engine = SuperDuperProblemSolvingEngine()
     results = engine.run_tournament(list(hypotheses), context=context, top_k=len(hypotheses))
 

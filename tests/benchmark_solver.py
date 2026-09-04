@@ -13,15 +13,15 @@ Quantitatively measures:
 6. Multi-Paradigm Path Suggestion Latency & Diversity
 """
 
-import time
 import math
-import numpy as np
-from typing import Dict, List, Any
+import time
 
-from super_solver.engine import SuperDuperProblemSolvingEngine
-from super_solver.core.types import CrucialExperiment, KTBoundary
+import numpy as np
+
 from super_solver.core.embeddings import embedding_service
-from super_solver.core.vsa import VSAEngine, CleanupMemory
+from super_solver.core.types import CrucialExperiment
+from super_solver.core.vsa import VSAEngine
+from super_solver.engine import SuperDuperProblemSolvingEngine
 
 
 def benchmark_search_space_pruning():
@@ -79,7 +79,7 @@ def benchmark_negative_manifold_hazard_evasion(engine: SuperDuperProblemSolvingE
         v = embedding_service.encode(q)
         is_near, sim, desc = engine.repulsor.check_proximity(v, threshold=0.40)
         if is_near:
-            v_def = engine.repulsor.deflect_trajectory(v)
+            engine.repulsor.deflect_trajectory(v)
             if is_hazardous:
                 true_positives += 1
             else:
@@ -143,7 +143,7 @@ def benchmark_vsa_algebraic_fidelity():
     avg_raw_sim = np.mean(recoveries_clean)
     cleanup_exact_recovery = np.mean(recoveries_with_cleanup) * 100.0
 
-    print(f"  VSA Hypervector Dimension: 1,024 bits/reals")
+    print("  VSA Hypervector Dimension: 1,024 bits/reals")
     print(f"  Raw unbinding cosine similarity under noise: {avg_raw_sim:.3f}")
     print(f"  Exact symbol recovery rate via CleanupMemory: {cleanup_exact_recovery:.1f}%")
 
@@ -267,9 +267,9 @@ def run_full_benchmark():
     print("=" * 80)
     print("     SUPER-DUPER-PROBLEM-SOLVING-ENGINE COMPREHENSIVE BENCHMARK")
     print("=" * 80)
-    
+
     engine = SuperDuperProblemSolvingEngine()
-    
+
     t_suite_start = time.perf_counter()
     benchmark_search_space_pruning()
     benchmark_negative_manifold_hazard_evasion(engine)

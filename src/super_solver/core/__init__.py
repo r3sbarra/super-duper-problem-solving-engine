@@ -1,17 +1,17 @@
 """Core primitives, types, and vector representations."""
 
+from super_solver.core.embeddings import PolarityAwareEmbeddingService, embedding_service
 from super_solver.core.types import (
-    ProblemState,
+    CrucialExperiment,
+    DiscoveryPath,
     Hypothesis,
     HypothesisStatus,
-    CrucialExperiment,
     KTBoundary,
     OperatorType,
+    ProblemState,
     ReasoningStep,
-    DiscoveryPath,
 )
 from super_solver.core.vsa import VSAEngine
-from super_solver.core.embeddings import PolarityAwareEmbeddingService, embedding_service
 
 __all__ = [
     "ProblemState",

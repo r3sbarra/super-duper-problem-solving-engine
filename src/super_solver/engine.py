@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
+from super_solver.core.embeddings import embedding_service
+from super_solver.core.smt_solver import SMTResult, smt_solver
 from super_solver.core.types import (
     CrucialExperiment,
     DiscoveryPath,
-    Hypothesis,
     HypothesisStatus,
     KTBoundary,
     MathematicalLemma,
@@ -19,33 +21,31 @@ from super_solver.core.types import (
     ReasoningStep,
     SuggestedPath,
 )
-from super_solver.core.embeddings import embedding_service
-from super_solver.frameworks.platt_inference import StrongInferenceEngine
-from super_solver.frameworks.kepner_tregoe import KepnerTregoeEngine
-from super_solver.frameworks.triz_engine import TRIZEngine
-from super_solver.frameworks.toc_cloud import TOCEngine
-from super_solver.frameworks.peirce_inquiry import PeirceanInquiryEngine
-from super_solver.frameworks.polya_heuristics import PolyaHeuristicsEngine
 from super_solver.frameworks.gentner_sme import StructureMappingEngine
+from super_solver.frameworks.kepner_tregoe import KepnerTregoeEngine
 from super_solver.frameworks.math_verification import LakatosProofVerificationEngine
-from super_solver.latent.continuous_thought import ContinuousThoughtController
-from super_solver.latent.thought_diffusion import ThoughtDiffusionRefiner
-from super_solver.latent.projection import SymbolicProjector
-from super_solver.search.negative_manifold import NegativeManifoldRepulsor
-from super_solver.search.mcts_prm import LatentMCTSEngine, ProcessRewardModel
-from super_solver.search.curiosity import CuriosityEngine
-from super_solver.memory.episodic_store import EpisodicVectorStore
-from super_solver.memory.case_harvester import CaseHarvester
-from super_solver.meta.self_improvement import SelfImprovementController
+from super_solver.frameworks.peirce_inquiry import PeirceanInquiryEngine
+from super_solver.frameworks.platt_inference import StrongInferenceEngine
+from super_solver.frameworks.polya_heuristics import PolyaHeuristicsEngine
+from super_solver.frameworks.sandbox import code_sandbox
+from super_solver.frameworks.toc_cloud import TOCEngine
+from super_solver.frameworks.tournament import DialecticalTournamentEngine, TournamentMatchResult
+from super_solver.frameworks.triz_engine import TRIZEngine
 from super_solver.frameworks.universal_vector_solver import (
+    CascadingDiscoveryResult,
     UniversalVectorizedSolver,
     VectorizedSolution,
-    CascadingDiscoveryResult,
 )
-from super_solver.frameworks.tournament import DialecticalTournamentEngine, TournamentMatchResult
-from super_solver.core.smt_solver import SMTSolver, smt_solver, SMTResult
-from super_solver.frameworks.sandbox import CodeExperimentSandbox, code_sandbox, SimulationResult
-from super_solver.meta.manuscript import ScientificManuscriptGenerator, manuscript_generator
+from super_solver.latent.continuous_thought import ContinuousThoughtController
+from super_solver.latent.projection import SymbolicProjector
+from super_solver.latent.thought_diffusion import ThoughtDiffusionRefiner
+from super_solver.memory.case_harvester import CaseHarvester
+from super_solver.memory.episodic_store import EpisodicVectorStore
+from super_solver.meta.manuscript import manuscript_generator
+from super_solver.meta.self_improvement import SelfImprovementController
+from super_solver.search.curiosity import CuriosityEngine
+from super_solver.search.mcts_prm import LatentMCTSEngine, ProcessRewardModel
+from super_solver.search.negative_manifold import NegativeManifoldRepulsor
 
 
 class SuperDuperProblemSolvingEngine:
@@ -230,7 +230,7 @@ class SuperDuperProblemSolvingEngine:
                 break
 
             info_gain = self.platt.evaluate_crucial_experiment(exp, hypotheses)
-            
+
             actual_outcome = ground_truth.get(exp.id)
             if not actual_outcome:
                 actual_outcome = exp.exclusory_predictions.get(active_survivors[0].id)

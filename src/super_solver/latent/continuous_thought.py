@@ -8,9 +8,9 @@ Enables latent breadth-first search and avoids premature commitment.
 from __future__ import annotations
 
 from typing import List, Optional, Tuple
+
 import numpy as np
 
-from super_solver.core.types import ReasoningStep, OperatorType
 from super_solver.core.embeddings import embedding_service
 
 
@@ -53,14 +53,14 @@ class ContinuousThoughtController:
         goal_vector: Optional[np.ndarray] = None,
     ) -> List[List[Tuple[str, np.ndarray]]]:
         """Performs Breadth-First Search (BFS) over continuous latent thoughts.
-        
+
         Maintains multiple candidate trajectory branches simultaneously without
         committing to surface language tokens.
         """
         # Each beam element: (current_latent, trajectory_of_operators)
         beams = [(initial_latent, [])]
 
-        for step in range(depth):
+        for _step in range(depth):
             next_beams = []
             for latent, traj in beams:
                 for op_name, op_vec in candidate_operators:

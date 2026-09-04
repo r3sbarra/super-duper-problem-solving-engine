@@ -2,8 +2,14 @@
 
 import os
 import tempfile
+
+from super_solver.core.types import (
+    DiscoveryPath,
+    KTBoundary,
+    OperatorType,
+    ReasoningStep,
+)
 from super_solver.engine import SuperDuperProblemSolvingEngine
-from super_solver.core.types import DiscoveryPath, KTBoundary, ProblemState, ReasoningStep, OperatorType
 
 
 def test_manuscript_generation_markdown_and_latex():

@@ -7,10 +7,10 @@ Platt exclusory information gain, and negative manifold hazard penalties.
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
+
 import numpy as np
 
-from super_solver.core.types import ReasoningStep, OperatorType
 from super_solver.core.embeddings import embedding_service
 from super_solver.search.negative_manifold import NegativeManifoldRepulsor
 

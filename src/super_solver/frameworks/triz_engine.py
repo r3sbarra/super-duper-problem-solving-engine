@@ -6,11 +6,11 @@ to resolve engineering and scientific trade-offs without compromise.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service
-
 
 TRIZ_PRINCIPLES: Dict[int, Dict[str, str]] = {
     1: {"name": "Segmentation", "desc": "Divide an object/problem into independent parts; make it sectional; increase degree of fragmentation."},

@@ -8,7 +8,8 @@ generating formal LaTeX papers and rich GitHub-flavored Markdown whitepapers.
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
+
 from super_solver.core.types import DiscoveryPath, ProblemState
 
 
@@ -33,7 +34,7 @@ class ScientificManuscriptGenerator:
             f"# {title}",
             f"\n**Authors:** {author}  ",
             f"**Affiliation:** {institution}  ",
-            f"**Status:** Peer-Reviewed Autonomous Demarcation  \n",
+            "**Status:** Peer-Reviewed Autonomous Demarcation  \n",
             "---",
             "\n## Abstract",
             f"We present an autonomous investigation into **{title}**. Utilizing multi-paradigm neurosymbolic reasoning combining Kepner-Tregoe boundary conditions, Platt's Strong Inference, and pure-Python formal refutation, we systematically evaluated competing hypotheses against physical and mathematical impossibility barriers. Our findings definitively conclude: **{path.final_breakthrough}**.\n",

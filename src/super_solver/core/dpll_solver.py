@@ -9,8 +9,8 @@ Guarantees exact formal consistency across multi-step deduction trajectories:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Set, Tuple
 import re
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class DPLLSolver:
@@ -21,7 +21,7 @@ class DPLLSolver:
 
     def solve_cnf(self, clauses: List[List[int]]) -> Tuple[bool, Optional[Dict[int, bool]]]:
         """Solves a CNF formula where each clause is a list of integer literals.
-        
+
         Positive integer = positive variable; negative integer = negated variable.
         Returns (is_satisfiable, model_assignment).
         """
@@ -131,7 +131,7 @@ class DPLLSolver:
         target_claim: str,
     ) -> Dict[str, Any]:
         """Proves that Premise_1 ... Premise_n entails target_claim via resolution refutation.
-        
+
         Proof by contradiction: If (Premises AND NOT target_claim) is UNSATISFIABLE,
         then the target claim is a necessary and proven logical consequence.
         """

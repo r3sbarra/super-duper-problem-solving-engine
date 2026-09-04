@@ -8,11 +8,9 @@ Implements:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-import math
 import re
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
-
 
 # ============================================================================
 # 1. Theory of Equality with Uninterpreted Functions (EUF) - Congruence Closure
@@ -349,10 +347,10 @@ class SMTSolver:
         return coeffs
 
     def _diff_sides(self, lhs: str, rhs: str) -> Dict[str, float]:
-        l = self._parse_side(lhs)
-        r = self._parse_side(rhs)
-        res = dict(l)
-        for k, v in r.items():
+        lhs_terms = self._parse_side(lhs)
+        rhs_terms = self._parse_side(rhs)
+        res = dict(lhs_terms)
+        for k, v in rhs_terms.items():
             res[k] = res.get(k, 0.0) - v
         return res
 

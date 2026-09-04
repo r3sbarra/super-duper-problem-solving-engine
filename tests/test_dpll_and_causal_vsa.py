@@ -1,7 +1,7 @@
 """Unit tests for DPLL SAT Solver, Causal VSA Graph Surgery, and BOED Experimental Design."""
 
-from super_solver.core.dpll_solver import DPLLSolver
 from super_solver.core.causal_vsa import VectorizedCausalModel
+from super_solver.core.dpll_solver import DPLLSolver
 from super_solver.frameworks.boed_designer import BOEDDesigner, CandidateExperimentDesign
 
 

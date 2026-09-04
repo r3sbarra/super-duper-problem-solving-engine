@@ -7,11 +7,12 @@ with full dimensional diagnostics.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
+
 import numpy as np
 
-from super_solver.core.types import KTBoundary
 from super_solver.core.embeddings import embedding_service
+from super_solver.core.types import KTBoundary
 
 
 class KepnerTregoeEngine:

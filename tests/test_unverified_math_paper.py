@@ -7,7 +7,6 @@ Tests:
    via logarithmic drift invariance and Conway undecidability barrier auditing.
 """
 
-import pytest
 from super_solver.core.types import VerificationStatus
 from super_solver.engine import SuperDuperProblemSolvingEngine
 

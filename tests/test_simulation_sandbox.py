@@ -1,6 +1,5 @@
 """Tests for the In Silico Code Experiment Simulation Sandbox."""
 
-from super_solver.engine import SuperDuperProblemSolvingEngine
 from super_solver.frameworks.sandbox import CodeExperimentSandbox
 
 

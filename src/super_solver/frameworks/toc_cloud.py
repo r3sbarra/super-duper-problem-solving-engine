@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-import numpy as np
 
 from super_solver.core.embeddings import embedding_service
 
@@ -48,7 +48,7 @@ class TOCEngine:
         candidate_injections: List[str],
     ) -> Dict[str, Any]:
         """Evaluates candidate injections to resolve the conflict between Requirements A and B.
-        
+
         A valid injection must satisfy BOTH Requirement A and Requirement B simultaneously,
         penalizing one-sided collapse into either extreme.
         """

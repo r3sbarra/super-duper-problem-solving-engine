@@ -6,12 +6,12 @@ aligning relational structures while abstracting away surface entities.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
-from pydantic import BaseModel
+from typing import Any, Dict, List
+
 import numpy as np
+from pydantic import BaseModel
 
 from super_solver.core.vsa import VSAEngine
-from super_solver.core.embeddings import embedding_service
 
 
 class RelationalStatement(BaseModel):
@@ -43,7 +43,7 @@ class StructureMappingEngine:
         target_domain_relations: List[RelationalStatement],
     ) -> Dict[str, Any]:
         """Aligns relational structures between base and target domains (Gentner SME).
-        
+
         Evaluates relational correspondence and induces entity bindings.
         """
         if not base_domain_relations or not target_domain_relations:
