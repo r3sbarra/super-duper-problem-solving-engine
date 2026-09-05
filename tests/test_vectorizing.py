@@ -23,6 +23,15 @@ def test_polarity_backend_deterministic():
     assert abs(np.linalg.norm(v1) - 1.0) < 1e-5
 
 
+def test_rich_backend_deterministic():
+    b = get_backend("rich")
+    v1 = b.encode("How to reduce latency in a distributed database")
+    v2 = b.encode("How to reduce latency in a distributed database")
+    assert b.dim == 512
+    assert np.allclose(v1, v2)
+    assert abs(np.linalg.norm(v1) - 1.0) < 1e-5
+
+
 def test_ollama_backend_falls_back_when_unreachable(monkeypatch):
     b = OllamaBackend(base_url="http://127.0.0.1:1", timeout=0.1)
     v = b.encode("test")
