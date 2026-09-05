@@ -80,19 +80,27 @@ def main() -> int:
         ok = sim >= args.threshold
         if ok:
             successes += 1
-            # Learn from success: add (problem, solution) to the domain index.
-            dk.store_problem(
+            # Learn from success: add (problem, solution) pair, LINKED, to the
+            # domain index so hybrid_analogize can resolve the solution.
+            pid = dk.store_problem(
                 specification=case["problem"],
                 title=title,
                 metadata={"kind": "self_learned"},
             )
-            dk.store_solution(
+            sid = dk.store_solution(
                 solution_text=case["solution"],
                 method="self_learned",
                 domain="engineering",
                 title=title,
                 metadata={"problem_context": case["problem"]},
             )
+            import json
+
+            dk.index._conn.execute(
+                "UPDATE vectors SET metadata_json=? WHERE id=?",
+                (json.dumps({"solution_id": sid, "kind": "self_learned"}), pid),
+            )
+            dk.index._conn.commit()
             learned += 1
         mark = "✓" if ok else "~"
         print(f"  {mark} {title:<28} sim={sim:.3f} {'LEARNED' if ok else ''}")
