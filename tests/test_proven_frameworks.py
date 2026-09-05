@@ -170,3 +170,32 @@ def test_polya_heuristics():
         aux[1]["subproblem"] == "Analyze stock market price trends of pharmaceutical retail stores"
     )
     assert aux[0]["relevance_score"] > aux[1]["relevance_score"]
+
+
+def test_polya_generate_auxiliary_problems():
+    """generate_auxiliary_problems synthesizes NEW subproblems, not echoes."""
+    engine = PolyaHeuristicsEngine()
+
+    spec = (
+        "Find new falsifiable, numerically-testable approaches to the Riemann "
+        "Hypothesis. RH states all non-trivial zeros of the Riemann zeta function "
+        "lie on the critical line Re(s)=1/2."
+    )
+    known = ["Lagarias", "Robin", "Li criterion", "GUE spacing", "Mertens"]
+
+    res = engine.generate_auxiliary_problems(spec, known_subproblems=known, max_new=8)
+
+    # It must return something, all entries carry the expected keys, and at
+    # least one genuinely-new subproblem is produced (not just re-ranked knowns).
+    assert len(res) > 0
+    assert len(res) <= 8
+    for r in res:
+        assert "subproblem" in r
+        assert "heuristic" in r
+        assert "relevance_score" in r
+        assert "is_new" in r
+        assert isinstance(r["relevance_score"], float)
+    assert any(r["is_new"] for r in res)
+    # Generated subproblems should be distinct from the caller-supplied knowns.
+    known_lower = {k.lower() for k in known}
+    assert not any(r["subproblem"].lower() in known_lower for r in res)
