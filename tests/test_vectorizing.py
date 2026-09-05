@@ -26,8 +26,8 @@ def test_polarity_backend_deterministic():
 def test_ollama_backend_falls_back_when_unreachable(monkeypatch):
     b = OllamaBackend(base_url="http://127.0.0.1:1", timeout=0.1)
     v = b.encode("test")
-    # Falls back to polarity (384d) when Ollama is unreachable
-    assert v.shape[0] == 384
+    # Falls back to polarity (384d) padded to the pinned ollama dim (768)
+    assert v.shape[0] == 768
 
 
 def test_hybrid_backend_dim():

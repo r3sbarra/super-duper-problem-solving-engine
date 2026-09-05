@@ -68,11 +68,13 @@ class OllamaBackend(EmbedderBackend):
     """Local Ollama embedder via HTTP (nomic-embed-text by default).
 
     Falls back to a deterministic hashing vector if Ollama is unreachable so
-    the engine never hard-fails on a missing daemon.
+    the engine never hard-fails on a missing daemon. The output dimension is
+    pinned to ``dim`` (default 768) so vectors are always stackable even when
+    some calls fall back to the 384d polarity path.
     """
 
     name = "ollama"
-    dim = 768  # nomic-embed-text default; overridden by the model's actual dim
+    dim = 768  # nomic-embed-text default; pinned so mixed fallback stays stackable
 
     def __init__(
         self,
@@ -101,9 +103,21 @@ class OllamaBackend(EmbedderBackend):
             self._available = False
         return self._available
 
+    def _pad_to_dim(self, vec: np.ndarray) -> np.ndarray:
+        """Pad (or truncate) a vector to the pinned output dimension."""
+        if vec.shape[0] == self.dim:
+            return vec
+        out = np.zeros(self.dim, dtype=np.float32)
+        n = min(vec.shape[0], self.dim)
+        out[:n] = vec[:n]
+        norm = np.linalg.norm(out)
+        if norm > 0:
+            out = out / norm
+        return out
+
     def encode(self, text: str) -> np.ndarray:
         if not self._probe():
-            return self._fallback.encode(text)
+            return self._pad_to_dim(self._fallback.encode(text))
         try:
             import httpx
 
@@ -116,15 +130,14 @@ class OllamaBackend(EmbedderBackend):
             data = resp.json()
             emb = data.get("embedding")
             if not emb:
-                return self._fallback.encode(text)
+                return self._pad_to_dim(self._fallback.encode(text))
             vec = np.asarray(emb, dtype=np.float32)
-            self.dim = vec.shape[0]
             norm = np.linalg.norm(vec)
             if norm > 0:
                 vec = vec / norm
-            return vec
+            return self._pad_to_dim(vec)
         except Exception:
-            return self._fallback.encode(text)
+            return self._pad_to_dim(self._fallback.encode(text))
 
 
 class HybridBackend(EmbedderBackend):
