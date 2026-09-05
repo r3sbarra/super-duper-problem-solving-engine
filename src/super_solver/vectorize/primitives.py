@@ -44,7 +44,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     # camouflage / hide
     (r"camouflage|hide|conceal|resemble its surroundings|invisible|deceive|reconnaissance|surveillance", "hide_structure"),
     # adhesion
-    (r"adhesi|stick|peel|glue|suction|grip|fasten|attach|hold.*on|anchor|mount", "adhesion"),
+    (r"adhesi|stick|peel|glue|suction|grip|fasten|attach|hold.*on|anchor|\bmount\b", "adhesion"),
     (r"low-tack|reusable.*label|price tag", "low_tack_adhesive"),
     # suspension / span
     (r"cable|suspend|hang.*cable|span|tower|bridge|roof.*column", "cable_suspension"),
@@ -73,7 +73,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"bifocal|near.*far vision|lens power|glasses", "combined_lens"),
     (r"note.*stick|paper note|remove.*residue", "temporary_adhesive"),
     # mathematics
-    (r"sum.*number|add.*number|add up|arithmetic series|consecutive numbers|total.*1 to|sum.*series|sum them|pair.*terms", "arithmetic_sum"),
+    (r"sum.*number|add.*number|add up|arithmetic series|consecutive numbers|total.*1 to|sum.*series|sum them|pair.*terms|sum of the", "arithmetic_sum"),
     (r"greatest common divisor|gcd|factor.*number|largest.*factor|prime factor", "gcd"),
     (r"prime|primality|sieve|composite|prime factor", "primality"),
     (r"area under.*curve|integral|antiderivative|numerical integration|area.*curve", "integration"),
@@ -83,7 +83,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"maximum.*function|critical point|derivative.*zero|extreme value|maximize|minimize", "optimization"),
     (r"fibonacci|nth.*sequence|exponential recursion|recurrence", "dynamic_programming"),
     # coding / algorithms
-    (r"search.*sorted|binary search|halve.*range|middle element|find.*in.*sorted|search.*phone book", "binary_search"),
+    (r"search.*\bsorted\b|binary search|halve.*range|middle element|find.*in.*\bsorted\b|search.*phone book", "binary_search"),
     (r"sort.*list|sort.*record|merge sort|split.*half|sorted halves|order.*items", "sorting"),
     (r"look up.*key|hash table|hash function|constant time.*lookup|find.*by.*id|find.*by.*key|instant.*lookup|look up.*by.*id", "hashing"),
     (r"longest common subsequence|prefix lengths|table.*cells|common subsequence", "dynamic_programming"),
@@ -93,6 +93,23 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"compress.*text|huffman|shorter codes|frequent characters|compress.*file", "compression"),
     (r"maximum subarray|kadane|best sum ending|largest.*subarray", "max_subarray"),
     (r"evaluate.*expression|postfix|shunting-yard|operator precedence|parse.*expression", "expression_eval"),
+    # advanced math / number theory
+    (r"modular inverse|extended euclid|modulus.*cryptography|product.*congruent", "modular_inverse"),
+    (r"large powers.*modulo|modular exponentiation|square.*base|encryption.*power", "modular_exp"),
+    (r"prime factor.*large|pollard|nontrivial factor|factor.*huge", "pollard_rho"),
+    (r"choose k|binomial|combinations|pascal.*triangle|n choose", "binomial"),
+    (r"linear recurrence|companion matrix|matrix exponentiation|characteristic polynomial|nth term.*recurrence", "matrix_exp"),
+    (r"coprime|relatively prime|gcd.*1", "coprime"),
+    # advanced algorithms
+    (r"maximum flow|augmenting path|ford-fulkerson|source.*sink.*capacity", "max_flow"),
+    (r"minimum cost.*connect|kruskal|cheapest edge|spanning tree", "spanning_tree"),
+    (r"longest increasing subsequence|smallest possible tails|\blis\b", "lis"),
+    (r"kth smallest|quickselect|partition.*pivot|kth.*element|nth smallest|smallest number.*without sorting", "quickselect"),
+    (r"pairs.*sum.*target|two-sum|complement.*hash|sum to a target|add up to a target|add up to.*target", "two_sum"),
+    (r"merge.*sorted array|two pointers.*smaller|merge two sorted", "merge"),
+    (r"median.*two sorted|partition point|logarithmic.*median", "median_sorted"),
+    (r"palindrome|compare.*both ends|skip.*non-alphanumeric", "palindrome"),
+    (r"number of islands|flood-fill|grid.*land.*water|count.*island", "flood_fill"),
 ]
 
 # Object-type primitives: what kind of thing the problem is about.

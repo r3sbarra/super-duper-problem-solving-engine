@@ -252,6 +252,68 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "evaluate a mathematical expression with operator precedence without ambiguity",
         "solution_direction": "Convert the expression to postfix notation and evaluate with a stack (shunting-yard algorithm)",
     },
+    # --- Advanced math / number theory ---
+    {
+        "problem_context": "find the modular inverse of a number under a prime modulus for cryptography",
+        "solution_direction": "Use the extended Euclidean algorithm to find the coefficient that makes the product congruent to 1",
+    },
+    {
+        "problem_context": "compute large powers modulo a number efficiently for encryption",
+        "solution_direction": "Repeatedly square the base and multiply only when the exponent bit is set (modular exponentiation)",
+    },
+    {
+        "problem_context": "find all prime factors of a very large number faster than trial division",
+        "solution_direction": "Use Pollard's rho algorithm with a pseudo-random sequence to find a nontrivial factor",
+    },
+    {
+        "problem_context": "count the number of ways to choose k items from n without enumerating all combinations",
+        "solution_direction": "Use the binomial coefficient formula n!/(k!(n-k)!) or Pascal's triangle recurrence",
+    },
+    {
+        "problem_context": "find the nth term of a linear recurrence without iterating all previous terms",
+        "solution_direction": "Exponentiate the companion matrix or use the characteristic polynomial (matrix exponentiation)",
+    },
+    {
+        "problem_context": "determine whether two large numbers are coprime without factoring them",
+        "solution_direction": "Compute their greatest common divisor with Euclid's algorithm; coprime if the GCD is 1",
+    },
+    # --- Advanced algorithms / competitive programming ---
+    {
+        "problem_context": "find the maximum flow from a source to a sink in a network with capacity limits",
+        "solution_direction": "Repeatedly find augmenting paths and push flow along them until no more exist (Ford-Fulkerson)",
+    },
+    {
+        "problem_context": "find the minimum cost to connect all nodes in a graph with weighted edges",
+        "solution_direction": "Repeatedly add the cheapest edge that connects a new node without forming a cycle (Kruskal's algorithm)",
+    },
+    {
+        "problem_context": "find the longest increasing subsequence of an array without trying all subsequences",
+        "solution_direction": "Maintain a sorted list of smallest possible tails and binary-search the position of each element",
+    },
+    {
+        "problem_context": "find the kth smallest element in an unsorted array without fully sorting it",
+        "solution_direction": "Partition around a pivot and recurse only into the side containing the kth element (quickselect)",
+    },
+    {
+        "problem_context": "find all pairs of numbers in an array that sum to a target value",
+        "solution_direction": "Use a hash set to check for the complement of each element in one pass (two-sum)",
+    },
+    {
+        "problem_context": "merge two sorted arrays into one sorted array efficiently",
+        "solution_direction": "Advance two pointers from the start of each array, always taking the smaller element (merge)",
+    },
+    {
+        "problem_context": "find the median of two sorted arrays in logarithmic time",
+        "solution_direction": "Binary-search the partition point in the smaller array so the left halves balance (median of two sorted arrays)",
+    },
+    {
+        "problem_context": "detect if a string is a palindrome ignoring spaces and case",
+        "solution_direction": "Compare characters from both ends moving inward, skipping non-alphanumeric characters",
+    },
+    {
+        "problem_context": "find the number of islands in a grid of land and water cells",
+        "solution_direction": "Flood-fill each unvisited land cell with depth-first search, counting each fill as one island",
+    },
 ]
 
 
