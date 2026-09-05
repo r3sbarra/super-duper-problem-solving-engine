@@ -237,6 +237,14 @@ def test_validate_solution_rejects_vague_and_accepts_concrete():
     )
     assert v2["valid"]
 
+    # Non-solution (no action primitive) -> rejected.
+    v3 = validate_solution(
+        "The panel is made of a material",
+        "How to make a building panel that is light enough to lift",
+    )
+    assert not v3["valid"]
+    assert "no action primitive" in v3["reason"]
+
 
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
