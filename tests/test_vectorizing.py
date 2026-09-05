@@ -200,6 +200,24 @@ def test_primitive_matcher_cross_domain():
     assert hits[0]["title"] == "Canoe"
 
 
+def test_entity_substitution_adapts_to_target_domain():
+    """Entity substitution rewrites a source solution with the target entity."""
+    from super_solver.vectorize.entity_substitution import substitute_entity
+
+    adapted = substitute_entity(
+        "Liquefy the gas under pressure and cold to reduce its volume for transport",
+        "How to ship hydrogen fuel efficiently in a compact tank on a truck",
+    )
+    assert "hydrogen" in adapted
+    assert "gas" not in adapted
+
+    adapted2 = substitute_entity(
+        "Hang the deck from cables suspended between tall towers",
+        "How to build a stadium roof that covers a huge area without interior columns",
+    )
+    assert "roof" in adapted2
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

@@ -751,6 +751,20 @@ class SuperDuperProblemSolvingEngine:
             # If a primitive match is strong, use it as the concrete claim.
             if prim_hits and prim_hits[0]["primitive_overlap"] >= 0.15:
                 concrete_claims = [h["content"] for h in prim_hits]
+
+            # Adapt the transferred solution to the target domain: substitute
+            # the source's key entity with the target's key entity so the
+            # generated solution reads correctly in the target domain.
+            try:
+                from super_solver.vectorize.entity_substitution import (
+                    substitute_entity,
+                )
+
+                concrete_claims = [
+                    substitute_entity(c, specification) for c in concrete_claims
+                ]
+            except Exception:
+                pass
         except Exception:
             pass
 
