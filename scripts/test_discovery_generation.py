@@ -58,6 +58,13 @@ def main() -> int:
 
     engine = SuperDuperProblemSolvingEngine(db_path=":memory:")
 
+    # Seed the domain-knowledge fact base into a vector index for grounding.
+    from super_solver.vectorize import VectorizationService
+    from super_solver.vectorize.domain_knowledge import build_domain_knowledge_index
+
+    dk = VectorizationService(db_path=":memory:")
+    build_domain_knowledge_index(dk)
+
     print(f"Testing FULL DISCOVERY (generation) on {len(cases)} cases, embedder={args.embedder}")
     print("=" * 78)
 
@@ -66,14 +73,17 @@ def main() -> int:
     sims = []
     for case in cases:
         title = case["title"]
-        # Run the full pipeline with TRIZ-grounded abduction and NO ground truth
-        # -> genuine generation of an engineering solution, never sees the answer.
+        # Run the full pipeline with TRIZ-grounded abduction + domain-knowledge
+        # grounding and NO ground truth -> genuine generation of a concrete
+        # engineering solution, never sees the answer.
         path = engine.solve_engineering_problem(
             title=title,
             specification=case["problem"],
             goal_criteria=["Find a novel solution to this problem"],
             top_principles=4,
             ground_truth_outcomes=None,  # NO ground truth -> UNVERIFIED, honest
+            domain_knowledge=dk,
+            concrete_top_k=3,
         )
         breakthrough = path.final_breakthrough
         # Strip the UNVERIFIED/CONFIRMED prefix to get the generated claim.
