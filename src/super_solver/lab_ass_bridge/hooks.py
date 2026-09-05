@@ -350,3 +350,248 @@ class LabAssSuperSolverBridge:
         vec = svc.encode_problem(specification, title=title)
         analogs = svc.analogize(vec, top_k=top_k, min_similarity=min_similarity)
         return {"problem": specification, "analogs": analogs}
+
+    # ------------------------------------------------------------------
+    # Feedback-loop bridge methods: write engine results BACK to lab-ass
+    # These close the integration gap where the engine generates hypotheses,
+    # experiments, and self-audits but never persists them to lab-ass.
+    # ------------------------------------------------------------------
+
+    async def preregister_hypotheses_from_path(
+        self,
+        path: Any,
+        session_id: str,
+        agent_id: str,
+    ) -> List[Dict[str, Any]]:
+        """Preregister all non-falsified hypotheses from a DiscoveryPath to lab-ass.
+
+        Iterates the path's reasoning steps, finds Peircean abduction steps,
+        and calls client.preregister_hypothesis for each surviving hypothesis
+        description. This makes the full abduction → test → confirmation lifecycle
+        visible in lab-ass instead of only living inside the engine.
+
+        Returns a list of preregistration results (one per hypothesis).
+        """
+        from super_solver.lab_ass_bridge.client import LabAssClient
+
+        client = LabAssClient()
+        results = []
+
+        # Extract hypothesis descriptions from Peircean Abduction reasoning steps
+        for step in getattr(path, "steps", []):
+            op_type = getattr(step, "operator_type", None)
+            op_name = getattr(step, "operator_name", "")
+            # Only process the abduction step (first PEIRCE_ABDUCTIVE_LEAP)
+            if "Peircean" not in op_name and "PEIRCE" not in str(op_type):
+                continue
+            summary = getattr(step, "symbolic_summary", "")
+            if not summary:
+                continue
+            # Parse "Top candidate: <description>" format emitted by the engine
+            description = summary.replace("Top candidate: ", "").strip()
+            if not description:
+                continue
+
+            import uuid
+            hyp_id = str(uuid.uuid4())
+            try:
+                result = await client.preregister_hypothesis(
+                    session_id=session_id,
+                    hypothesis_id=hyp_id,
+                    null_hypothesis=(
+                        "The observed phenomenon has no underlying structure "
+                        "beyond random chance."
+                    ),
+                    testable_prediction=description,
+                    falsification_criteria=(
+                        "Observation inconsistent with this prediction under "
+                        "controlled conditions with p < 0.05."
+                    ),
+                    agent_id=agent_id,
+                )
+                results.append(result)
+            except Exception as exc:
+                # Best-effort; never abort the workflow on a registration failure
+                results.append({"error": str(exc), "description": description})
+
+        return results
+
+    async def design_experiment_from_boed(
+        self,
+        session_id: str,
+        agent_id: str,
+        hypothesis_priors: Dict[str, float],
+        candidate_designs: List[Dict[str, Any]],
+        likelihood_matrix: Dict[str, Any],
+        angle_id: Optional[str] = None,
+        hypothesis_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Rank experiments by BOED expected information gain, then write the top
+        design to lab-ass as a formal experiment manifest.
+
+        This closes the gap where BOED results were computed but never persisted.
+        Returns the lab-ass experiment record for the top-ranked design.
+        """
+        from super_solver.lab_ass_bridge.client import LabAssClient
+
+        # 1. Rank experiments by EIG
+        ranked = self.next_experiment(
+            hypothesis_priors=hypothesis_priors,
+            candidate_designs=candidate_designs,
+            likelihood_matrix=likelihood_matrix,
+        )
+        if not ranked:
+            return {"error": "BOED returned no ranked designs"}
+
+        top = ranked[0]
+        client = LabAssClient()
+
+        # 2. Write the top-ranked design to lab-ass
+        result = await client.design_experiment(
+            session_id=session_id,
+            title=top.get("name", "BOED-selected experiment"),
+            methodology=(
+                f"Bayesian Optimal Experimental Design selection. "
+                f"Expected information gain: {top.get('expected_information_gain', 0):.4f} bits. "
+                f"Cost-penalized utility: {top.get('cost_penalized_utility', 0):.4f}."
+            ),
+            agent_id=agent_id,
+            angle_id=angle_id,
+            hypothesis_id=hypothesis_id,
+            target_metric="expected_information_gain",
+            parameters={
+                "boed_ranking": ranked,
+                "design_id": top.get("design_id"),
+                "prior_entropy": top.get("prior_entropy"),
+                "expected_posterior_entropy": top.get("expected_posterior_entropy"),
+            },
+        )
+        return result
+
+    async def record_path_experiments(
+        self,
+        path: Any,
+        session_id: str,
+        agent_id: str,
+        experiment_id_map: Optional[Dict[str, str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Map CrucialExperiments from a DiscoveryPath to lab-ass experiment run records.
+
+        experiment_id_map: optional {engine_exp_id: lab_ass_experiment_id}
+        mapping. When provided, each engine experiment is linked to its
+        lab-ass counterpart. When absent, a stub record is written per
+        experiment with the engine ID.
+
+        Returns a list of record results (one per crucial experiment).
+        """
+        from super_solver.lab_ass_bridge.client import LabAssClient
+
+        client = LabAssClient()
+        results = []
+        id_map = experiment_id_map or {}
+
+        for exp in getattr(path, "crucial_experiments", []):
+            exp_id = getattr(exp, "id", None) or str(id(exp))
+            lab_exp_id = id_map.get(exp_id, exp_id)
+            try:
+                result = await client.record_experiment_run(
+                    session_id=session_id,
+                    experiment_id=lab_exp_id,
+                    outcome=getattr(exp, "observed_outcome", "unverified"),
+                    metrics={
+                        "info_gain_bits": getattr(exp, "info_gain", None),
+                        "falsified_count": len(getattr(path, "falsified_paths", [])),
+                    },
+                    agent_id=agent_id,
+                    status="completed",
+                    notes=getattr(exp, "name", ""),
+                )
+                results.append(result)
+            except Exception as exc:
+                results.append({"error": str(exc), "experiment_id": exp_id})
+
+        return results
+
+    async def synthesize_report(self, session_id: str) -> Dict[str, Any]:
+        """Trigger lab-ass to synthesize a final research report.
+
+        Call this after all angles are explored and complete_angle has been
+        called for each. Returns the synthesized report content.
+        """
+        from super_solver.lab_ass_bridge.client import LabAssClient
+
+        client = LabAssClient()
+        return await client.synthesize_report(session_id)
+
+    async def run_self_audit_and_write_findings(
+        self,
+        session_id: str,
+        agent_id: str,
+        angle_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Run engine self-audit (Causal VSA + DPLL + BOED) and write results as lab-ass findings.
+
+        This closes the gap where self-audit results were computed but never
+        surfaced to the lab-ass session. The structured audit summary is
+        decomposed into individual findings so lab-ass tracks engine health.
+        """
+        from super_solver.lab_ass_bridge.client import LabAssClient
+
+        audit = self.engine.run_self_audit_and_optimization()
+        client = LabAssClient()
+
+        # Decompose the structured audit into flat finding strings
+        findings = []
+
+        dpll = audit.get("dpll_invariant_verification", {})
+        findings.append({
+            "content": (
+                f"[Self-Audit] DPLL invariant verification: "
+                f"proved={dpll.get('proved')}, verdict={dpll.get('verdict')}"
+            ),
+            "confidence": 0.95 if dpll.get("proved") else 0.60,
+            "agent_id": agent_id,
+            "angle_id": angle_id,
+        })
+
+        causal = audit.get("causal_intervention_audit", {})
+        findings.append({
+            "content": (
+                f"[Self-Audit] Causal intervention: "
+                f"intervention={causal.get('intervention')}, "
+                f"ACE={causal.get('average_causal_effect')}, "
+                f"effective={causal.get('is_effective')}"
+            ),
+            "confidence": 0.90,
+            "agent_id": agent_id,
+            "angle_id": angle_id,
+        })
+
+        boed = audit.get("boed_tuning_utility", {})
+        findings.append({
+            "content": (
+                f"[Self-Audit] BOED tuning: "
+                f"design={boed.get('design')}, "
+                f"EIG={boed.get('expected_information_gain'):.4f}, "
+                f"utility={boed.get('cost_penalized_utility'):.4f}"
+            ),
+            "confidence": 0.90,
+            "agent_id": agent_id,
+            "angle_id": angle_id,
+        })
+
+        params = audit.get("tuned_parameters", {})
+        findings.append({
+            "content": (
+                f"[Self-Audit] Tuned parameters: "
+                f"guidance_scale={params.get('guidance_scale'):.2f}, "
+                f"repulsion_scale={params.get('repulsion_scale'):.2f}, "
+                f"proximity_threshold={params.get('proximity_threshold'):.2f}"
+            ),
+            "confidence": 0.85,
+            "agent_id": agent_id,
+            "angle_id": angle_id,
+        })
+
+        batch_result = await client.add_findings_batch(session_id, findings)
+        return {"audit_summary": audit, "findings_written": batch_result}

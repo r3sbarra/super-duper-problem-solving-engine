@@ -51,6 +51,62 @@ class LabAssClient:
             resp.raise_for_status()
             return resp.json()
 
+    async def add_findings_batch(
+        self,
+        session_id: str,
+        findings: list[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Bulk-add multiple findings in one request.
+
+        Each finding dict supports: content (required), confidence, agent_id,
+        angle_id, source_url, source_id.
+        """
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.post(
+                f"/api/sessions/{session_id}/findings/batch",
+                json={"findings": findings},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def vote_finding(
+        self,
+        session_id: str,
+        finding_id: str,
+        vote: str,
+        agent_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Vote on a finding's quality. vote is one of 'up', 'down', 'neutral'."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.post(
+                f"/api/sessions/{session_id}/findings/{finding_id}/vote",
+                json={"vote": vote, "agent_id": agent_id},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def deduplicate_findings(self, session_id: str) -> Dict[str, Any]:
+        """Trigger deduplication of semantically redundant findings in the session."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.post(f"/api/sessions/{session_id}/findings/deduplicate")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def search_similar_findings(
+        self,
+        session_id: str,
+        content: str,
+        threshold: float = 0.8,
+    ) -> Dict[str, Any]:
+        """Search for semantically similar findings within the session."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.post(
+                f"/api/sessions/{session_id}/findings/search",
+                json={"content": content, "threshold": threshold},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
     async def register_dead_end(
         self,
         session_id: str,
@@ -60,6 +116,38 @@ class LabAssClient:
         async with httpx.AsyncClient(base_url=self.base_url) as client:
             payload = {"reason": reason, "angle_id": angle_id}
             resp = await client.post(f"/api/sessions/{session_id}/dead-ends", json=payload)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def get_shared_blackboard(self, session_id: str) -> Dict[str, Any]:
+        """Fetch the shared agent blackboard for a session (cross-agent context)."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.get(f"/api/sessions/{session_id}/blackboard")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def send_message(
+        self,
+        session_id: str,
+        content: str,
+        agent_id: Optional[str] = None,
+        kind: str = "update",
+        recipient_agent_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Send an inter-agent message or broadcast within a session.
+
+        kind: 'update' | 'question' | 'handoff' | 'alert'
+        """
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.post(
+                f"/api/sessions/{session_id}/messages",
+                json={
+                    "content": content,
+                    "agent_id": agent_id,
+                    "kind": kind,
+                    "recipient_agent_id": recipient_agent_id,
+                },
+            )
             resp.raise_for_status()
             return resp.json()
 
@@ -98,6 +186,127 @@ class LabAssClient:
             resp = await client.post(
                 f"/api/sessions/{session_id}/claims/{claim_id}/verdict", json=payload
             )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def preregister_hypothesis(
+        self,
+        session_id: str,
+        hypothesis_id: str,
+        null_hypothesis: str,
+        testable_prediction: str,
+        falsification_criteria: str,
+        agent_id: Optional[str] = None,
+        variables: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Pre-register a hypothesis (OSF standard) to prevent post-hoc bias.
+
+        Links engine-generated hypotheses to lab-ass for full audit trail:
+        abduction → preregistration → experiment → confirmation/falsification.
+        """
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            payload = {
+                "hypothesis_id": hypothesis_id,
+                "null_hypothesis": null_hypothesis,
+                "testable_prediction": testable_prediction,
+                "falsification_criteria": falsification_criteria,
+                "agent_id": agent_id,
+                "variables": variables or {},
+            }
+            resp = await client.post(
+                f"/api/sessions/{session_id}/hypotheses/{hypothesis_id}/preregister",
+                json=payload,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def design_experiment(
+        self,
+        session_id: str,
+        title: str,
+        methodology: str,
+        agent_id: Optional[str] = None,
+        angle_id: Optional[str] = None,
+        hypothesis_id: Optional[str] = None,
+        control_group: Optional[str] = None,
+        experimental_group: Optional[str] = None,
+        target_metric: Optional[str] = None,
+        execution_command: Optional[str] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Design an experimental protocol manifest in lab-ass.
+
+        Call this after super_solver next_experiment (BOED) selects the top
+        design, writing the manifest back so lab-ass tracks it.
+        """
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            payload = {
+                "title": title,
+                "methodology": methodology,
+                "agent_id": agent_id,
+                "angle_id": angle_id,
+                "hypothesis_id": hypothesis_id,
+                "control_group": control_group,
+                "experimental_group": experimental_group,
+                "target_metric": target_metric,
+                "execution_command": execution_command,
+                "parameters": parameters or {},
+            }
+            resp = await client.post(
+                f"/api/sessions/{session_id}/experiments",
+                json=payload,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def record_experiment_run(
+        self,
+        session_id: str,
+        experiment_id: str,
+        outcome: str,
+        metrics: Optional[Dict[str, Any]] = None,
+        agent_id: Optional[str] = None,
+        status: str = "completed",
+        notes: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Record execution results of an experiment back to lab-ass.
+
+        Closes the feedback loop: super-solver runs an experiment, records the
+        outcome, and lab-ass updates hypothesis confidence accordingly.
+        """
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            payload = {
+                "outcome": outcome,
+                "metrics": metrics or {},
+                "agent_id": agent_id,
+                "status": status,
+                "notes": notes,
+            }
+            resp = await client.post(
+                f"/api/sessions/{session_id}/experiments/{experiment_id}/runs",
+                json=payload,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    async def get_session_digest(self, session_id: str) -> Dict[str, Any]:
+        """Fetch a compact digest of session progress (token-efficient alternative to get_state)."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.get(f"/api/sessions/{session_id}/digest")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def get_workload(self, session_id: str) -> Dict[str, Any]:
+        """Get the current workload distribution across agents in a session."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.get(f"/api/sessions/{session_id}/workload")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def synthesize_report(self, session_id: str) -> Dict[str, Any]:
+        """Trigger lab-ass to synthesize a final research report from all session findings."""
+        async with httpx.AsyncClient(base_url=self.base_url) as client:
+            resp = await client.post(f"/api/sessions/{session_id}/synthesize")
             resp.raise_for_status()
             return resp.json()
 
