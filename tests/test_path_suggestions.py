@@ -37,7 +37,10 @@ def test_suggest_paths_for_mathematical_conjecture():
 
     # Verify that mathematical barrier evasion paths (e.g. Arithmetization or Fine-Grained SETH) are suggested
     path_titles = [p.title.lower() for p in suggested]
-    assert any("arithmetization" in t or "fine-grained" in t or "seth" in t or "inventive" in t for t in path_titles)
+    assert any(
+        "arithmetization" in t or "fine-grained" in t or "seth" in t or "inventive" in t
+        for t in path_titles
+    )
 
 
 def test_suggest_paths_for_scientific_engineering_tradeoff():

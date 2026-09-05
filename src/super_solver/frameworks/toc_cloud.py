@@ -70,13 +70,15 @@ class TOCEngine:
             harmonic_min = min(sim_a, sim_b)
             score = (1.2 * harmonic_min) + (0.4 * (sim_a + sim_b)) + (0.3 * sim_obj)
 
-            rankings.append({
-                "injection": inj,
-                "score": float(score),
-                "sim_to_requirement_a": float(sim_a),
-                "sim_to_requirement_b": float(sim_b),
-                "sim_to_objective": float(sim_obj),
-            })
+            rankings.append(
+                {
+                    "injection": inj,
+                    "score": float(score),
+                    "sim_to_requirement_a": float(sim_a),
+                    "sim_to_requirement_b": float(sim_b),
+                    "sim_to_objective": float(sim_obj),
+                }
+            )
 
             if score > best_score:
                 best_score = score

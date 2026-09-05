@@ -109,8 +109,12 @@ class LakatosProofVerificationEngine:
         self._barrier_obs_vecs: Dict[str, np.ndarray] = {}
         self._barrier_eva_vecs: Dict[str, np.ndarray] = {}
         for bid, b in self.barriers.items():
-            self._barrier_obs_vecs[bid] = embedding_service.encode(f"{b.field} {b.obstruction_criterion}")
-            self._barrier_eva_vecs[bid] = embedding_service.encode(f"{b.field} {b.evasion_criterion}")
+            self._barrier_obs_vecs[bid] = embedding_service.encode(
+                f"{b.field} {b.obstruction_criterion}"
+            )
+            self._barrier_eva_vecs[bid] = embedding_service.encode(
+                f"{b.field} {b.evasion_criterion}"
+            )
 
     def extract_or_synthesize_lemmas(
         self,
@@ -132,7 +136,10 @@ class LakatosProofVerificationEngine:
 
         for s in sentences:
             s_low = s.lower()
-            if any(k in s_low for k in ["assume", "let ", "where ", "if ", "for any ", "condition", "hypothesis"]):
+            if any(
+                k in s_low
+                for k in ["assume", "let ", "where ", "if ", "for any ", "condition", "hypothesis"]
+            ):
                 conditions.append(s)
             else:
                 claim_sentences.append(s)
@@ -141,7 +148,11 @@ class LakatosProofVerificationEngine:
             claim_sentences = sentences or [paper_title]
 
         for idx, s in enumerate(claim_sentences):
-            m = re.search(r"\b(Theorem\s*\d+|Lemma\s*\d+|Proposition\s*\d+|Corollary\s*\d+)\b", s, re.IGNORECASE)
+            m = re.search(
+                r"\b(Theorem\s*\d+|Lemma\s*\d+|Proposition\s*\d+|Corollary\s*\d+)\b",
+                s,
+                re.IGNORECASE,
+            )
             if m:
                 lem_id = m.group(1)
             elif idx == len(claim_sentences) - 1 and len(claim_sentences) > 1:
@@ -151,16 +162,20 @@ class LakatosProofVerificationEngine:
             else:
                 lem_id = f"Lemma {idx + 1} (Intermediate Step)"
 
-            bound_match = re.search(r"(\b[><=]\s*[\w\d\.\^/+-]+|<<[_\w,\s]*|O\([^\)]+\)|o\(1\)|Omega\([^\)]+\))", s)
+            bound_match = re.search(
+                r"(\b[><=]\s*[\w\d\.\^/+-]+|<<[_\w,\s]*|O\([^\)]+\)|o\(1\)|Omega\([^\)]+\))", s
+            )
             extracted_bound = bound_match.group(1) if bound_match else None
 
-            lemmas.append(MathematicalLemma(
-                lemma_id=lem_id,
-                statement=s,
-                technique=s[:120],
-                assumptions=conditions[:2] if conditions else ["Standard axiomatic regularity"],
-                claimed_bound=extracted_bound,
-            ))
+            lemmas.append(
+                MathematicalLemma(
+                    lemma_id=lem_id,
+                    statement=s,
+                    technique=s[:120],
+                    assumptions=conditions[:2] if conditions else ["Standard axiomatic regularity"],
+                    claimed_bound=extracted_bound,
+                )
+            )
 
         return lemmas
 
@@ -236,7 +251,9 @@ class LakatosProofVerificationEngine:
         reasoning_trace.append(f"   Target Conjecture: {target_conjecture}")
 
         lemmas = self.extract_or_synthesize_lemmas(paper_title, abstract_text, explicit_lemmas)
-        reasoning_trace.append(f"2. Deconstructed proof into {len(lemmas)} formal lemmas / theorem steps.")
+        reasoning_trace.append(
+            f"2. Deconstructed proof into {len(lemmas)} formal lemmas / theorem steps."
+        )
 
         flawed_lemmas = []
         sound_lemmas = []
@@ -257,15 +274,21 @@ class LakatosProofVerificationEngine:
                 if cex:
                     lem.status = "FALSIFIED_BY_COUNTEREXAMPLE"
                     all_counterexamples.append(f"{cex['instance_name']}: {cex['description']}")
-                    flawed_lemmas.append(f"{lem.lemma_id}: {lem.statement[:100]} - Fails against {cex['instance_name']}")
+                    flawed_lemmas.append(
+                        f"{lem.lemma_id}: {lem.statement[:100]} - Fails against {cex['instance_name']}"
+                    )
                     reasoning_trace.append(
                         f"   [!] CRITICAL FLAW in {lem.lemma_id}: Violates {conflicts[0].name}. "
                         f"Refuted by {cex['instance_name']}."
                     )
                 else:
                     lem.status = "BARRIER_CONFLICT"
-                    flawed_lemmas.append(f"{lem.lemma_id}: {lem.statement[:100]} - Conflicts with {conflicts[0].name}")
-                    reasoning_trace.append(f"   [!] BARRIER CONFLICT in {lem.lemma_id}: {conflicts[0].name}")
+                    flawed_lemmas.append(
+                        f"{lem.lemma_id}: {lem.statement[:100]} - Conflicts with {conflicts[0].name}"
+                    )
+                    reasoning_trace.append(
+                        f"   [!] BARRIER CONFLICT in {lem.lemma_id}: {conflicts[0].name}"
+                    )
             else:
                 # Lemma passed barrier check; verify analytical drift invariants if present
                 drift_match = re.search(r"log2?\(3\)\s*-\s*2", lem.statement.lower())
@@ -273,8 +296,12 @@ class LakatosProofVerificationEngine:
                     drift_val = np.log2(3) - 2.0  # -0.415037
                     if drift_val < 0:
                         lem.status = "VERIFIED_SOUND"
-                        sound_lemmas.append(f"{lem.lemma_id}: {lem.statement[:100]} (Negative drift = {drift_val:.3f} < 0)")
-                        reasoning_trace.append(f"   [+] SOUND: {lem.lemma_id} verified. Analytic drift is negative ({drift_val:.3f} < 0).")
+                        sound_lemmas.append(
+                            f"{lem.lemma_id}: {lem.statement[:100]} (Negative drift = {drift_val:.3f} < 0)"
+                        )
+                        reasoning_trace.append(
+                            f"   [+] SOUND: {lem.lemma_id} verified. Analytic drift is negative ({drift_val:.3f} < 0)."
+                        )
                     else:
                         lem.status = "UNJUSTIFIED"
                         flawed_lemmas.append(lem.lemma_id)
@@ -283,7 +310,9 @@ class LakatosProofVerificationEngine:
                     evaded_note = f" (Evades {', '.join(evaded)})" if evaded else ""
                     lem.status = "SOUND_LOCAL_STEP"
                     sound_lemmas.append(f"{lem.lemma_id}: {lem.statement}{evaded_note}")
-                    reasoning_trace.append(f"   [+] PASS: {lem.lemma_id} satisfies consistency and barrier constraints{evaded_note}.")
+                    reasoning_trace.append(
+                        f"   [+] PASS: {lem.lemma_id} satisfies consistency and barrier constraints{evaded_note}."
+                    )
 
         # Determine final verdict
         if flawed_lemmas:
@@ -306,7 +335,9 @@ class LakatosProofVerificationEngine:
             confidence = 0.60
             summary = "PROOF INCONCLUSIVE: Gaps or unverified inductive bounds detected."
 
-        reasoning_trace.append(f"3. Verification Verdict: {verdict.value} (Confidence: {confidence * 100:.1f}%)")
+        reasoning_trace.append(
+            f"3. Verification Verdict: {verdict.value} (Confidence: {confidence * 100:.1f}%)"
+        )
 
         return ProofVerificationResult(
             paper_id=paper_id,
@@ -325,23 +356,25 @@ class LakatosProofVerificationEngine:
     def export_proof_mermaid(self, result: ProofVerificationResult) -> str:
         """Generates a visual Mermaid graph of the mathematical verification audit."""
         lines = ["```mermaid", "graph TD"]
-        lines.append(f'  P["Paper: {result.paper_title[:45]}..."] --> V["Lakatos Proof Verification"]')
+        lines.append(
+            f'  P["Paper: {result.paper_title[:45]}..."] --> V["Lakatos Proof Verification"]'
+        )
 
         for i, sound in enumerate(result.sound_lemmas):
-            node_id = f"S_{i+1}"
+            node_id = f"S_{i + 1}"
             sound_clean = sound.replace('"', "'")[:50]
             lines.append(f'  V -->|Sound Step| {node_id}["{sound_clean}"]')
             lines.append(f"  style {node_id} fill:#d4edda,stroke:#28a745")
 
         for j, flaw in enumerate(result.flawed_lemmas):
-            node_id = f"F_{j+1}"
+            node_id = f"F_{j + 1}"
             flaw_clean = flaw.replace('"', "'")[:50]
             lines.append(f'  V -. Falsified Step .-> {node_id}["{flaw_clean}"]')
             lines.append(f"  style {node_id} fill:#ffcccc,stroke:#cc0000,stroke-width:2px")
 
         if result.barrier_violations:
             for k, b in enumerate(result.barrier_violations):
-                node_id = f"B_{k+1}"
+                node_id = f"B_{k + 1}"
                 b_clean = b.split("(")[0].strip().replace('"', "'")
                 lines.append(f'  V -. Barrier Violation .-> {node_id}["Barrier: {b_clean}"]')
                 lines.append(f"  style {node_id} fill:#fff3cd,stroke:#ffc107")
@@ -366,54 +399,65 @@ class LakatosProofVerificationEngine:
         " ".join(result.barrier_violations).lower()
 
         # Check barrier IDs dynamically
-        if any("tardos" in v or "relativization" in v or "natural" in v for v in result.barrier_violations):
-            paths.append(SuggestedPath(
-                path_id="math_path_arithmetization",
-                strategy_type="ALGEBRAIC_BARRIER_EVASION",
-                title="Arithmetization & Interactive Proofs Strategy",
-                description="Replace combinatorial Boolean gate approximations with low-degree polynomial extensions over finite fields F_q. Algebrization and interactive proof techniques (LFKN, Shamir IP=PSPACE) bypass both relativization and monotone approximation obstructions.",
-                rationale="Non-relativizing techniques use algebraic properties of polynomials that do not hold in arbitrary oracle worlds, bypassing the Baker-Gill-Solovay and Tardos barriers.",
-                feasibility_score=0.78,
-                novelty_score=0.85,
-                dead_end_safety_margin=0.92,
-                recommended_next_action="Map formula to multilinear polynomials and check circuit lower bounds via degree analysis.",
-            ))
-            paths.append(SuggestedPath(
-                path_id="math_path_fine_grained",
-                strategy_type="CONDITIONAL_COMPLEXITY",
-                title="Fine-Grained / Conditional Complexity Separation (SETH)",
-                description="Rather than attempting unconditional circuit lower bounds which trigger Razborov-Rudich Natural Proofs, establish conditional lower bounds based on the Strong Exponential Time Hypothesis (SETH) or 3-SUM conjecture.",
-                rationale="Conditional reductions evade Natural Proofs by assuming cryptographic pseudorandomness is preserved.",
-                feasibility_score=0.89,
-                novelty_score=0.72,
-                dead_end_safety_margin=0.95,
-                recommended_next_action="Formulate fine-grained reduction from k-SAT or Orthogonal Vectors to target problem.",
-            ))
+        if any(
+            "tardos" in v or "relativization" in v or "natural" in v
+            for v in result.barrier_violations
+        ):
+            paths.append(
+                SuggestedPath(
+                    path_id="math_path_arithmetization",
+                    strategy_type="ALGEBRAIC_BARRIER_EVASION",
+                    title="Arithmetization & Interactive Proofs Strategy",
+                    description="Replace combinatorial Boolean gate approximations with low-degree polynomial extensions over finite fields F_q. Algebrization and interactive proof techniques (LFKN, Shamir IP=PSPACE) bypass both relativization and monotone approximation obstructions.",
+                    rationale="Non-relativizing techniques use algebraic properties of polynomials that do not hold in arbitrary oracle worlds, bypassing the Baker-Gill-Solovay and Tardos barriers.",
+                    feasibility_score=0.78,
+                    novelty_score=0.85,
+                    dead_end_safety_margin=0.92,
+                    recommended_next_action="Map formula to multilinear polynomials and check circuit lower bounds via degree analysis.",
+                )
+            )
+            paths.append(
+                SuggestedPath(
+                    path_id="math_path_fine_grained",
+                    strategy_type="CONDITIONAL_COMPLEXITY",
+                    title="Fine-Grained / Conditional Complexity Separation (SETH)",
+                    description="Rather than attempting unconditional circuit lower bounds which trigger Razborov-Rudich Natural Proofs, establish conditional lower bounds based on the Strong Exponential Time Hypothesis (SETH) or 3-SUM conjecture.",
+                    rationale="Conditional reductions evade Natural Proofs by assuming cryptographic pseudorandomness is preserved.",
+                    feasibility_score=0.89,
+                    novelty_score=0.72,
+                    dead_end_safety_margin=0.95,
+                    recommended_next_action="Formulate fine-grained reduction from k-SAT or Orthogonal Vectors to target problem.",
+                )
+            )
 
         if any("conway" in v for v in result.barrier_violations):
-            paths.append(SuggestedPath(
-                path_id="math_path_density_relaxation",
-                strategy_type="MEASURE_THEORETIC_RELAXATION",
-                title="Logarithmic Density 1 Invariant Drift (Tao's Path)",
-                description="Relax worst-case termination for all n to almost-all n by proving negative logarithmic drift on 2-adic valuations.",
-                rationale="Almost-all statements bypass Turing undecidability of general Collatz functions.",
-                feasibility_score=0.92,
-                novelty_score=0.88,
-                dead_end_safety_margin=0.96,
-                recommended_next_action="Establish non-concentration of skew random walk on residue classes mod 2^k.",
-            ))
+            paths.append(
+                SuggestedPath(
+                    path_id="math_path_density_relaxation",
+                    strategy_type="MEASURE_THEORETIC_RELAXATION",
+                    title="Logarithmic Density 1 Invariant Drift (Tao's Path)",
+                    description="Relax worst-case termination for all n to almost-all n by proving negative logarithmic drift on 2-adic valuations.",
+                    rationale="Almost-all statements bypass Turing undecidability of general Collatz functions.",
+                    feasibility_score=0.92,
+                    novelty_score=0.88,
+                    dead_end_safety_margin=0.96,
+                    recommended_next_action="Establish non-concentration of skew random walk on residue classes mod 2^k.",
+                )
+            )
 
         if any("parity" in v for v in result.barrier_violations):
-            paths.append(SuggestedPath(
-                path_id="math_path_bilinear_forms",
-                strategy_type="PARITY_BREAKING_BILINEAR_SUMS",
-                title="Bilinear Form Sieve (Bombieri-Friedlander-Iwaniec / Zhang-Maynard)",
-                description="Incorporate Type I and Type II bilinear sums with Kloosterman exponential sums to break the Selberg parity barrier.",
-                rationale="Bilinear structures differentiate primes (Omega=1) from semiprimes (Omega=2) via Fourier phase cancellation.",
-                feasibility_score=0.84,
-                novelty_score=0.89,
-                dead_end_safety_margin=0.94,
-                recommended_next_action="Construct smooth bilinear sieve weights with distribution level theta > 1/2.",
-            ))
+            paths.append(
+                SuggestedPath(
+                    path_id="math_path_bilinear_forms",
+                    strategy_type="PARITY_BREAKING_BILINEAR_SUMS",
+                    title="Bilinear Form Sieve (Bombieri-Friedlander-Iwaniec / Zhang-Maynard)",
+                    description="Incorporate Type I and Type II bilinear sums with Kloosterman exponential sums to break the Selberg parity barrier.",
+                    rationale="Bilinear structures differentiate primes (Omega=1) from semiprimes (Omega=2) via Fourier phase cancellation.",
+                    feasibility_score=0.84,
+                    novelty_score=0.89,
+                    dead_end_safety_margin=0.94,
+                    recommended_next_action="Construct smooth bilinear sieve weights with distribution level theta > 1/2.",
+                )
+            )
 
         return paths

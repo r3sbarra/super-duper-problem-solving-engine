@@ -1,6 +1,5 @@
 """Unit tests for the 7 proven problem-solving frameworks in super_solver."""
 
-
 from super_solver.core.types import CrucialExperiment, Hypothesis, HypothesisStatus, KTBoundary
 from super_solver.frameworks.kepner_tregoe import KepnerTregoeEngine
 from super_solver.frameworks.peirce_inquiry import PeirceanInquiryEngine
@@ -13,8 +12,18 @@ from super_solver.frameworks.triz_engine import TRIZEngine
 def test_platt_strong_inference_entropy_and_pruning():
     engine = StrongInferenceEngine()
 
-    h1 = Hypothesis(id="h1", title="Hypothesis A", description="Enzyme is substrate-inhibited", current_confidence=0.5)
-    h2 = Hypothesis(id="h2", title="Hypothesis B", description="Allosteric feedback loop", current_confidence=0.5)
+    h1 = Hypothesis(
+        id="h1",
+        title="Hypothesis A",
+        description="Enzyme is substrate-inhibited",
+        current_confidence=0.5,
+    )
+    h2 = Hypothesis(
+        id="h2",
+        title="Hypothesis B",
+        description="Allosteric feedback loop",
+        current_confidence=0.5,
+    )
 
     initial_entropy = engine.compute_entropy([h1, h2])
     assert 0.95 <= initial_entropy <= 1.05
@@ -24,13 +33,15 @@ def test_platt_strong_inference_entropy_and_pruning():
         name="Allosteric site mutation assay",
         description="Mutate site X. If H1, activity unchanged; if H2, feedback disabled.",
         target_hypotheses=["h1", "h2"],
-        exclusory_predictions={"h1": "unchanged", "h2": "feedback_disabled"}
+        exclusory_predictions={"h1": "unchanged", "h2": "feedback_disabled"},
     )
 
     info_gain = engine.evaluate_crucial_experiment(exp, [h1, h2])
     assert info_gain > 0.8
 
-    updated_h, falsified = engine.execute_and_prune(exp, [h1, h2], observed_outcome="feedback_disabled")
+    updated_h, falsified = engine.execute_and_prune(
+        exp, [h1, h2], observed_outcome="feedback_disabled"
+    )
     assert "h1" in falsified
     assert updated_h[0].status == HypothesisStatus.FALSIFIED
     assert updated_h[1].status == HypothesisStatus.CONFIRMED
@@ -65,12 +76,18 @@ def test_kepner_tregoe_boundary_filtering():
 def test_triz_contradiction_matching():
     engine = TRIZEngine()
 
-    contradiction = "Increasing mechanical strength of the beam causes excessive mass and weight burden"
+    contradiction = (
+        "Increasing mechanical strength of the beam causes excessive mass and weight burden"
+    )
     principles = engine.suggest_principles(contradiction, top_k=5)
 
     assert len(principles) == 5
     principle_names = [p["name"] for p in principles]
-    assert any(p in ["Anti-Weight", "Mechanical Vibration", "Mechanics Substitution", "Composite Materials"] for p in principle_names)
+    assert any(
+        p
+        in ["Anti-Weight", "Mechanical Vibration", "Mechanics Substitution", "Composite Materials"]
+        for p in principle_names
+    )
 
 
 def test_toc_evaporating_cloud_resolution():
@@ -98,7 +115,9 @@ def test_toc_evaporating_cloud_resolution():
 def test_peirce_abductive_deductive_inductive_cycle():
     engine = PeirceanInquiryEngine()
 
-    anomaly = "Bacterial culture survives normally lethal antibiotic dose in presence of metabolite X"
+    anomaly = (
+        "Bacterial culture survives normally lethal antibiotic dose in presence of metabolite X"
+    )
     context = "Microbiology cellular metabolism and antibiotic resistance mechanisms"
     candidates = [
         "Metabolite X acts as an enzymatic decoy or competitive inhibitor for the antibiotic",
@@ -117,7 +136,7 @@ def test_peirce_abductive_deductive_inductive_cycle():
         candidate_predictions=[
             "Binding affinity assay will show direct molecular complex between metabolite X and antibiotic",
             "Temperature of the room will drop by 20 degrees",
-        ]
+        ],
     )
     assert len(predictions) >= 1
     assert "Binding affinity" in predictions[0]
@@ -125,7 +144,9 @@ def test_peirce_abductive_deductive_inductive_cycle():
     # Induction
     conf = engine.induct_calibrate(
         hypotheses[0],
-        observed_evidence=["Surface plasmon resonance verifies high-affinity binding between metabolite X and antibiotic"]
+        observed_evidence=[
+            "Surface plasmon resonance verifies high-affinity binding between metabolite X and antibiotic"
+        ],
     )
     assert conf > 0.45
     assert hypotheses[0].status in [HypothesisStatus.CONFIRMED, HypothesisStatus.TESTING]
@@ -141,6 +162,11 @@ def test_polya_heuristics():
     ]
 
     aux = engine.decompose_auxiliary_problems(spec, subproblems)
-    assert aux[0]["subproblem"] == "Predict secondary structure helices and stability of folded domains"
-    assert aux[1]["subproblem"] == "Analyze stock market price trends of pharmaceutical retail stores"
+    assert (
+        aux[0]["subproblem"]
+        == "Predict secondary structure helices and stability of folded domains"
+    )
+    assert (
+        aux[1]["subproblem"] == "Analyze stock market price trends of pharmaceutical retail stores"
+    )
     assert aux[0]["relevance_score"] > aux[1]["relevance_score"]

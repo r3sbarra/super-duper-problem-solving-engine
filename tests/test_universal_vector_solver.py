@@ -36,7 +36,10 @@ def test_quantum_computing_qubit_tradeoff_vector_contradiction():
     assert "top_rankings" in solution.details
     assert len(solution.details["top_rankings"]) >= 3
     # Check that recommendation mentions the domain and target parameters
-    assert "qubit" in solution.actionable_recommendation.lower() or "quantum" in solution.actionable_recommendation.lower()
+    assert (
+        "qubit" in solution.actionable_recommendation.lower()
+        or "quantum" in solution.actionable_recommendation.lower()
+    )
 
 
 def test_molecular_biology_epitope_diagnostic_boundary_kernel():
@@ -127,7 +130,11 @@ def test_cross_disciplinary_vsa_analogical_transfer():
     target_domain = "Distributed Systems (Cloud Datacenter Load Balancing)"
 
     source_relations = [
-        {"relation": "evaporates_over", "subject": "pheromone_deposit", "object": "congested_trail"},
+        {
+            "relation": "evaporates_over",
+            "subject": "pheromone_deposit",
+            "object": "congested_trail",
+        },
         {"relation": "reinforces", "subject": "foraging_agent", "object": "shortest_path"},
         {"relation": "regulates", "subject": "collective_density", "object": "resource_throughput"},
     ]

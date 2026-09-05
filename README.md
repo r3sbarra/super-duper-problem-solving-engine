@@ -188,8 +188,7 @@ problem = engine.formulate_problem(
 ```python
 # Direct lookup in Altshuller's Contradiction Matrix
 results = engine.triz.resolve_contradiction_matrix(
-    improving_parameter="speed",
-    worsening_parameter="accuracy"
+    improving_parameter="speed", worsening_parameter="accuracy"
 )
 for r in results:
     print(f"Principle {r['principle_id']}: {r['name']} - {r['description']}")
@@ -208,8 +207,8 @@ crucial_experiments = [
         target_hypotheses=["hyp_abduct_1", "hyp_abduct_2"],
         exclusory_predictions={
             "hyp_abduct_1": "superconducts",
-            "hyp_abduct_2": "transparent_insulator"
-        }
+            "hyp_abduct_2": "transparent_insulator",
+        },
     )
 ]
 
@@ -262,7 +261,9 @@ paths = engine.suggest_paths(
 for p in paths:
     print(f"[{p.strategy_type}] {p.title}")
     print(f"  Action: {p.recommended_next_action}")
-    print(f"  Feasibility: {p.feasibility_score} | Novelty: {p.novelty_score} | Dead-End Margin: {p.dead_end_safety_margin}")
+    print(
+        f"  Feasibility: {p.feasibility_score} | Novelty: {p.novelty_score} | Dead-End Margin: {p.dead_end_safety_margin}"
+    )
 ```
 
 ### 7. Self-Improvement, Self-Audit, & Synaptic Memory Consolidation

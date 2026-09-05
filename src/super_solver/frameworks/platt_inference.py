@@ -56,13 +56,15 @@ class StrongInferenceEngine:
 
         # Only add if it creates a non-trivial partition (different outcomes)
         if len(set(predictions_exp1.values())) > 1:
-            experiments.append(CrucialExperiment(
-                id="exp_auto_purity_control",
-                name="High-Resolution Purity & Systematic Filtering Assay",
-                description="Apply ultra-strict kinematic or compositional filtering to isolate pure unpolluted sample subset.",
-                target_hypotheses=list(predictions_exp1.keys()),
-                exclusory_predictions=predictions_exp1,
-            ))
+            experiments.append(
+                CrucialExperiment(
+                    id="exp_auto_purity_control",
+                    name="High-Resolution Purity & Systematic Filtering Assay",
+                    description="Apply ultra-strict kinematic or compositional filtering to isolate pure unpolluted sample subset.",
+                    target_hypotheses=list(predictions_exp1.keys()),
+                    exclusory_predictions=predictions_exp1,
+                )
+            )
 
         # 2. External Field / Environmental Boundary Modulation Test
         predictions_exp2 = {}
@@ -76,13 +78,15 @@ class StrongInferenceEngine:
                 predictions_exp2[h.id] = "independent_of_field"
 
         if len(set(predictions_exp2.values())) > 1:
-            experiments.append(CrucialExperiment(
-                id="exp_auto_field_modulation",
-                name="Environmental Boundary & External Field Modulation Assay",
-                description="Measure anomaly across varying external field conditions or background environments.",
-                target_hypotheses=list(predictions_exp2.keys()),
-                exclusory_predictions=predictions_exp2,
-            ))
+            experiments.append(
+                CrucialExperiment(
+                    id="exp_auto_field_modulation",
+                    name="Environmental Boundary & External Field Modulation Assay",
+                    description="Measure anomaly across varying external field conditions or background environments.",
+                    target_hypotheses=list(predictions_exp2.keys()),
+                    exclusory_predictions=predictions_exp2,
+                )
+            )
 
         return experiments
 

@@ -32,10 +32,16 @@ def test_bicep2_cosmic_inflation_dust_falsification():
     )
 
     # 1. Fundamental inflation modification hypothesis must be falsified
-    assert any("fundamental" in f.lower() or "breakdown" in f.lower() for f in discovery_path.falsified_paths)
+    assert any(
+        "fundamental" in f.lower() or "breakdown" in f.lower()
+        for f in discovery_path.falsified_paths
+    )
 
     # 2. Interstellar dust / foreground selection artifact must be confirmed
-    assert "artifact" in discovery_path.final_breakthrough.lower() or "contaminant" in discovery_path.final_breakthrough.lower()
+    assert (
+        "artifact" in discovery_path.final_breakthrough.lower()
+        or "contaminant" in discovery_path.final_breakthrough.lower()
+    )
     assert discovery_path.confidence > 0.70
 
     # 3. Verify Mermaid diagram generation
@@ -64,10 +70,16 @@ def test_stap_cells_acid_pluripotency_falsification():
     )
 
     # 1. Verify that the novel epigenetic reprogramming hypothesis was falsified
-    assert any("fundamental" in f.lower() or "breakdown" in f.lower() for f in discovery_path.falsified_paths)
+    assert any(
+        "fundamental" in f.lower() or "breakdown" in f.lower()
+        for f in discovery_path.falsified_paths
+    )
 
     # 2. Verify that ES cell cross-contamination / artifact was confirmed
-    assert "artifact" in discovery_path.final_breakthrough.lower() or "contaminant" in discovery_path.final_breakthrough.lower()
+    assert (
+        "artifact" in discovery_path.final_breakthrough.lower()
+        or "contaminant" in discovery_path.final_breakthrough.lower()
+    )
     assert discovery_path.confidence > 0.70
 
 
@@ -122,4 +134,7 @@ def test_self_improvement_auto_tuning_loop():
 
     # 4. Verify that falsified dead ends from the self-improvement run were harvested
     assert len(engine.repulsor.dead_ends) >= 1
-    assert any("Static rigid" in desc or "Auto-harvested" in desc for desc in engine.repulsor.dead_end_descriptions)
+    assert any(
+        "Static rigid" in desc or "Auto-harvested" in desc
+        for desc in engine.repulsor.dead_end_descriptions
+    )

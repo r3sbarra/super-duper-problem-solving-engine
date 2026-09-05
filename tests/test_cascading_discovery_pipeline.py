@@ -62,8 +62,16 @@ def test_end_to_end_cascading_discovery_pipeline():
     # Stage 5: Structural Analogy from Biology
     source_domain = "Neurobiology (Voltage-Gated Ion Channel Conduits)"
     source_relations = [
-        {"relation": "selectively_transports", "subject": "filter_cavity", "object": "potassium_cation"},
-        {"relation": "accommodates_strain", "subject": "lipid_bilayer", "object": "conformation_change"},
+        {
+            "relation": "selectively_transports",
+            "subject": "filter_cavity",
+            "object": "potassium_cation",
+        },
+        {
+            "relation": "accommodates_strain",
+            "subject": "lipid_bilayer",
+            "object": "conformation_change",
+        },
     ]
     target_substitutions = {
         "filter_cavity": "sub_nanometer_zeolitic_pore",

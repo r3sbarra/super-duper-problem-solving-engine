@@ -76,7 +76,10 @@ def test_manuscript_generation_markdown_and_latex():
 def test_manuscript_save_to_disk():
     """Validates saving both LaTeX and Markdown manuscripts directly to disk."""
     engine = SuperDuperProblemSolvingEngine()
-    problem = engine.formulate_problem(title="BICEP2 Cosmic Inflation Dust Demarcation", specification="Cosmic B-mode polarization.")
+    problem = engine.formulate_problem(
+        title="BICEP2 Cosmic Inflation Dust Demarcation",
+        specification="Cosmic B-mode polarization.",
+    )
     path = DiscoveryPath(
         problem_id=problem.id,
         problem_title=problem.title,
@@ -93,7 +96,6 @@ def test_manuscript_save_to_disk():
         final_breakthrough="CONFIRMED: Galactic thermal dust polarization accounts for observed B-modes",
         total_steps=1,
     )
-
 
     with tempfile.TemporaryDirectory() as tmpdir:
         res = engine.generate_manuscript(path, problem=problem, output_dir=tmpdir)

@@ -59,7 +59,7 @@ class DPLLSolver:
             if unit_literals:
                 lit = unit_literals[0]
                 var = abs(lit)
-                val = (lit > 0)
+                val = lit > 0
                 current_assign[var] = val
                 current_clauses = self._simplify_clauses(current_clauses, lit)
                 changed = True
@@ -74,7 +74,7 @@ class DPLLSolver:
             for lit in list(lit_set):
                 if -lit not in lit_set:
                     var = abs(lit)
-                    val = (lit > 0)
+                    val = lit > 0
                     current_assign[var] = val
                     current_clauses = [c for c in current_clauses if lit not in c]
                     changed = True
@@ -183,7 +183,9 @@ class DPLLSolver:
             }
         else:
             # Countermodel found where premises hold but claim is false
-            readable_countermodel = {rev_map.get(k, str(k)): v for k, v in countermodel.items()} if countermodel else {}
+            readable_countermodel = (
+                {rev_map.get(k, str(k)): v for k, v in countermodel.items()} if countermodel else {}
+            )
             return {
                 "proved": False,
                 "verdict": "COUNTERMODEL_EXISTS",
@@ -194,4 +196,3 @@ class DPLLSolver:
 
 
 dpll_solver = DPLLSolver()
-

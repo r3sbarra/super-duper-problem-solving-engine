@@ -29,6 +29,7 @@ class OperatorType(str, Enum):
 
 class KTBoundary(BaseModel):
     """Kepner-Tregoe 4-Dimensional IS / IS NOT Boundary Condition specification."""
+
     identity_is: str
     identity_is_not: str
     location_is: str
@@ -47,6 +48,7 @@ class KTBoundary(BaseModel):
 
 class Hypothesis(BaseModel):
     """Formal scientific hypothesis representation."""
+
     id: str
     title: str
     description: str
@@ -62,13 +64,14 @@ class Hypothesis(BaseModel):
 
 class CrucialExperiment(BaseModel):
     """Platt Strong Inference crucial discriminating experiment."""
+
     id: str
     name: str
     description: str
     target_hypotheses: List[str] = Field(default_factory=list)
     exclusory_predictions: Dict[str, str] = Field(
         default_factory=dict,
-        description="Maps hypothesis_id -> expected outcome if hypothesis is true"
+        description="Maps hypothesis_id -> expected outcome if hypothesis is true",
     )
     actual_outcome: Optional[str] = None
     falsified_hypotheses: List[str] = Field(default_factory=list)
@@ -77,6 +80,7 @@ class CrucialExperiment(BaseModel):
 
 class ProblemState(BaseModel):
     """The 5-Tuple problem state: (P, O, S, G, D)."""
+
     id: str
     title: str
     specification: str
@@ -93,6 +97,7 @@ class ProblemState(BaseModel):
 
 class ReasoningStep(BaseModel):
     """A single discrete or continuous reasoning transition."""
+
     step_index: int
     operator_type: OperatorType
     operator_name: str
@@ -106,6 +111,7 @@ class ReasoningStep(BaseModel):
 
 class DiscoveryPath(BaseModel):
     """A complete reconstructed or discovered path from problem to breakthrough."""
+
     problem_id: str
     problem_title: str
     initial_abduction: str
@@ -126,6 +132,7 @@ class VerificationStatus(str, Enum):
 
 class MathematicalLemma(BaseModel):
     """A formal mathematical lemma or theorem step in a paper's proof."""
+
     lemma_id: str
     statement: str
     technique: str
@@ -138,6 +145,7 @@ class MathematicalLemma(BaseModel):
 
 class MathematicalBarrier(BaseModel):
     """A known proven obstruction or no-go theorem in mathematics."""
+
     barrier_id: str
     name: str
     field: str
@@ -150,6 +158,7 @@ class MathematicalBarrier(BaseModel):
 
 class ProofVerificationResult(BaseModel):
     """Formal verification report for an unproven or contested mathematical paper."""
+
     paper_id: str
     paper_title: str
     target_conjecture: str
@@ -165,6 +174,7 @@ class ProofVerificationResult(BaseModel):
 
 class SuggestedPath(BaseModel):
     """An actionable, ranked alternative discovery path or repair trajectory."""
+
     path_id: str
     strategy_type: str
     title: str
@@ -175,5 +185,3 @@ class SuggestedPath(BaseModel):
     dead_end_safety_margin: float = 1.0
     recommended_next_action: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
-
-

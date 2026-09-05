@@ -164,8 +164,7 @@ class LabAssSuperSolverBridge:
             "total_steps": path.total_steps,
             "falsified_paths": path.falsified_paths,
             "steps": [
-                {"operator": s.operator_name, "summary": s.symbolic_summary}
-                for s in path.steps
+                {"operator": s.operator_name, "summary": s.symbolic_summary} for s in path.steps
             ],
         }
 

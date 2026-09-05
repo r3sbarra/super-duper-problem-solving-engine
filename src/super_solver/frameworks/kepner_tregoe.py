@@ -21,7 +21,9 @@ class KepnerTregoeEngine:
     def __init__(self):
         pass
 
-    def build_boundary_hyperplane(self, boundary: KTBoundary) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def build_boundary_hyperplane(
+        self, boundary: KTBoundary
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Builds positive centroid c_IS, negative centroid c_IS_NOT, and normal vector w."""
         is_text, is_not_text = boundary.to_contrastive_text()
         v_is = embedding_service.encode(is_text)
@@ -80,7 +82,9 @@ class KepnerTregoeEngine:
             "sim_to_is": float(sim_is),
             "sim_to_is_not": float(sim_not),
             "hyperplane_projection": float(projection),
-            "valid_boundary_fit": bool(net_score > 0.15 and sim_is > sim_not and len(violated_dims) <= 1),
+            "valid_boundary_fit": bool(
+                net_score > 0.15 and sim_is > sim_not and len(violated_dims) <= 1
+            ),
             "dimensional_breakdown": dim_scores,
             "violated_dimensions": violated_dims,
         }

@@ -34,10 +34,12 @@ class CaseHarvester:
                 "steps_count": len(path.steps),
                 "experiments_count": len(path.crucial_experiments),
                 "confidence": path.confidence,
-            }
+            },
         )
 
-    def retrieve_analogous_cases(self, current_problem: str, top_k: int = 3) -> List[Dict[str, Any]]:
+    def retrieve_analogous_cases(
+        self, current_problem: str, top_k: int = 3
+    ) -> List[Dict[str, Any]]:
         """Finds analogous prior cases for inspiration and structural transfer."""
         q_vec = embedding_service.encode(current_problem)
         return self.store.search_similar(q_vec, category="discovery_case", top_k=top_k)

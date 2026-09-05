@@ -58,11 +58,11 @@ def test_synaptic_memory_consolidation():
 
     # Verify proximity hazard detection still works against the consolidated centroid
     from super_solver.core.embeddings import embedding_service
-    query_vec = embedding_service.encode("Rigid static heuristic parameter tuning without adaptation")
+
+    query_vec = embedding_service.encode(
+        "Rigid static heuristic parameter tuning without adaptation"
+    )
     is_near, max_sim, desc = engine.repulsor.check_proximity(query_vec, threshold=0.60)
     assert is_near is True
     assert desc is not None
     assert "Consolidated Hazard Cluster" in desc
-
-
-

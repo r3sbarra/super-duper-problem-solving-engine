@@ -70,14 +70,16 @@ class CodeExperimentSandbox:
                     except Exception:
                         pass
 
-            is_success = (res.returncode == 0)
+            is_success = res.returncode == 0
             return SimulationResult(
                 success=is_success,
                 output=parsed_data,
                 stdout=res.stdout,
                 stderr=res.stderr,
                 execution_time_ms=round(elapsed_ms, 2),
-                error_message=None if is_success else f"Process returned exit code {res.returncode}",
+                error_message=None
+                if is_success
+                else f"Process returned exit code {res.returncode}",
                 observation_category=str(obs_category) if obs_category else None,
             )
         except subprocess.TimeoutExpired:

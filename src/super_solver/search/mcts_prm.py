@@ -157,7 +157,9 @@ class LatentMCTSEngine:
         curr = root
         while curr.children:
             best_child = max(curr.children, key=lambda c: c.visits)
-            path.append((best_child.operator_name, best_child.state_vector, best_child.prm_step_score))
+            path.append(
+                (best_child.operator_name, best_child.state_vector, best_child.prm_step_score)
+            )
             curr = best_child
 
         return path

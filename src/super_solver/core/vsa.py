@@ -27,7 +27,9 @@ class CleanupMemory:
         norm = np.linalg.norm(vector)
         self.codebook[symbol] = vector / (norm + 1e-12) if norm > 0 else vector
 
-    def clean(self, noisy_vector: np.ndarray, min_similarity: float = 0.20) -> Tuple[Optional[str], float]:
+    def clean(
+        self, noisy_vector: np.ndarray, min_similarity: float = 0.20
+    ) -> Tuple[Optional[str], float]:
         """Finds the nearest canonical symbol in the codebook."""
         if not self.codebook:
             return None, 0.0
@@ -81,7 +83,9 @@ class VSAEngine:
         inv_key[1:] = key[:0:-1]
         return self.bind(bound, inv_key)
 
-    def bundle(self, vectors: List[np.ndarray], weights: Optional[List[float]] = None) -> np.ndarray:
+    def bundle(
+        self, vectors: List[np.ndarray], weights: Optional[List[float]] = None
+    ) -> np.ndarray:
         """Bundling operator (\\oplus) via weighted superposition."""
         if not vectors:
             return np.zeros(self.dim)

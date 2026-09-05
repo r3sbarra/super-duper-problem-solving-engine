@@ -58,13 +58,17 @@ def test_causal_vsa_graph_surgery_and_confounding_resolution():
     assert g_vec.shape == (2048,)
 
     # 1. Intervene do(cu2s_phase_transition = 0.9): should strongly affect resistivity_drop
-    int_cu2s = causal.intervene("cu2s_phase_transition", clamped_value=0.9, consequence_target="resistivity_drop")
+    int_cu2s = causal.intervene(
+        "cu2s_phase_transition", clamped_value=0.9, consequence_target="resistivity_drop"
+    )
     assert int_cu2s["is_causally_effective"] is True
     assert int_cu2s["average_causal_effect"] > 0.20
     assert "cu2s_phase_transition" in int_cu2s["intervention"]
 
     # 2. Intervene do(cu2s_phase_transition = 0.9) on meissner effect: should have zero effect!
-    int_meissner = causal.intervene("cu2s_phase_transition", clamped_value=0.9, consequence_target="meissner_flux_expulsion")
+    int_meissner = causal.intervene(
+        "cu2s_phase_transition", clamped_value=0.9, consequence_target="meissner_flux_expulsion"
+    )
     assert abs(int_meissner["average_causal_effect"]) < 0.05
     assert int_meissner["is_causally_effective"] is False
 

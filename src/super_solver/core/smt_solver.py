@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 # 1. Theory of Equality with Uninterpreted Functions (EUF) - Congruence Closure
 # ============================================================================
 
+
 class CongruenceClosure:
     """Union-Find with Congruence Closure for Equality with Uninterpreted Functions (EUF)."""
 
@@ -105,9 +106,11 @@ class CongruenceClosure:
 # 2. Theory of Linear Real Arithmetic (QF_LRA) - Fourier-Motzkin Elimination
 # ============================================================================
 
+
 @dataclass
 class LinearConstraint:
     """Represents a linear inequality: sum(coeffs[x] * x) <= const_val."""
+
     coeffs: Dict[str, float]
     const_val: float
     strict: bool = False  # True for <, False for <=
@@ -147,7 +150,7 @@ class FourierMotzkinLRA:
         for var in sorted(variables):
             pos: List[LinearConstraint] = []  # coeffs[var] > 0
             neg: List[LinearConstraint] = []  # coeffs[var] < 0
-            zero: List[LinearConstraint] = [] # var not present
+            zero: List[LinearConstraint] = []  # var not present
 
             for c in current:
                 a = c.coeffs.get(var, 0.0)
@@ -177,7 +180,9 @@ class FourierMotzkinLRA:
                     comb_const = (p.const_val * a_n) + (n.const_val * a_p)
                     comb_strict = p.strict or n.strict
 
-                    new_c = LinearConstraint(coeffs=comb_coeffs, const_val=comb_const, strict=comb_strict).normalized()
+                    new_c = LinearConstraint(
+                        coeffs=comb_coeffs, const_val=comb_const, strict=comb_strict
+                    ).normalized()
 
                     # Direct contradiction check on empty coefficients
                     if not new_c.coeffs:
@@ -204,6 +209,7 @@ class FourierMotzkinLRA:
 # ============================================================================
 # 3. High-Level SMT Solver Facade
 # ============================================================================
+
 
 @dataclass
 class SMTResult:
@@ -251,7 +257,7 @@ class SMTSolver:
             details={
                 "theory": "EUF",
                 "equivalence_classes": {k: cc.find(k) for k in cc.parent},
-            }
+            },
         )
 
     def _register_potential_func(self, cc: CongruenceClosure, term: str):
@@ -309,7 +315,7 @@ class SMTSolver:
                 "theory": "QF_LRA",
                 "conflict": conflict,
                 "constraint_count": len(constraints),
-            }
+            },
         )
 
     def _parse_side(self, s: str) -> Dict[str, float]:
@@ -353,7 +359,6 @@ class SMTSolver:
         for k, v in rhs_terms.items():
             res[k] = res.get(k, 0.0) - v
         return res
-
 
 
 smt_solver = SMTSolver()

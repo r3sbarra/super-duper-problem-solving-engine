@@ -37,7 +37,9 @@ class VectorizedCausalModel:
         self.role_cause = self.vsa.random_hypervector("role:cause")
         self.role_effect = self.vsa.random_hypervector("role:effect")
 
-    def add_variable(self, name: str, baseline_value: float = 0.5, domain: str = "general") -> CausalNode:
+    def add_variable(
+        self, name: str, baseline_value: float = 0.5, domain: str = "general"
+    ) -> CausalNode:
         """Registers a causal variable with a dedicated hypervector."""
         node = CausalNode(name=name, domain=domain)
         node.baseline_value = baseline_value
@@ -64,10 +66,12 @@ class VectorizedCausalModel:
             for c_name in node.parents:
                 v_cause = self.node_vectors[c_name]
                 # Circular convolution binding: (role_cause (x) Cause) + (role_effect (x) Effect)
-                edge_rep = self.vsa.bundle([
-                    self.vsa.bind(self.role_cause, v_cause),
-                    self.vsa.bind(self.role_effect, v_effect),
-                ])
+                edge_rep = self.vsa.bundle(
+                    [
+                        self.vsa.bind(self.role_cause, v_cause),
+                        self.vsa.bind(self.role_effect, v_effect),
+                    ]
+                )
                 edge_hypervectors.append(edge_rep)
 
         return self.vsa.bundle(edge_hypervectors)
@@ -91,7 +95,9 @@ class VectorizedCausalModel:
 
         # 2. Forward propagate downstream causal impacts
         # Topological / BFS traversal from target_variable to descendants
-        simulated_values: Dict[str, float] = {k: node.baseline_value for k, node in self.nodes.items()}
+        simulated_values: Dict[str, float] = {
+            k: node.baseline_value for k, node in self.nodes.items()
+        }
         simulated_values[target_variable] = clamped_value
 
         visited: Set[str] = {target_variable}
@@ -112,7 +118,11 @@ class VectorizedCausalModel:
                     queue.append(child)
 
         # 3. Assess causal effect on consequence target
-        target_eval = consequence_target or (self.nodes[target_variable].children[0] if self.nodes[target_variable].children else target_variable)
+        target_eval = consequence_target or (
+            self.nodes[target_variable].children[0]
+            if self.nodes[target_variable].children
+            else target_variable
+        )
         baseline_out = self.nodes[target_eval].baseline_value if target_eval in self.nodes else 0.5
         intervened_out = simulated_values.get(target_eval, baseline_out)
         average_causal_effect = intervened_out - baseline_out
@@ -122,10 +132,14 @@ class VectorizedCausalModel:
         severed_edges = []
         for p in severed_parents:
             v_p = self.node_vectors[p]
-            severed_edges.append(self.vsa.bundle([
-                self.vsa.bind(self.role_cause, v_p),
-                self.vsa.bind(self.role_effect, v_target),
-            ]))
+            severed_edges.append(
+                self.vsa.bundle(
+                    [
+                        self.vsa.bind(self.role_cause, v_p),
+                        self.vsa.bind(self.role_effect, v_target),
+                    ]
+                )
+            )
 
         return {
             "intervention": f"do({target_variable} = {clamped_value:.2f})",

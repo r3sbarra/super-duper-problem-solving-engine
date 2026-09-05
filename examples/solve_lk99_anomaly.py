@@ -35,7 +35,9 @@ def main():
     triz_matches = engine.triz.suggest_principles(problem.specification, top_k=3)
     print("\nSuggested TRIZ Principles:")
     for match in triz_matches:
-        print(f"  - Principle #{match['principle_id']} ({match['name']}): {match['similarity_score']:.3f}")
+        print(
+            f"  - Principle #{match['principle_id']} ({match['name']}): {match['similarity_score']:.3f}"
+        )
 
     # 3. Deduce discovery path with Strong Inference falsification
     path = engine.deduce_discovery_path(

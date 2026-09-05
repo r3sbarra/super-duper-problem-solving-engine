@@ -14,8 +14,27 @@ from typing import List, Union
 import numpy as np
 
 STOPWORDS = {
-    "for", "using", "the", "a", "an", "in", "on", "and", "or", "to", "of",
-    "with", "by", "is", "are", "as", "at", "it", "from", "that", "this",
+    "for",
+    "using",
+    "the",
+    "a",
+    "an",
+    "in",
+    "on",
+    "and",
+    "or",
+    "to",
+    "of",
+    "with",
+    "by",
+    "is",
+    "are",
+    "as",
+    "at",
+    "it",
+    "from",
+    "that",
+    "this",
 }
 
 
@@ -24,7 +43,7 @@ def _stem(w: str) -> str:
     w = w.lower()
     for suff in ("ing", "tions", "tion", "ies", "es", "ed", "al", "s"):
         if w.endswith(suff) and len(w) > len(suff) + 2:
-            return w[:-len(suff)]
+            return w[: -len(suff)]
     return w
 
 
@@ -38,14 +57,41 @@ class PolarityAwareEmbeddingService:
     EMBEDDING_DIM = 384
 
     NEGATION_TERMS = {
-        "not", "no", "never", "inhibit", "decreas", "suppress", "block",
-        "fail", "falsifi", "refut", "disprov", "cannot", "neither",
-        "nor", "without", "absent", "deactivat", "toxic", "dead_end", "repel"
+        "not",
+        "no",
+        "never",
+        "inhibit",
+        "decreas",
+        "suppress",
+        "block",
+        "fail",
+        "falsifi",
+        "refut",
+        "disprov",
+        "cannot",
+        "neither",
+        "nor",
+        "without",
+        "absent",
+        "deactivat",
+        "toxic",
+        "dead_end",
+        "repel",
     }
 
     AFFIRMATIVE_TERMS = {
-        "activat", "promot", "increas", "succeed", "success", "confirm",
-        "prove", "proven", "verifi", "present", "enabl", "catalyz"
+        "activat",
+        "promot",
+        "increas",
+        "succeed",
+        "success",
+        "confirm",
+        "prove",
+        "proven",
+        "verifi",
+        "present",
+        "enabl",
+        "catalyz",
     }
 
     def __init__(self, dim: int = EMBEDDING_DIM):
@@ -106,7 +152,9 @@ class PolarityAwareEmbeddingService:
             vec = vec / norm
         return vec
 
-    def cosine_similarity(self, a: Union[np.ndarray, List[float]], b: Union[np.ndarray, List[float]]) -> float:
+    def cosine_similarity(
+        self, a: Union[np.ndarray, List[float]], b: Union[np.ndarray, List[float]]
+    ) -> float:
         va = np.asarray(a, dtype=np.float32)
         vb = np.asarray(b, dtype=np.float32)
         na = np.linalg.norm(va)

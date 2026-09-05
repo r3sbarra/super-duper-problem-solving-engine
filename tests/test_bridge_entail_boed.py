@@ -29,8 +29,20 @@ def test_bridge_next_experiment_ranks():
     bridge = LabAssSuperSolverBridge()
     priors = {"H1": 0.5, "H2": 0.5}
     designs = [
-        {"design_id": "exp_squid", "name": "SQUID", "description": "direct", "parameters": {}, "cost": 2.0},
-        {"design_id": "exp_dc", "name": "DC probe", "description": "confounded", "parameters": {}, "cost": 1.0},
+        {
+            "design_id": "exp_squid",
+            "name": "SQUID",
+            "description": "direct",
+            "parameters": {},
+            "cost": 2.0,
+        },
+        {
+            "design_id": "exp_dc",
+            "name": "DC probe",
+            "description": "confounded",
+            "parameters": {},
+            "cost": 1.0,
+        },
     ]
     likelihood = {
         "exp_squid": {

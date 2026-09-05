@@ -72,7 +72,10 @@ def test_verify_random_arxiv_pratim_mitra_subconvexity():
     assert any("1/168" in b or "<<" in b for b in bounds)
 
     # Verify techniques were dynamically extracted
-    assert any("delta-symbol" in s.lower() or "deligne" in s.lower() or "subconvexity" in s.lower() for s in result.sound_lemmas)
+    assert any(
+        "delta-symbol" in s.lower() or "deligne" in s.lower() or "subconvexity" in s.lower()
+        for s in result.sound_lemmas
+    )
     assert result.confidence >= 0.85
     assert result.verdict == VerificationStatus.VERIFIED_SOUND
 

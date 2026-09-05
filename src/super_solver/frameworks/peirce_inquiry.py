@@ -35,31 +35,47 @@ class PeirceanInquiryEngine:
         4. Non-Linear Emergent Interaction (Feedback loops, structural phase transitions)
         """
         # Extract prominent key concepts from anomaly text
-        words = [w.lower() for w in re.findall(r"\b[a-zA-Z]{4,}\b", anomaly_observation) if w.lower() not in {
-            "this", "that", "with", "from", "were", "been", "have", "reported", "shows", "paper", "study", "data"
-        }]
+        words = [
+            w.lower()
+            for w in re.findall(r"\b[a-zA-Z]{4,}\b", anomaly_observation)
+            if w.lower()
+            not in {
+                "this",
+                "that",
+                "with",
+                "from",
+                "were",
+                "been",
+                "have",
+                "reported",
+                "shows",
+                "paper",
+                "study",
+                "data",
+            }
+        ]
         key_concept = " ".join(words[:4]) if words else "observed anomaly"
 
         frames = [
             {
                 "type": "Systematic / Observational Selection Artifact",
                 "template": f"The {key_concept} is an observational artifact caused by unresolved contaminants, selection bias, or undetected secondary companions in the sample.",
-                "archetype": "artifact_hypothesis"
+                "archetype": "artifact_hypothesis",
             },
             {
                 "type": "Fundamental Law Modification",
                 "template": f"The {key_concept} represents a genuine breakdown of standard theory, requiring fundamental modification of governing physical laws or new field interactions.",
-                "archetype": "fundamental_modification_hypothesis"
+                "archetype": "fundamental_modification_hypothesis",
             },
             {
                 "type": "Environmental & Boundary Coupling",
                 "template": f"The {key_concept} arises from unmodeled external environmental boundary conditions, galactic external field effects, or substrate interactions.",
-                "archetype": "environmental_coupling_hypothesis"
+                "archetype": "environmental_coupling_hypothesis",
             },
             {
                 "type": "Structural Phase / Emergent Non-Linear Dynamics",
                 "template": f"The {key_concept} is driven by a localized first-order structural phase transition, resonance, or non-linear collective behavior in the constituent medium.",
-                "archetype": "emergent_phase_hypothesis"
+                "archetype": "emergent_phase_hypothesis",
             },
         ]
 
@@ -87,7 +103,7 @@ class PeirceanInquiryEngine:
                 metadata={
                     "archetype": frame["archetype"],
                     "explanatory_fit": float(fit),
-                }
+                },
             )
             hypotheses.append(h)
 
@@ -118,8 +134,8 @@ class PeirceanInquiryEngine:
             explanatory_fit = embedding_service.cosine_similarity(v_cand, focus)
 
             h = Hypothesis(
-                id=f"hyp_abduct_{i+1}",
-                title=f"Abductive Explanation {i+1}",
+                id=f"hyp_abduct_{i + 1}",
+                title=f"Abductive Explanation {i + 1}",
                 description=text,
                 prior_confidence=float(max(0.1, min(0.9, explanatory_fit))),
                 current_confidence=float(max(0.1, min(0.9, explanatory_fit))),
@@ -132,9 +148,15 @@ class PeirceanInquiryEngine:
         hypotheses.sort(key=lambda h: h.current_confidence, reverse=True)
         return hypotheses
 
-    def deduce_predictions(self, hypothesis: Hypothesis, candidate_predictions: List[str]) -> List[str]:
+    def deduce_predictions(
+        self, hypothesis: Hypothesis, candidate_predictions: List[str]
+    ) -> List[str]:
         """Deduction: Derives observational predictions that must hold if hypothesis is true."""
-        v_hyp = np.asarray(hypothesis.vector) if hypothesis.vector else embedding_service.encode(hypothesis.description)
+        v_hyp = (
+            np.asarray(hypothesis.vector)
+            if hypothesis.vector
+            else embedding_service.encode(hypothesis.description)
+        )
 
         scored = []
         for pred in candidate_predictions:

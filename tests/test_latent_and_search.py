@@ -23,7 +23,9 @@ def test_coconut_continuous_latent_rollout_and_bfs():
     operators = [("RadicalPair", op_a), ("ThermalNoise", op_b)]
     goal = embedding_service.encode("Avian magnetoreception biological sensor")
 
-    trajectories = ctrl.rollout_latent_bfs(s0, candidate_operators=operators, depth=2, beam_width=2, goal_vector=goal)
+    trajectories = ctrl.rollout_latent_bfs(
+        s0, candidate_operators=operators, depth=2, beam_width=2, goal_vector=goal
+    )
     assert len(trajectories) == 2
     assert len(trajectories[0]) == 2
 
@@ -57,7 +59,9 @@ def test_negative_manifold_repulsion():
     repulsor.register_dead_end(dead_end_desc)
 
     # Candidate step directly reiterating this failed direction
-    toxic_candidate = embedding_service.encode("Run classical harmonic oscillator approximation without electronic polarization")
+    toxic_candidate = embedding_service.encode(
+        "Run classical harmonic oscillator approximation without electronic polarization"
+    )
     is_near, sim_dead, desc = repulsor.check_proximity(toxic_candidate)
     assert is_near is True
     assert sim_dead > 0.60

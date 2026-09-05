@@ -45,8 +45,14 @@ def test_autonomous_deduction_on_unproven_arxiv_paper():
 
     # 3. Verify that the fundamental law modification hypothesis was falsified
     # and the observational artifact / unresolved companion hypothesis was confirmed!
-    assert any("fundamental" in f.lower() or "breakdown" in f.lower() for f in discovery_path.falsified_paths)
-    assert "artifact" in discovery_path.final_breakthrough.lower() or "contaminant" in discovery_path.final_breakthrough.lower()
+    assert any(
+        "fundamental" in f.lower() or "breakdown" in f.lower()
+        for f in discovery_path.falsified_paths
+    )
+    assert (
+        "artifact" in discovery_path.final_breakthrough.lower()
+        or "contaminant" in discovery_path.final_breakthrough.lower()
+    )
     assert discovery_path.confidence > 0.70
 
     # 4. Verify visual Mermaid flowchart generation

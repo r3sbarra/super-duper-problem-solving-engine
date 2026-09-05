@@ -96,7 +96,7 @@ class EpisodicVectorStore:
                 INSERT OR REPLACE INTO episodes (id, category, title, content, vector_blob, metadata_json)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (item_id, category, title, content, vector_bytes, meta_str)
+                (item_id, category, title, content, vector_bytes, meta_str),
             )
 
     def search_similar(
@@ -120,14 +120,16 @@ class EpisodicVectorStore:
             vec = np.frombuffer(blob, dtype=np.float32)
             sim = embedding_service.cosine_similarity(query_vector, vec)
             if sim >= min_similarity:
-                results.append({
-                    "id": r_id,
-                    "category": r_cat,
-                    "title": r_title,
-                    "content": r_content,
-                    "similarity": float(sim),
-                    "metadata": json.loads(meta_str) if meta_str else {},
-                })
+                results.append(
+                    {
+                        "id": r_id,
+                        "category": r_cat,
+                        "title": r_title,
+                        "content": r_content,
+                        "similarity": float(sim),
+                        "metadata": json.loads(meta_str) if meta_str else {},
+                    }
+                )
 
         results.sort(key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
@@ -137,7 +139,9 @@ class EpisodicVectorStore:
         cur.execute("SELECT COUNT(*) FROM episodes")
         return int(cur.fetchone()[0])
 
-    def insert_dead_end(self, description: str, vector: np.ndarray, item_id: Optional[str] = None) -> str:
+    def insert_dead_end(
+        self, description: str, vector: np.ndarray, item_id: Optional[str] = None
+    ) -> str:
         """Inserts or updates a dead-end record in the persistent store."""
         item_id = item_id or str(uuid.uuid4())
         vector_bytes = np.asarray(vector, dtype=np.float32).tobytes()
@@ -147,14 +151,16 @@ class EpisodicVectorStore:
                 INSERT OR REPLACE INTO dead_ends (id, description, vector_blob)
                 VALUES (?, ?, ?)
                 """,
-                (item_id, description, vector_bytes)
+                (item_id, description, vector_bytes),
             )
         return item_id
 
     def load_dead_ends(self) -> List[Tuple[str, np.ndarray]]:
         """Loads all registered dead ends as (description, vector) pairs."""
         cur = self._conn.cursor()
-        rows = cur.execute("SELECT description, vector_blob FROM dead_ends ORDER BY created_at ASC").fetchall()
+        rows = cur.execute(
+            "SELECT description, vector_blob FROM dead_ends ORDER BY created_at ASC"
+        ).fetchall()
         result = []
         for desc, blob in rows:
             vec = np.frombuffer(blob, dtype=np.float32)
@@ -170,7 +176,7 @@ class EpisodicVectorStore:
                 vector_bytes = np.asarray(vec, dtype=np.float32).tobytes()
                 self._conn.execute(
                     "INSERT INTO dead_ends (id, description, vector_blob) VALUES (?, ?, ?)",
-                    (item_id, desc, vector_bytes)
+                    (item_id, desc, vector_bytes),
                 )
 
     def save_parameters(self, params: Dict[str, Any]):
@@ -183,7 +189,7 @@ class EpisodicVectorStore:
                         INSERT OR REPLACE INTO engine_parameters (param_key, param_value, updated_at)
                         VALUES (?, ?, CURRENT_TIMESTAMP)
                         """,
-                        (key, float(val))
+                        (key, float(val)),
                     )
 
     def load_parameters(self) -> Dict[str, float]:
@@ -197,16 +203,16 @@ class EpisodicVectorStore:
         record_json = json.dumps(record)
         with self._conn:
             self._conn.execute(
-                "INSERT INTO self_improvement_history (record_json) VALUES (?)",
-                (record_json,)
+                "INSERT INTO self_improvement_history (record_json) VALUES (?)", (record_json,)
             )
 
     def load_improvement_history(self) -> List[Dict[str, Any]]:
         """Loads the self-improvement audit trail."""
         cur = self._conn.cursor()
-        rows = cur.execute("SELECT record_json FROM self_improvement_history ORDER BY id ASC").fetchall()
+        rows = cur.execute(
+            "SELECT record_json FROM self_improvement_history ORDER BY id ASC"
+        ).fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def close(self):
         self._conn.close()
-

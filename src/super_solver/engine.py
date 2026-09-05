@@ -77,7 +77,6 @@ class SuperDuperProblemSolvingEngine:
         self.mcts = LatentMCTSEngine(prm=self.prm)
         self.self_improver = SelfImprovementController(engine=self)
 
-
         # New audit-driven extensions
         self.tournament = DialecticalTournamentEngine(
             repulsor=self.repulsor,
@@ -88,7 +87,6 @@ class SuperDuperProblemSolvingEngine:
         self.smt = smt_solver
         self.sandbox = code_sandbox
         self.manuscript = manuscript_generator
-
 
     def formulate_problem(
         self,
@@ -147,15 +145,17 @@ class SuperDuperProblemSolvingEngine:
             )
 
         step_1_vec = embedding_service.encode(" ".join([h.description for h in hypotheses[:2]]))
-        reasoning_steps.append(ReasoningStep(
-            step_index=len(reasoning_steps) + 1,
-            operator_type=OperatorType.PEIRCE_ABDUCTIVE_LEAP,
-            operator_name="Peircean Abduction",
-            description=f"Generated and ranked {len(hypotheses)} competing hypotheses from anomaly.",
-            latent_vector=step_1_vec.tolist(),
-            confidence=float(hypotheses[0].current_confidence),
-            symbolic_summary=f"Top candidate: {hypotheses[0].description}",
-        ))
+        reasoning_steps.append(
+            ReasoningStep(
+                step_index=len(reasoning_steps) + 1,
+                operator_type=OperatorType.PEIRCE_ABDUCTIVE_LEAP,
+                operator_name="Peircean Abduction",
+                description=f"Generated and ranked {len(hypotheses)} competing hypotheses from anomaly.",
+                latent_vector=step_1_vec.tolist(),
+                confidence=float(hypotheses[0].current_confidence),
+                symbolic_summary=f"Top candidate: {hypotheses[0].description}",
+            )
+        )
 
         # 2. KEPNER-TREGOE BOUNDARY FILTERING (if boundary provided)
         if problem.boundary:
@@ -169,36 +169,46 @@ class SuperDuperProblemSolvingEngine:
                         if h.id not in falsified_list:
                             falsified_list.append(h.id)
 
-            reasoning_steps.append(ReasoningStep(
-                step_index=len(reasoning_steps) + 1,
-                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                operator_name="Kepner-Tregoe Boundary Filtering",
-                description="Filtered candidate hypotheses through 4D IS/IS NOT boundary hyperplane.",
-                latent_vector=v_boundary_is.tolist(),
-                confidence=0.85,
-                symbolic_summary="Pruned hypotheses that leak into IS NOT failure envelope.",
-            ))
+            reasoning_steps.append(
+                ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                    operator_name="Kepner-Tregoe Boundary Filtering",
+                    description="Filtered candidate hypotheses through 4D IS/IS NOT boundary hyperplane.",
+                    latent_vector=v_boundary_is.tolist(),
+                    confidence=0.85,
+                    symbolic_summary="Pruned hypotheses that leak into IS NOT failure envelope.",
+                )
+            )
 
         # 3. LATENT THOUGHT ROLLOUT & NEGATIVE REPULSION (Coconut + DoT + Repulsor)
         current_latent = np.asarray(problem.state_vector)
-        v_goal = np.asarray(problem.goal_vector) if problem.goal_vector else embedding_service.encode(problem.title)
+        v_goal = (
+            np.asarray(problem.goal_vector)
+            if problem.goal_vector
+            else embedding_service.encode(problem.title)
+        )
 
         is_near, sim_dead, dead_desc = self.repulsor.check_proximity(current_latent)
         if is_near:
             current_latent = self.repulsor.deflect_trajectory(current_latent, goal_vector=v_goal)
-            reasoning_steps.append(ReasoningStep(
-                step_index=len(reasoning_steps) + 1,
-                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                operator_name="Negative Manifold Deflection",
-                description=f"Deflected search away from dead end '{dead_desc}' (similarity was {sim_dead:.2f}).",
-                latent_vector=current_latent.tolist(),
-                dead_end_margin=float(1.0 - sim_dead),
-                confidence=0.90,
-                symbolic_summary="Avoided repetition of prior failed direction.",
-            ))
+            reasoning_steps.append(
+                ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                    operator_name="Negative Manifold Deflection",
+                    description=f"Deflected search away from dead end '{dead_desc}' (similarity was {sim_dead:.2f}).",
+                    latent_vector=current_latent.tolist(),
+                    dead_end_margin=float(1.0 - sim_dead),
+                    confidence=0.90,
+                    symbolic_summary="Avoided repetition of prior failed direction.",
+                )
+            )
 
         triz_ops = self.triz.suggest_principles(problem.specification, top_k=2)
-        op_vec = embedding_service.encode(triz_ops[0]["name"] if triz_ops else "General Transformation")
+        op_vec = embedding_service.encode(
+            triz_ops[0]["name"] if triz_ops else "General Transformation"
+        )
         current_latent = self.coconut.step_continuous_thought(current_latent, op_vec)
 
         params = self.self_improver.params
@@ -216,16 +226,17 @@ class SuperDuperProblemSolvingEngine:
         )
         current_latent = refined_traj[0] if refined_traj else current_latent
 
-
-        reasoning_steps.append(ReasoningStep(
-            step_index=len(reasoning_steps) + 1,
-            operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-            operator_name="Coconut Latent Rollout & Thought Diffusion",
-            description=f"Evolved continuous thought vector using TRIZ operator '{triz_ops[0]['name'] if triz_ops else 'Transformation'}' with DoT denoising.",
-            latent_vector=current_latent.tolist(),
-            confidence=0.88,
-            symbolic_summary="Refined continuous trajectory toward goal manifold.",
-        ))
+        reasoning_steps.append(
+            ReasoningStep(
+                step_index=len(reasoning_steps) + 1,
+                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                operator_name="Coconut Latent Rollout & Thought Diffusion",
+                description=f"Evolved continuous thought vector using TRIZ operator '{triz_ops[0]['name'] if triz_ops else 'Transformation'}' with DoT denoising.",
+                latent_vector=current_latent.tolist(),
+                confidence=0.88,
+                symbolic_summary="Refined continuous trajectory toward goal manifold.",
+            )
+        )
 
         # 3b. LATENT MCTS SEARCH (PRM-scored tree search over candidate operators)
         # The MCTS engine was instantiated but never invoked in the discovery
@@ -236,7 +247,13 @@ class SuperDuperProblemSolvingEngine:
         for op in triz_ops[:4]:
             candidate_ops.append((op["name"], embedding_service.encode(op["name"]), 0.5))
         for h in hypotheses[:3]:
-            candidate_ops.append((f"hypothesis:{h.id}", embedding_service.encode(h.description), h.current_confidence))
+            candidate_ops.append(
+                (
+                    f"hypothesis:{h.id}",
+                    embedding_service.encode(h.description),
+                    h.current_confidence,
+                )
+            )
         if candidate_ops:
             mcts_path = self.mcts.search_best_path(
                 initial_state=current_latent,
@@ -247,31 +264,37 @@ class SuperDuperProblemSolvingEngine:
             if mcts_path:
                 best_op_name, best_state, best_score = mcts_path[0]
                 current_latent = np.asarray(best_state)
-                reasoning_steps.append(ReasoningStep(
-                    step_index=len(reasoning_steps) + 1,
-                    operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                    operator_name="Latent MCTS Search (PRM)",
-                    description=f"MCTS selected operator '{best_op_name}' (PRM score {best_score:.2f}) across {len(candidate_ops)} candidates.",
-                    latent_vector=current_latent.tolist(),
-                    confidence=0.85,
-                    symbolic_summary="Tree-searched the latent space instead of a single linear step.",
-                ))
+                reasoning_steps.append(
+                    ReasoningStep(
+                        step_index=len(reasoning_steps) + 1,
+                        operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                        operator_name="Latent MCTS Search (PRM)",
+                        description=f"MCTS selected operator '{best_op_name}' (PRM score {best_score:.2f}) across {len(candidate_ops)} candidates.",
+                        latent_vector=current_latent.tolist(),
+                        confidence=0.85,
+                        symbolic_summary="Tree-searched the latent space instead of a single linear step.",
+                    )
+                )
 
         # 3c. SYMBOLIC PROJECTION — decode the latent state back to a testable claim
         # The SymbolicProjector was instantiated but never used; without it the
         # latent vectors accumulate but never project back to auditable claims.
         candidate_claims = [h.description for h in hypotheses]
-        nearest_claim, claim_sim = self.projector.project_to_nearest_claim(current_latent, candidate_claims)
+        nearest_claim, claim_sim = self.projector.project_to_nearest_claim(
+            current_latent, candidate_claims
+        )
         if nearest_claim:
-            reasoning_steps.append(ReasoningStep(
-                step_index=len(reasoning_steps) + 1,
-                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                operator_name="Symbolic Projection",
-                description=f"Latent state decoded to nearest claim (similarity {claim_sim:.2f}): {nearest_claim[:120]}",
-                latent_vector=current_latent.tolist(),
-                confidence=float(claim_sim),
-                symbolic_summary=nearest_claim[:200],
-            ))
+            reasoning_steps.append(
+                ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                    operator_name="Symbolic Projection",
+                    description=f"Latent state decoded to nearest claim (similarity {claim_sim:.2f}): {nearest_claim[:120]}",
+                    latent_vector=current_latent.tolist(),
+                    confidence=float(claim_sim),
+                    symbolic_summary=nearest_claim[:200],
+                )
+            )
 
         # 3d. DPLL LOGICAL CONSISTENCY CHECK on the surviving hypotheses
         # The DPLL solver was instantiated but never called in the pipeline;
@@ -282,21 +305,25 @@ class SuperDuperProblemSolvingEngine:
                 target_claim=problem.specification,
             )
             proved = bool(result.get("proved"))
-            reasoning_steps.append(ReasoningStep(
-                step_index=len(reasoning_steps) + 1,
-                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                operator_name="DPLL Logical Consistency",
-                description=f"Hypotheses logically {'entail' if proved else 'do not entail'} the problem statement.",
-                latent_vector=current_latent.tolist(),
-                confidence=0.9 if proved else 0.3,
-                symbolic_summary=result.get("summary", "DPLL refutation check on candidate premises.")[:200],
-            ))
+            reasoning_steps.append(
+                ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                    operator_name="DPLL Logical Consistency",
+                    description=f"Hypotheses logically {'entail' if proved else 'do not entail'} the problem statement.",
+                    latent_vector=current_latent.tolist(),
+                    confidence=0.9 if proved else 0.3,
+                    symbolic_summary=result.get(
+                        "summary", "DPLL refutation check on candidate premises."
+                    )[:200],
+                )
+            )
         except Exception:
             # DPLL is best-effort; a failure here should not abort discovery.
             pass
 
         # 4. PLATT STRONG INFERENCE: CRUCIAL EXPERIMENTS (Autonomous if not provided)
-        is_autonomous_exp = (crucial_experiments is None)
+        is_autonomous_exp = crucial_experiments is None
         experiments_to_run = crucial_experiments
         if not experiments_to_run:
             experiments_to_run = self.platt.autonomous_design_crucial_experiments(hypotheses)
@@ -316,15 +343,17 @@ class SuperDuperProblemSolvingEngine:
                 # self-confirmation and makes the pipeline non-falsifiable.
                 # Instead, skip pruning (we cannot judge) and record that the
                 # outcome is unverified.
-                reasoning_steps.append(ReasoningStep(
-                    step_index=len(reasoning_steps) + 1,
-                    operator_type=OperatorType.PLATT_CRUCIAL_EXPERIMENT,
-                    operator_name=f"Crucial Experiment: {exp.name}",
-                    description=f"No ground truth provided — outcome UNVERIFIED, no hypotheses pruned. Info gain: {info_gain:.2f} bits.",
-                    latent_vector=current_latent.tolist(),
-                    confidence=0.5,
-                    symbolic_summary="Experiment skipped (no ground truth); result unverified.",
-                ))
+                reasoning_steps.append(
+                    ReasoningStep(
+                        step_index=len(reasoning_steps) + 1,
+                        operator_type=OperatorType.PLATT_CRUCIAL_EXPERIMENT,
+                        operator_name=f"Crucial Experiment: {exp.name}",
+                        description=f"No ground truth provided — outcome UNVERIFIED, no hypotheses pruned. Info gain: {info_gain:.2f} bits.",
+                        latent_vector=current_latent.tolist(),
+                        confidence=0.5,
+                        symbolic_summary="Experiment skipped (no ground truth); result unverified.",
+                    )
+                )
                 executed_experiments.append(exp)
                 continue
 
@@ -340,15 +369,17 @@ class SuperDuperProblemSolvingEngine:
                 if fid not in falsified_list:
                     falsified_list.append(fid)
 
-            reasoning_steps.append(ReasoningStep(
-                step_index=len(reasoning_steps) + 1,
-                operator_type=OperatorType.PLATT_CRUCIAL_EXPERIMENT,
-                operator_name=f"Crucial Experiment: {exp.name}",
-                description=f"Observed '{actual_outcome}', falsified {len(newly_falsified)} hypotheses. Info gain: {info_gain:.2f} bits.",
-                latent_vector=current_latent.tolist(),
-                confidence=0.95,
-                symbolic_summary=f"Surviving candidates: {[h.id for h in hypotheses if h.status != HypothesisStatus.FALSIFIED]}",
-            ))
+            reasoning_steps.append(
+                ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.PLATT_CRUCIAL_EXPERIMENT,
+                    operator_name=f"Crucial Experiment: {exp.name}",
+                    description=f"Observed '{actual_outcome}', falsified {len(newly_falsified)} hypotheses. Info gain: {info_gain:.2f} bits.",
+                    latent_vector=current_latent.tolist(),
+                    confidence=0.95,
+                    symbolic_summary=f"Surviving candidates: {[h.id for h in hypotheses if h.status != HypothesisStatus.FALSIFIED]}",
+                )
+            )
 
         # 5. BREAKTHROUGH IDENTIFICATION
         survivors = [h for h in hypotheses if h.status != HypothesisStatus.FALSIFIED]
@@ -364,7 +395,9 @@ class SuperDuperProblemSolvingEngine:
                 # Mark UNVERIFIED (a distinct, honest state) instead of
                 # self-confirming the top survivor.
                 winner.status = HypothesisStatus.PROPOSED
-                breakthrough = f"UNVERIFIED: {winner.description} (no ground truth — needs falsification)"
+                breakthrough = (
+                    f"UNVERIFIED: {winner.description} (no ground truth — needs falsification)"
+                )
                 final_conf = winner.current_confidence * 0.5
         else:
             breakthrough = "INCONCLUSIVE: All candidates falsified. Need new abductive generation."
@@ -394,7 +427,9 @@ class SuperDuperProblemSolvingEngine:
         prob = self.formulate_problem(
             title=paper_title,
             specification=abstract_text,
-            goal_criteria=["Resolve whether observed anomaly is fundamental physics or observational artifact"],
+            goal_criteria=[
+                "Resolve whether observed anomaly is fundamental physics or observational artifact"
+            ],
         )
 
         path = self.deduce_discovery_path(
@@ -403,7 +438,7 @@ class SuperDuperProblemSolvingEngine:
             crucial_experiments=None,
             ground_truth_outcomes={
                 "exp_auto_purity_control": observed_experimental_result,
-            }
+            },
         )
         return path
 
@@ -420,7 +455,7 @@ class SuperDuperProblemSolvingEngine:
 
         if path.falsified_paths:
             for j, f_id in enumerate(path.falsified_paths):
-                f_node = f"FAL_{j+1}"
+                f_node = f"FAL_{j + 1}"
                 lines.append(f'  {prev_node} -. Falsified .-> {f_node}["{f_id}"]')
                 lines.append(f"  style {f_node} fill:#ffcccc,stroke:#cc0000")
 
@@ -488,7 +523,19 @@ class SuperDuperProblemSolvingEngine:
         candidates: List[SuggestedPath] = []
 
         # 1. Check for Mathematical Barriers / Conjectures (Lakatos Engine)
-        if any(term in combined for term in ["p versus np", "p != np", "collatz", "3x+1", "sieve", "twin prime", "conjecture", "proof"]):
+        if any(
+            term in combined
+            for term in [
+                "p versus np",
+                "p != np",
+                "collatz",
+                "3x+1",
+                "sieve",
+                "twin prime",
+                "conjecture",
+                "proof",
+            ]
+        ):
             dummy_res = self.math_verifier.verify_mathematical_paper(
                 paper_id="query",
                 paper_title=problem_specification[:60],
@@ -503,44 +550,52 @@ class SuperDuperProblemSolvingEngine:
         if triz_ops:
             op1 = triz_ops[0]
             op2 = triz_ops[1] if len(triz_ops) > 1 else triz_ops[0]
-            candidates.append(SuggestedPath(
-                path_id="path_triz_transform",
-                strategy_type="TRIZ_INVENTIVE_CONTRADICTION",
-                title=f"Inventive Principle #{op1['principle_id']} ({op1['name']}) Resolution",
-                description=f"Resolve core trade-off using '{op1['name']}': {op1['description']}. Complement with Principle #{op2['principle_id']} ('{op2['name']}').",
-                rationale="Overcomes trade-off without compromise by transforming the operational parameter space.",
-                recommended_next_action=f"Apply {op1['name']} to decouple conflicting parameters in {problem_specification[:40]}...",
-            ))
+            candidates.append(
+                SuggestedPath(
+                    path_id="path_triz_transform",
+                    strategy_type="TRIZ_INVENTIVE_CONTRADICTION",
+                    title=f"Inventive Principle #{op1['principle_id']} ({op1['name']}) Resolution",
+                    description=f"Resolve core trade-off using '{op1['name']}': {op1['description']}. Complement with Principle #{op2['principle_id']} ('{op2['name']}').",
+                    rationale="Overcomes trade-off without compromise by transforming the operational parameter space.",
+                    recommended_next_action=f"Apply {op1['name']} to decouple conflicting parameters in {problem_specification[:40]}...",
+                )
+            )
 
         # 3. Polya Auxiliary Problem Decomposition & Working Backwards
-        candidates.append(SuggestedPath(
-            path_id="path_polya_working_backwards",
-            strategy_type="POLYA_DECOMPOSITION_WORKING_BACKWARDS",
-            title="Teleological Goal Regression & Auxiliary Subproblem Isolation",
-            description="Assume target solution is achieved in a simplified ideal limit. Work backward to identify necessary precursor lemmas/milestones, isolating the simplest non-trivial subproblem.",
-            rationale="Reduces cognitive search dimensionality by projecting from known goal invariants back to current state.",
-            recommended_next_action="Identify minimal non-trivial toy instance or boundary subproblem where the phenomenon isolates cleanly.",
-        ))
+        candidates.append(
+            SuggestedPath(
+                path_id="path_polya_working_backwards",
+                strategy_type="POLYA_DECOMPOSITION_WORKING_BACKWARDS",
+                title="Teleological Goal Regression & Auxiliary Subproblem Isolation",
+                description="Assume target solution is achieved in a simplified ideal limit. Work backward to identify necessary precursor lemmas/milestones, isolating the simplest non-trivial subproblem.",
+                rationale="Reduces cognitive search dimensionality by projecting from known goal invariants back to current state.",
+                recommended_next_action="Identify minimal non-trivial toy instance or boundary subproblem where the phenomenon isolates cleanly.",
+            )
+        )
 
         # 4. Gentner Analogical Structural Transfer Path
-        candidates.append(SuggestedPath(
-            path_id="path_gentner_analogy",
-            strategy_type="ANALOGICAL_STRUCTURAL_TRANSFER",
-            title="Cross-Domain Relational Structure Mapping",
-            description="Map causal relational network from a previously solved isomorphic domain (e.g. condensed matter phase transitions, evolutionary MSA co-evolution, or network flow).",
-            rationale="Reuses verified high-order causal relations rather than exploring from zero priors.",
-            recommended_next_action="Query episodic breakthrough memory for cross-domain systems sharing the same causal graph topology.",
-        ))
+        candidates.append(
+            SuggestedPath(
+                path_id="path_gentner_analogy",
+                strategy_type="ANALOGICAL_STRUCTURAL_TRANSFER",
+                title="Cross-Domain Relational Structure Mapping",
+                description="Map causal relational network from a previously solved isomorphic domain (e.g. condensed matter phase transitions, evolutionary MSA co-evolution, or network flow).",
+                rationale="Reuses verified high-order causal relations rather than exploring from zero priors.",
+                recommended_next_action="Query episodic breakthrough memory for cross-domain systems sharing the same causal graph topology.",
+            )
+        )
 
         # 5. Platt Strong Inference Crucial Assay Path
-        candidates.append(SuggestedPath(
-            path_id="path_platt_crucial_assay",
-            strategy_type="PLATT_STRONG_INFERENCE_ASSAY",
-            title="High-Resolution Differential Crucial Experiment",
-            description="Design an empirical or computational assay with zero-overlap predictions between the top 2 competing mechanisms to force an informational bifurcation.",
-            rationale="Guarantees maximum Shannon information gain and immediate pruning of at least 50% of the active hypothesis manifold.",
-            recommended_next_action="Synthesize mutually exclusory predictions across extreme boundary parameters.",
-        ))
+        candidates.append(
+            SuggestedPath(
+                path_id="path_platt_crucial_assay",
+                strategy_type="PLATT_STRONG_INFERENCE_ASSAY",
+                title="High-Resolution Differential Crucial Experiment",
+                description="Design an empirical or computational assay with zero-overlap predictions between the top 2 competing mechanisms to force an informational bifurcation.",
+                rationale="Guarantees maximum Shannon information gain and immediate pruning of at least 50% of the active hypothesis manifold.",
+                recommended_next_action="Synthesize mutually exclusory predictions across extreme boundary parameters.",
+            )
+        )
 
         # Compute dynamic vector metrics: Feasibility, Novelty, Dead-End Margin
         v_prob = embedding_service.encode(problem_specification)
@@ -548,7 +603,9 @@ class SuperDuperProblemSolvingEngine:
 
         for p in candidates:
             v_path = embedding_service.encode(p.title + " " + p.description)
-            feasibility = float(max(0.1, min(0.99, embedding_service.cosine_similarity(v_prob, v_path) * 1.5)))
+            feasibility = float(
+                max(0.1, min(0.99, embedding_service.cosine_similarity(v_prob, v_path) * 1.5))
+            )
             novelty = float(self.curiosity.compute_frontier_novelty(v_path, [v_prob]))
             safety_margin = 1.0
             if known_dead:
@@ -561,8 +618,10 @@ class SuperDuperProblemSolvingEngine:
 
         # Composite ranking
         candidates.sort(
-            key=lambda p: (0.4 * p.feasibility_score + 0.3 * p.novelty_score + 0.3 * p.dead_end_safety_margin),
-            reverse=True
+            key=lambda p: (
+                0.4 * p.feasibility_score + 0.3 * p.novelty_score + 0.3 * p.dead_end_safety_margin
+            ),
+            reverse=True,
         )
 
         return candidates[:top_k]
@@ -600,7 +659,9 @@ class SuperDuperProblemSolvingEngine:
 
     def consolidate_memory(self, similarity_threshold: float = 0.75) -> int:
         """Applies synaptic consolidation to prune redundant dead-end repulsors into compact schemas."""
-        return self.self_improver.consolidate_synaptic_memory(similarity_threshold=similarity_threshold)
+        return self.self_improver.consolidate_synaptic_memory(
+            similarity_threshold=similarity_threshold
+        )
 
     def run_tournament(
         self,
@@ -643,7 +704,3 @@ class SuperDuperProblemSolvingEngine:
     ) -> SMTResult:
         """Verifies satisfiability of equality with uninterpreted functions."""
         return self.smt.check_euf_satisfiability(equalities, disequalities)
-
-
-
-

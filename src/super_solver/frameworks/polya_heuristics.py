@@ -30,11 +30,13 @@ class PolyaHeuristicsEngine:
         for sub in known_subproblems:
             v_sub = embedding_service.encode(sub)
             relevance = embedding_service.cosine_similarity(v_prob, v_sub)
-            sub_scores.append({
-                "subproblem": sub,
-                "relevance_score": float(relevance),
-                "is_essential": bool(relevance > 0.45),
-            })
+            sub_scores.append(
+                {
+                    "subproblem": sub,
+                    "relevance_score": float(relevance),
+                    "is_essential": bool(relevance > 0.45),
+                }
+            )
 
         sub_scores.sort(key=lambda x: x["relevance_score"], reverse=True)
         return sub_scores

@@ -2,7 +2,6 @@
 VSA Cleanup Memory, Bayesian updating, and Mermaid Diagram export.
 """
 
-
 from super_solver.core.types import CrucialExperiment, Hypothesis, KTBoundary
 from super_solver.core.vsa import VSAEngine
 from super_solver.engine import SuperDuperProblemSolvingEngine
@@ -65,10 +64,12 @@ def test_platt_noisy_bayesian_update():
         name="Noisy test",
         description="Assay with 10% measurement error",
         target_hypotheses=["h1", "h2"],
-        exclusory_predictions={"h1": "pos", "h2": "neg"}
+        exclusory_predictions={"h1": "pos", "h2": "neg"},
     )
 
-    updated, falsified = engine.execute_and_prune(exp, [h1, h2], observed_outcome="pos", error_rate=0.1)
+    updated, falsified = engine.execute_and_prune(
+        exp, [h1, h2], observed_outcome="pos", error_rate=0.1
+    )
     assert updated[0].current_confidence > 0.85
     assert updated[1].current_confidence < 0.15
 
@@ -88,10 +89,13 @@ def test_mermaid_and_explanation_export():
                 name="Pure crystal test",
                 description="Test without Cu2S",
                 target_hypotheses=["hyp_abduct_1", "hyp_abduct_2"],
-                exclusory_predictions={"hyp_abduct_1": "superconducts", "hyp_abduct_2": "insulator"}
+                exclusory_predictions={
+                    "hyp_abduct_1": "superconducts",
+                    "hyp_abduct_2": "insulator",
+                },
             )
         ],
-        ground_truth_outcomes={"e1": "insulator"}
+        ground_truth_outcomes={"e1": "insulator"},
     )
 
     mermaid_code = engine.export_mermaid_diagram(path)

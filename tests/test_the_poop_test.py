@@ -55,7 +55,7 @@ def test_the_poop_test():
             "hyp_abduct_1": "smears_solid_waste_into_floor",
             "hyp_abduct_2": "isolates_solid_bulk_waste",
             "hyp_abduct_3": "biohazard_escalation",
-        }
+        },
     )
 
     known_dead_ends = [

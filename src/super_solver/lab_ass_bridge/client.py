@@ -17,7 +17,11 @@ class LabAssClient:
     """Connects to lab-ass REST API."""
 
     def __init__(self, base_url: Optional[str] = None):
-        resolved_url = base_url or os.getenv("LAB_ASS_URL") or os.getenv("LAB_ASS_BASE_URL", "http://127.0.0.1:3002")
+        resolved_url = (
+            base_url
+            or os.getenv("LAB_ASS_URL")
+            or os.getenv("LAB_ASS_BASE_URL", "http://127.0.0.1:3002")
+        )
         self.base_url = resolved_url.rstrip("/")
 
     async def get_session_state(self, session_id: str) -> Dict[str, Any]:

@@ -28,7 +28,11 @@ class ScientificManuscriptGenerator:
     ) -> str:
         """Generates a complete, publication-grade Markdown scientific paper."""
         title = problem.title if problem else "Autonomous Scientific Investigation"
-        spec = problem.specification if problem else "Empirical investigation of anomalous physical/mathematical phenomena."
+        spec = (
+            problem.specification
+            if problem
+            else "Empirical investigation of anomalous physical/mathematical phenomena."
+        )
 
         lines = [
             f"# {title}",
@@ -45,24 +49,28 @@ class ScientificManuscriptGenerator:
 
         if problem and problem.boundary:
             b = problem.boundary
-            lines.extend([
-                "### 1.1 Kepner-Tregoe 4D Demarcation Boundary",
-                "| Dimension | IS (Observed Phenomenon) | IS NOT (Excluded Territory) |",
-                "| :--- | :--- | :--- |",
-                f"| **Identity** | {b.identity_is} | {b.identity_is_not} |",
-                f"| **Location** | {b.location_is} | {b.location_is_not} |",
-                f"| **Timing** | {b.timing_is} | {b.timing_is_not} |",
-                f"| **Extent** | {b.extent_is} | {b.extent_is_not} |",
-                "",
-            ])
+            lines.extend(
+                [
+                    "### 1.1 Kepner-Tregoe 4D Demarcation Boundary",
+                    "| Dimension | IS (Observed Phenomenon) | IS NOT (Excluded Territory) |",
+                    "| :--- | :--- | :--- |",
+                    f"| **Identity** | {b.identity_is} | {b.identity_is_not} |",
+                    f"| **Location** | {b.location_is} | {b.location_is_not} |",
+                    f"| **Timing** | {b.timing_is} | {b.timing_is_not} |",
+                    f"| **Extent** | {b.extent_is} | {b.extent_is_not} |",
+                    "",
+                ]
+            )
 
-        lines.extend([
-            "## 2. Hypothesis Space & Evolutionary Trajectory",
-            f"A total of **{path.total_steps}** reasoning iterations were executed across the hypothesis manifold.",
-            "",
-            "| Step | Action Type | Details | Confidence Shift |",
-            "| :---: | :--- | :--- | :---: |",
-        ])
+        lines.extend(
+            [
+                "## 2. Hypothesis Space & Evolutionary Trajectory",
+                f"A total of **{path.total_steps}** reasoning iterations were executed across the hypothesis manifold.",
+                "",
+                "| Step | Action Type | Details | Confidence Shift |",
+                "| :---: | :--- | :--- | :---: |",
+            ]
+        )
 
         for step in path.steps:
             conf_str = f"{step.confidence:.2f}" if step.confidence is not None else "N/A"
@@ -70,20 +78,22 @@ class ScientificManuscriptGenerator:
             op_type = getattr(step, "operator_type", getattr(step, "action_type", "STEP"))
             lines.append(f"| {step_idx} | `{op_type}` | {step.description} | {conf_str} |")
 
-        lines.extend([
-            "",
-            "## 3. Crucial Exclusory Experiments & Verification",
-            "To resolve competing explanations without confirmation bias, crucial exclusory experiments were deployed to maximize Shannon information gain.",
-            f"\n> **Final Demarcation Breakthrough:**  \n> `{path.final_breakthrough}`\n",
-            "## 4. Discussion & Epistemological Implications",
-            "By embedding hypotheses in continuous latent vector spaces with active negative manifold repulsion, this investigation avoided known dead ends and premature confirmation loops. Structural causal analysis confirmed the isolation of confounding factors, establishing high reproducibility.",
-            "",
-            "## References",
-            "- Platt, J. R. (1964). *Strong Inference*. Science, 146(3642), 347-353.",
-            "- Altshuller, G. (1984). *Creativity as an Exact Science*. Gordon & Breach.",
-            "- Lakatos, I. (1976). *Proofs and Refutations*. Cambridge University Press.",
-            "- Pearl, J. (2009). *Causality: Models, Reasoning, and Inference*. Cambridge University Press.",
-        ])
+        lines.extend(
+            [
+                "",
+                "## 3. Crucial Exclusory Experiments & Verification",
+                "To resolve competing explanations without confirmation bias, crucial exclusory experiments were deployed to maximize Shannon information gain.",
+                f"\n> **Final Demarcation Breakthrough:**  \n> `{path.final_breakthrough}`\n",
+                "## 4. Discussion & Epistemological Implications",
+                "By embedding hypotheses in continuous latent vector spaces with active negative manifold repulsion, this investigation avoided known dead ends and premature confirmation loops. Structural causal analysis confirmed the isolation of confounding factors, establishing high reproducibility.",
+                "",
+                "## References",
+                "- Platt, J. R. (1964). *Strong Inference*. Science, 146(3642), 347-353.",
+                "- Altshuller, G. (1984). *Creativity as an Exact Science*. Gordon & Breach.",
+                "- Lakatos, I. (1976). *Proofs and Refutations*. Cambridge University Press.",
+                "- Pearl, J. (2009). *Causality: Models, Reasoning, and Inference*. Cambridge University Press.",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -94,8 +104,20 @@ class ScientificManuscriptGenerator:
         author: str = "Autonomous Discovery Engine",
     ) -> str:
         """Generates a fully compilable LaTeX scientific paper."""
-        title = (problem.title if problem else getattr(path, "problem_title", "Autonomous Scientific Investigation")).replace("_", "\\_").replace("&", "\\&")
-        spec = (problem.specification if problem else "Empirical investigation.").replace("_", "\\_").replace("&", "\\&")
+        title = (
+            (
+                problem.title
+                if problem
+                else getattr(path, "problem_title", "Autonomous Scientific Investigation")
+            )
+            .replace("_", "\\_")
+            .replace("&", "\\&")
+        )
+        spec = (
+            (problem.specification if problem else "Empirical investigation.")
+            .replace("_", "\\_")
+            .replace("&", "\\&")
+        )
         breakthrough = path.final_breakthrough.replace("_", "\\_").replace("&", "\\&")
 
         doc = f"""\\documentclass[11pt,a4paper]{{article}}
@@ -128,7 +150,6 @@ The engine executed {path.total_steps} structured reasoning steps across the hyp
             step_idx = getattr(step, "step_index", getattr(step, "step_number", 1))
             op_type = getattr(step, "operator_type", getattr(step, "action_type", "STEP"))
             doc += f"  \\item \\textbf{{Step {step_idx} [{op_type}]}}: {desc}\n"
-
 
         doc += f"""\\end{{itemize}}
 

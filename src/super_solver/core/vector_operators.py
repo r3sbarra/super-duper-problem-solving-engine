@@ -44,7 +44,11 @@ class VectorContradictionTensor:
         sim_worse = float(np.dot(p, self.v_worse))
 
         # Reward improvement alignment; penalize worsening alignment; reward gradient synthesis
-        alignment = (1.2 * sim_imp) - (0.8 * sim_worse) + (0.5 * float(np.dot(p, self.directional_gradient)))
+        alignment = (
+            (1.2 * sim_imp)
+            - (0.8 * sim_worse)
+            + (0.5 * float(np.dot(p, self.directional_gradient)))
+        )
         return float(alignment)
 
 
@@ -55,7 +59,9 @@ class NullSpaceAssumptionProjector:
         self.dim = dim
         if assumption_vectors:
             # Stack into matrix A (dim x k)
-            normed = [v / (np.linalg.norm(v) + 1e-12) for v in assumption_vectors if np.linalg.norm(v) > 0]
+            normed = [
+                v / (np.linalg.norm(v) + 1e-12) for v in assumption_vectors if np.linalg.norm(v) > 0
+            ]
             if normed:
                 A = np.column_stack(normed)  # (dim, k)
                 # Compute projection matrix P_A = A (A^T A)^-1 A^T
@@ -95,9 +101,15 @@ class NullSpaceAssumptionProjector:
 class ContinuousBoundaryDiagnosticKernel:
     """Continuous max-margin boundary kernel for multi-dimensional root cause and failure analysis."""
 
-    def __init__(self, is_manifestations: List[np.ndarray], is_not_manifestations: List[np.ndarray]):
-        self.is_vectors = [v / (np.linalg.norm(v) + 1e-12) for v in is_manifestations if np.linalg.norm(v) > 0]
-        self.is_not_vectors = [v / (np.linalg.norm(v) + 1e-12) for v in is_not_manifestations if np.linalg.norm(v) > 0]
+    def __init__(
+        self, is_manifestations: List[np.ndarray], is_not_manifestations: List[np.ndarray]
+    ):
+        self.is_vectors = [
+            v / (np.linalg.norm(v) + 1e-12) for v in is_manifestations if np.linalg.norm(v) > 0
+        ]
+        self.is_not_vectors = [
+            v / (np.linalg.norm(v) + 1e-12) for v in is_not_manifestations if np.linalg.norm(v) > 0
+        ]
 
         # Compute positive and negative centroids
         if self.is_vectors:
@@ -117,7 +129,9 @@ class ContinuousBoundaryDiagnosticKernel:
         norm_w = np.linalg.norm(w)
         self.w = w / (norm_w + 1e-12) if norm_w > 0 else w
 
-    def evaluate_candidate(self, candidate_vector: np.ndarray, leakage_weight: float = 1.4) -> Dict[str, float]:
+    def evaluate_candidate(
+        self, candidate_vector: np.ndarray, leakage_weight: float = 1.4
+    ) -> Dict[str, float]:
         """Evaluates a candidate vector against the positive and negative manifestation fields."""
         v = candidate_vector / (np.linalg.norm(candidate_vector) + 1e-12)
         sim_is = float(np.dot(v, self.c_is))

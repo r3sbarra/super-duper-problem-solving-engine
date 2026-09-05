@@ -59,7 +59,7 @@ def test_deduce_lk99_superconductivity_demarcation_path():
                 "hyp_abduct_1": "superconducts",
                 "hyp_abduct_2": "transparent_insulator",
                 "hyp_abduct_3": "ferromagnetic",
-            }
+            },
         ),
         CrucialExperiment(
             id="exp_cu2s_isolated",
@@ -69,7 +69,7 @@ def test_deduce_lk99_superconductivity_demarcation_path():
             exclusory_predictions={
                 "hyp_abduct_1": "different_temperature",
                 "hyp_abduct_2": "matches_104C_drop",
-            }
+            },
         ),
     ]
 
@@ -118,7 +118,9 @@ def test_deduce_alphafold2_discovery_path():
     problem = engine.formulate_problem(
         title=problem_title,
         specification=problem_spec,
-        goal_criteria=["Achieve experimental GDT-TS > 90 accuracy comparable to X-ray crystallography"],
+        goal_criteria=[
+            "Achieve experimental GDT-TS > 90 accuracy comparable to X-ray crystallography"
+        ],
     )
 
     candidate_hypotheses = [
@@ -137,13 +139,11 @@ def test_deduce_alphafold2_discovery_path():
                 "hyp_abduct_1": "gdt_under_50",
                 "hyp_abduct_2": "gdt_over_90",
                 "hyp_abduct_3": "coordinate_drift_unphysical",
-            }
+            },
         )
     ]
 
-    ground_truth = {
-        "exp_casp14_blind_test": "gdt_over_90"
-    }
+    ground_truth = {"exp_casp14_blind_test": "gdt_over_90"}
 
     known_dead_ends = [
         "Pure 2D convolutional networks on contact maps without 3D geometric equivariance",

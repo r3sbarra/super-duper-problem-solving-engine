@@ -42,7 +42,9 @@ class NegativeManifoldRepulsor:
                 self.dead_ends.append(vec)
                 self.dead_end_descriptions.append(desc)
 
-    def register_dead_end(self, description: str, vector: Optional[np.ndarray] = None) -> np.ndarray:
+    def register_dead_end(
+        self, description: str, vector: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         """Registers a verified dead end or falsified trajectory."""
         if vector is None:
             vector = embedding_service.encode(description)
@@ -162,8 +164,9 @@ class NegativeManifoldRepulsor:
         self.dead_end_descriptions = consolidated_descs
 
         if self.store is not None:
-            self.store.sync_dead_ends(list(zip(self.dead_end_descriptions, self.dead_ends, strict=False)))
+            self.store.sync_dead_ends(
+                list(zip(self.dead_end_descriptions, self.dead_ends, strict=False))
+            )
 
         pruned_count = initial_count - len(self.dead_ends)
         return pruned_count
-

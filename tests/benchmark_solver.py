@@ -27,7 +27,9 @@ from super_solver.engine import SuperDuperProblemSolvingEngine
 def benchmark_search_space_pruning():
     print("\n--- [1/6] BENCHMARK: Platt Strong Inference vs Brute Force Scaling ---")
     sizes = [4, 8, 16, 32, 64, 128, 256, 512, 1024]
-    print(f"  {'N Hypotheses':<15} | {'Brute-Force':<15} | {'Platt Inference':<18} | {'Pruning Reduction':<20}")
+    print(
+        f"  {'N Hypotheses':<15} | {'Brute-Force':<15} | {'Platt Inference':<18} | {'Pruning Reduction':<20}"
+    )
     print("  " + "-" * 75)
 
     for n in sizes:
@@ -93,8 +95,16 @@ def benchmark_negative_manifold_hazard_evasion(engine: SuperDuperProblemSolvingE
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     avg_per_step = elapsed_ms / len(all_queries)
 
-    precision = (true_positives / (true_positives + false_positives)) * 100.0 if (true_positives + false_positives) > 0 else 0.0
-    recall = (true_positives / (true_positives + false_negatives)) * 100.0 if (true_positives + false_negatives) > 0 else 0.0
+    precision = (
+        (true_positives / (true_positives + false_positives)) * 100.0
+        if (true_positives + false_positives) > 0
+        else 0.0
+    )
+    recall = (
+        (true_positives / (true_positives + false_negatives)) * 100.0
+        if (true_positives + false_negatives) > 0
+        else 0.0
+    )
     accuracy = ((true_positives + true_negatives) / len(all_queries)) * 100.0
 
     print(f"  Total steps evaluated: {len(all_queries)} queries (100 hazardous, 100 safe)")
@@ -137,7 +147,7 @@ def benchmark_vsa_algebraic_fidelity():
 
         # Cleanup Memory projection
         recovered_symbol, sim_cleaned = vsa.cleanup.clean(unbound)
-        is_exact = (recovered_symbol == a_name)
+        is_exact = recovered_symbol == a_name
         recoveries_with_cleanup.append(1.0 if is_exact else 0.0)
 
     avg_raw_sim = np.mean(recoveries_clean)
@@ -160,7 +170,14 @@ def benchmark_end_to_end_deduction_latencies(engine: SuperDuperProblemSolvingEng
         observed_experimental_result="anomaly_vanishes_in_pure_sample",
     )
     t_gaia = (time.perf_counter() - t0) * 1000.0
-    results.append(("Gaia DR3 MOND Falsification (arXiv:2311.03436)", t_gaia, p1.final_breakthrough[:55], f"{p1.confidence*100:.0f}%"))
+    results.append(
+        (
+            "Gaia DR3 MOND Falsification (arXiv:2311.03436)",
+            t_gaia,
+            p1.final_breakthrough[:55],
+            f"{p1.confidence * 100:.0f}%",
+        )
+    )
 
     # 2. P != NP Mathematical Refutation (arXiv:1708.03486)
     t0 = time.perf_counter()
@@ -171,7 +188,14 @@ def benchmark_end_to_end_deduction_latencies(engine: SuperDuperProblemSolvingEng
         target_conjecture="P versus NP",
     )
     t_pnp = (time.perf_counter() - t0) * 1000.0
-    results.append(("P != NP Proof Refutation (arXiv:1708.03486)", t_pnp, f"Verdict: {p2.verdict.value} (Tardos Barrier)", f"{p2.confidence*100:.0f}%"))
+    results.append(
+        (
+            "P != NP Proof Refutation (arXiv:1708.03486)",
+            t_pnp,
+            f"Verdict: {p2.verdict.value} (Tardos Barrier)",
+            f"{p2.confidence * 100:.0f}%",
+        )
+    )
 
     # 3. Terence Tao Collatz Verification (arXiv:1909.03562)
     t0 = time.perf_counter()
@@ -182,7 +206,14 @@ def benchmark_end_to_end_deduction_latencies(engine: SuperDuperProblemSolvingEng
         target_conjecture="Collatz 3x+1 Conjecture",
     )
     t_collatz = (time.perf_counter() - t0) * 1000.0
-    results.append(("Collatz Tao Verification (arXiv:1909.03562)", t_collatz, f"Verdict: {p3.verdict.value} (Negative Drift)", f"{p3.confidence*100:.0f}%"))
+    results.append(
+        (
+            "Collatz Tao Verification (arXiv:1909.03562)",
+            t_collatz,
+            f"Verdict: {p3.verdict.value} (Negative Drift)",
+            f"{p3.confidence * 100:.0f}%",
+        )
+    )
 
     # 4. CASP14 AlphaFold2 Discovery Deduction
     t0 = time.perf_counter()
@@ -203,13 +234,23 @@ def benchmark_end_to_end_deduction_latencies(engine: SuperDuperProblemSolvingEng
                 name="Blind Assessment",
                 description="Test de novo targets",
                 target_hypotheses=["hyp_abduct_1", "hyp_abduct_2"],
-                exclusory_predictions={"hyp_abduct_1": "gdt_under_50", "hyp_abduct_2": "gdt_over_90"}
+                exclusory_predictions={
+                    "hyp_abduct_1": "gdt_under_50",
+                    "hyp_abduct_2": "gdt_over_90",
+                },
             )
         ],
-        ground_truth_outcomes={"exp_casp14": "gdt_over_90"}
+        ground_truth_outcomes={"exp_casp14": "gdt_over_90"},
     )
     t_af2 = (time.perf_counter() - t0) * 1000.0
-    results.append(("CASP14 AlphaFold2 Path Deduction", t_af2, p4.final_breakthrough[:55], f"{p4.confidence*100:.0f}%"))
+    results.append(
+        (
+            "CASP14 AlphaFold2 Path Deduction",
+            t_af2,
+            p4.final_breakthrough[:55],
+            f"{p4.confidence * 100:.0f}%",
+        )
+    )
 
     print(f"  {'Task':<45} | {'Latency':<12} | {'Confidence':<10} | {'Outcome'}")
     print("  " + "-" * 105)

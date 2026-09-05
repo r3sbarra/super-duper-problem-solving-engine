@@ -16,6 +16,7 @@ from super_solver.core.vsa import VSAEngine
 
 class RelationalStatement(BaseModel):
     """A higher-order relational proposition: Relation(EntityA, EntityB)."""
+
     relation: str
     entity_a: str
     entity_b: str
@@ -47,7 +48,11 @@ class StructureMappingEngine:
         Evaluates relational correspondence and induces entity bindings.
         """
         if not base_domain_relations or not target_domain_relations:
-            return {"structural_alignment_score": 0.0, "matches": [], "isomorphic_transfer_viable": False}
+            return {
+                "structural_alignment_score": 0.0,
+                "matches": [],
+                "isomorphic_transfer_viable": False,
+            }
 
         matches = []
         entity_mappings: Dict[str, str] = {}
@@ -68,11 +73,13 @@ class StructureMappingEngine:
 
             if best_target and best_sim > 0.40:
                 relational_scores.append(best_sim)
-                matches.append({
-                    "base_relation": f"{b_stmt.relation}({b_stmt.entity_a}, {b_stmt.entity_b})",
-                    "target_relation": f"{best_target.relation}({best_target.entity_a}, {best_target.entity_b})",
-                    "relational_match_score": float(best_sim),
-                })
+                matches.append(
+                    {
+                        "base_relation": f"{b_stmt.relation}({b_stmt.entity_a}, {b_stmt.entity_b})",
+                        "target_relation": f"{best_target.relation}({best_target.entity_a}, {best_target.entity_b})",
+                        "relational_match_score": float(best_sim),
+                    }
+                )
                 # Induce entity correspondences
                 entity_mappings[b_stmt.entity_a] = best_target.entity_a
                 entity_mappings[b_stmt.entity_b] = best_target.entity_b

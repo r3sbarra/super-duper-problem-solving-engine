@@ -30,6 +30,7 @@ from super_solver.frameworks.triz_engine import TRIZ_PRINCIPLES
 
 class VectorizedSolution(BaseModel):
     """Output from the Universal Vectorized Solver."""
+
     problem_type: str
     domain: str
     method: str
@@ -42,6 +43,7 @@ class VectorizedSolution(BaseModel):
 
 class CascadingDiscoveryResult(BaseModel):
     """End-to-end multi-disciplinary discovery trajectory output."""
+
     problem_title: str
     domain: str
     stage1_boundary_diagnostic: Dict[str, Any]
@@ -89,15 +91,26 @@ class UniversalVectorizedSolver:
             p_vec = self._principle_vectors[pid]
             align_score = tensor.evaluate_principle_alignment(p_vec)
             p_data = TRIZ_PRINCIPLES[pid]
-            rankings.append({
-                "principle_id": pid,
-                "name": p_data["name"],
-                "description": p_data["desc"],
-                "alignment_score": float(align_score),
-            })
+            rankings.append(
+                {
+                    "principle_id": pid,
+                    "name": p_data["name"],
+                    "description": p_data["desc"],
+                    "alignment_score": float(align_score),
+                }
+            )
 
         rankings.sort(key=lambda x: x["alignment_score"], reverse=True)
-        top = rankings[0] if rankings else {"principle_id": 15, "name": "Dynamics", "description": "Dynamize system", "alignment_score": 0.5}
+        top = (
+            rankings[0]
+            if rankings
+            else {
+                "principle_id": 15,
+                "name": "Dynamics",
+                "description": "Dynamize system",
+                "alignment_score": 0.5,
+            }
+        )
 
         recommendation = (
             f"Apply Vectorized Operator #{top['principle_id']} ({top['name']}) to {domain}: "
@@ -148,21 +161,37 @@ class UniversalVectorizedSolver:
 
             # Balanced requirement fulfillment in assumption-free subspace
             harmonic_min = min(sim_a, sim_b)
-            score = (1.3 * harmonic_min) + (0.4 * (sim_a + sim_b)) + (0.3 * sim_obj) - (0.8 * assumption_leakage)
+            score = (
+                (1.3 * harmonic_min)
+                + (0.4 * (sim_a + sim_b))
+                + (0.3 * sim_obj)
+                - (0.8 * assumption_leakage)
+            )
 
-            rankings.append({
-                "injection": inj,
-                "net_score": float(score),
-                "sim_a": float(sim_a),
-                "sim_b": float(sim_b),
-                "assumption_leakage": float(assumption_leakage),
-            })
+            rankings.append(
+                {
+                    "injection": inj,
+                    "net_score": float(score),
+                    "sim_a": float(sim_a),
+                    "sim_b": float(sim_b),
+                    "assumption_leakage": float(assumption_leakage),
+                }
+            )
 
             if score > best_score:
                 best_score = score
 
         rankings.sort(key=lambda x: x["net_score"], reverse=True)
-        top = rankings[0] if rankings else {"injection": candidate_injections[0] if candidate_injections else "Default synthesis", "net_score": 0.5}
+        top = (
+            rankings[0]
+            if rankings
+            else {
+                "injection": candidate_injections[0]
+                if candidate_injections
+                else "Default synthesis",
+                "net_score": 0.5,
+            }
+        )
 
         rec = (
             f"Null-Space Injection in {domain}: Break deadlock between '{requirement_a}' and '{requirement_b}' "
@@ -192,7 +221,9 @@ class UniversalVectorizedSolver:
         v_is = [embedding_service.encode(m) for m in is_manifestations]
         v_not = [embedding_service.encode(m) for m in is_not_manifestations]
 
-        kernel = ContinuousBoundaryDiagnosticKernel(is_manifestations=v_is, is_not_manifestations=v_not)
+        kernel = ContinuousBoundaryDiagnosticKernel(
+            is_manifestations=v_is, is_not_manifestations=v_not
+        )
 
         rankings = []
         best_score = -float("inf")
@@ -200,14 +231,16 @@ class UniversalVectorizedSolver:
         for cause in candidate_causes:
             v_cause = embedding_service.encode(cause)
             diag = kernel.evaluate_candidate(v_cause)
-            rankings.append({
-                "candidate": cause,
-                "net_score": diag["net_score"],
-                "sim_to_is": diag["sim_to_is"],
-                "sim_to_is_not": diag["sim_to_is_not"],
-                "margin": diag["margin"],
-                "is_valid": diag["is_valid"],
-            })
+            rankings.append(
+                {
+                    "candidate": cause,
+                    "net_score": diag["net_score"],
+                    "sim_to_is": diag["sim_to_is"],
+                    "sim_to_is_not": diag["sim_to_is_not"],
+                    "margin": diag["margin"],
+                    "is_valid": diag["is_valid"],
+                }
+            )
 
             if diag["net_score"] > best_score:
                 best_score = diag["net_score"]
@@ -257,10 +290,12 @@ class UniversalVectorizedSolver:
             v_role_o = self.vsa.random_hypervector("role:object")
 
             # Circular convolution binding: Relation (x) (Role_S (x) Entity_S + Role_O (x) Entity_O)
-            pred_struct = self.vsa.bundle([
-                self.vsa.bind(v_role_s, v_sub),
-                self.vsa.bind(v_role_o, v_obj),
-            ])
+            pred_struct = self.vsa.bundle(
+                [
+                    self.vsa.bind(v_role_s, v_sub),
+                    self.vsa.bind(v_role_o, v_obj),
+                ]
+            )
             bound_stmt = self.vsa.bind(v_rel, pred_struct)
             bound_source_hypervectors.append(bound_stmt)
 
@@ -270,10 +305,12 @@ class UniversalVectorizedSolver:
             v_t_sub = self.vsa.random_hypervector(f"ent:{t_sub_name}")
             v_t_obj = self.vsa.random_hypervector(f"ent:{t_obj_name}")
 
-            t_pred_struct = self.vsa.bundle([
-                self.vsa.bind(v_role_s, v_t_sub),
-                self.vsa.bind(v_role_o, v_t_obj),
-            ])
+            t_pred_struct = self.vsa.bundle(
+                [
+                    self.vsa.bind(v_role_s, v_t_sub),
+                    self.vsa.bind(v_role_o, v_t_obj),
+                ]
+            )
             t_bound_stmt = self.vsa.bind(v_rel, t_pred_struct)
             bound_target_hypervectors.append(t_bound_stmt)
 
@@ -304,7 +341,10 @@ class UniversalVectorizedSolver:
             primary_operator="Isomorphic Relational Projection",
             score=isomorphism_score,
             confidence=transfer_confidence,
-            details={"transferred_statements": transferred_statements, "entity_map": target_entity_substitutions},
+            details={
+                "transferred_statements": transferred_statements,
+                "entity_map": target_entity_substitutions,
+            },
             actionable_recommendation=rec,
         )
 
@@ -318,35 +358,53 @@ class UniversalVectorizedSolver:
         """Unified entry point that dispatches to the optimal vectorized problem-solving operator."""
         dom = domain or "Cross-Disciplinary Science & Technology"
 
-        if problem_type == "contradiction" or ("tradeoff" in problem_description.lower() or "versus" in problem_description.lower()):
+        if problem_type == "contradiction" or (
+            "tradeoff" in problem_description.lower() or "versus" in problem_description.lower()
+        ):
             imp = kwargs.get("improving_objective", problem_description)
             worse = kwargs.get("worsening_penalty", "systemic deterioration or resource exhaustion")
             return self.resolve_vector_contradiction(imp, worse, domain_context=dom)
 
-        elif problem_type == "evaporation" or ("conflict" in problem_description.lower() or "dilemma" in problem_description.lower()):
+        elif problem_type == "evaporation" or (
+            "conflict" in problem_description.lower() or "dilemma" in problem_description.lower()
+        ):
             req_a = kwargs.get("requirement_a", "Preserve stability and control")
             req_b = kwargs.get("requirement_b", "Maximize dynamic agility and speed")
-            assumptions = kwargs.get("assumptions", ["Control requires rigid centralized synchronization"])
-            injections = kwargs.get("candidate_injections", [
-                "Decentralized local autonomous feedback with consensus verification",
-                "Periodic batch synchronization",
-                "Static partitioning",
-            ])
-            return self.evaporate_assumptions_nullspace(problem_description, req_a, req_b, assumptions, injections, domain_context=dom)
+            assumptions = kwargs.get(
+                "assumptions", ["Control requires rigid centralized synchronization"]
+            )
+            injections = kwargs.get(
+                "candidate_injections",
+                [
+                    "Decentralized local autonomous feedback with consensus verification",
+                    "Periodic batch synchronization",
+                    "Static partitioning",
+                ],
+            )
+            return self.evaporate_assumptions_nullspace(
+                problem_description, req_a, req_b, assumptions, injections, domain_context=dom
+            )
 
-        elif problem_type == "diagnostic" or ("root cause" in problem_description.lower() or "failure" in problem_description.lower()):
+        elif problem_type == "diagnostic" or (
+            "root cause" in problem_description.lower() or "failure" in problem_description.lower()
+        ):
             is_m = kwargs.get("is_manifestations", [problem_description])
             is_not_m = kwargs.get("is_not_manifestations", ["nominal operating conditions"])
-            causes = kwargs.get("candidate_causes", [
-                f"Defect in {problem_description[:40]}",
-                "Random thermal noise fluctuation",
-                "Sensor measurement artifact",
-            ])
+            causes = kwargs.get(
+                "candidate_causes",
+                [
+                    f"Defect in {problem_description[:40]}",
+                    "Random thermal noise fluctuation",
+                    "Sensor measurement artifact",
+                ],
+            )
             return self.diagnose_boundary_kernel(is_m, is_not_m, causes, domain_context=dom)
 
         else:
             # Default to continuous contradiction resolution
-            return self.resolve_vector_contradiction(problem_description, "unintended degradation", domain_context=dom)
+            return self.resolve_vector_contradiction(
+                problem_description, "unintended degradation", domain_context=dom
+            )
 
     def execute_cascading_discovery_pipeline(
         self,
@@ -434,11 +492,11 @@ class UniversalVectorizedSolver:
 
         # Overall confidence is composite of stages
         overall_conf = float(
-            0.20 * s1.confidence +
-            0.20 * (1.0 if s2.get("is_causally_effective") else 0.5) +
-            0.20 * s3.confidence +
-            0.20 * s4.confidence +
-            0.20 * (1.0 if s6.get("proved") else 0.5)
+            0.20 * s1.confidence
+            + 0.20 * (1.0 if s2.get("is_causally_effective") else 0.5)
+            + 0.20 * s3.confidence
+            + 0.20 * s4.confidence
+            + 0.20 * (1.0 if s6.get("proved") else 0.5)
         )
 
         return CascadingDiscoveryResult(

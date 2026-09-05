@@ -49,9 +49,10 @@ class SelfImprovementController:
     def _apply_parameters_to_engine(self):
         """Synchronizes active controller parameters to connected engine components."""
         if hasattr(self.engine, "repulsor") and self.engine.repulsor is not None:
-            self.engine.repulsor.PROXIMITY_ALERT_THRESHOLD = float(self.params["proximity_threshold"])
+            self.engine.repulsor.PROXIMITY_ALERT_THRESHOLD = float(
+                self.params["proximity_threshold"]
+            )
             self.engine.repulsor.repulsor_weight = float(self.params["repulsion_scale"])
-
 
     def harvest_discovery_experience(self, path: DiscoveryPath) -> int:
         """Automatically harvests falsified hypotheses as negative repulsors and indexes cases."""
@@ -153,7 +154,6 @@ class SelfImprovementController:
             self.engine.store.save_improvement_record(record)
         return record
 
-
     def solve_self_optimization_task(self) -> DiscoveryPath:
         """The engine formulates and solves the problem of optimizing its own architecture."""
         problem = self.engine.formulate_problem(
@@ -176,7 +176,7 @@ class SelfImprovementController:
                 timing_is_not="One-off static configuration at startup",
                 extent_is="Internal reasoning parameters",
                 extent_is_not="Global process memory",
-            )
+            ),
         )
 
         discovery_path = self.engine.deduce_discovery_path(
@@ -192,7 +192,7 @@ class SelfImprovementController:
             ],
             ground_truth_outcomes={
                 "exp_auto_purity_control": "anomaly_vanishes_in_pure_sample",
-            }
+            },
         )
 
         # Apply the confirmed self-improvement strategy
@@ -228,6 +228,7 @@ class SelfImprovementController:
         # 3. BOED Active Parameter Tuning Experiment Design
         priors = {"Optimal_CFG_1.4": 0.5, "Suboptimal_CFG_0.5": 0.5}
         from super_solver.frameworks.boed_designer import CandidateExperimentDesign
+
         exp_tune = CandidateExperimentDesign(
             design_id="exp_entropy_modulation",
             name="Entropy-Modulated Proximity Check",
@@ -241,7 +242,7 @@ class SelfImprovementController:
             outcome_likelihoods={
                 "converged_under_3_steps": {"Optimal_CFG_1.4": 0.95, "Suboptimal_CFG_0.5": 0.10},
                 "stuck_in_local_minima": {"Optimal_CFG_1.4": 0.05, "Suboptimal_CFG_0.5": 0.90},
-            }
+            },
         )
 
         # 4. Auto-tune parameters based on the multi-disciplinary self-audit
@@ -285,4 +286,3 @@ class SelfImprovementController:
             if hasattr(self.engine, "store") and self.engine.store is not None:
                 self.engine.store.save_improvement_record(rec)
         return pruned
-

@@ -85,7 +85,7 @@ class DialecticalTournamentEngine:
         is_near, max_sim, closest_desc = self.repulsor.check_proximity(hyp_vec, threshold=0.62)
         if is_near and closest_desc:
             dead_end_warnings.append(f"Near dead-end (sim={max_sim:.2f}): {closest_desc}")
-            current_robustness *= (1.0 - max_sim * 0.7)
+            current_robustness *= 1.0 - max_sim * 0.7
             r1 = TournamentRound(
                 round_number=1,
                 advocate_argument=f"Hypothesis proposes mechanism: {hypothesis}",
@@ -111,9 +111,10 @@ class DialecticalTournamentEngine:
             target_conjecture=hypothesis,
         )
 
-
-        if lakatos_res.verdict == VerificationStatus.REFUTED_FLAWED and lakatos_res.barrier_violations:
-
+        if (
+            lakatos_res.verdict == VerificationStatus.REFUTED_FLAWED
+            and lakatos_res.barrier_violations
+        ):
             for b in lakatos_res.barrier_violations:
                 barrier_violations.append(b)
             for c in lakatos_res.counterexamples:
@@ -166,7 +167,9 @@ class DialecticalTournamentEngine:
         elif dead_end_warnings and current_robustness < 0.45:
             verdict = TournamentVerdict.CONCEDED_DEAD_END
             survived = False
-            summary = f"Conceded to Red Team: Trapped in known failure manifold ({dead_end_warnings[0]})."
+            summary = (
+                f"Conceded to Red Team: Trapped in known failure manifold ({dead_end_warnings[0]})."
+            )
         elif current_robustness < 0.60:
             verdict = TournamentVerdict.WEAKENED_INCONSISTENT
             survived = False

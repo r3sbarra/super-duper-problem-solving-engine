@@ -1,6 +1,5 @@
 """Tests for VSA hypervector algebra and Gentner Structure Mapping Engine."""
 
-
 from super_solver.core.vsa import VSAEngine
 from super_solver.frameworks.gentner_sme import RelationalStatement, StructureMappingEngine
 
@@ -52,14 +51,25 @@ def test_gentner_structure_mapping_engine():
 
     # Base domain: Solar System (Sun attracts Planet, Sun is more massive than Planet)
     base = [
-        RelationalStatement(relation="attracts", entity_a="sun", entity_b="planet", domain="solar_system"),
-        RelationalStatement(relation="revolves_around", entity_a="planet", entity_b="sun", domain="solar_system"),
+        RelationalStatement(
+            relation="attracts", entity_a="sun", entity_b="planet", domain="solar_system"
+        ),
+        RelationalStatement(
+            relation="revolves_around", entity_a="planet", entity_b="sun", domain="solar_system"
+        ),
     ]
 
     # Target domain: Rutherford Atom (Nucleus attracts Electron, Electron revolves around Nucleus)
     target = [
-        RelationalStatement(relation="attracts", entity_a="nucleus", entity_b="electron", domain="atomic_physics"),
-        RelationalStatement(relation="revolves_around", entity_a="electron", entity_b="nucleus", domain="atomic_physics"),
+        RelationalStatement(
+            relation="attracts", entity_a="nucleus", entity_b="electron", domain="atomic_physics"
+        ),
+        RelationalStatement(
+            relation="revolves_around",
+            entity_a="electron",
+            entity_b="nucleus",
+            domain="atomic_physics",
+        ),
     ]
 
     res = sme.align_systems(base, target)

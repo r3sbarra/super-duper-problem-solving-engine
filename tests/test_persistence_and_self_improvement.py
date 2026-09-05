@@ -1,10 +1,5 @@
 """Tests validating persistent memory (episodes, dead ends, parameters) and functional self-improvement."""
 
-import os
-from pathlib import Path
-
-import numpy as np
-
 from super_solver.core.embeddings import embedding_service
 from super_solver.engine import SuperDuperProblemSolvingEngine
 from super_solver.memory.episodic_store import get_default_db_path
@@ -50,6 +45,7 @@ def test_memory_persists_across_engine_instances(tmp_path):
         candidate_hypotheses=["Maintain neutral pH buffer", "Acidic flash rinse"],
         known_dead_ends=["Acidic flash rinse"],
     )
+    assert path.confidence > 0
     assert engine1.store.count() >= 1
 
     # Close engine 1
@@ -73,7 +69,9 @@ def test_memory_persists_across_engine_instances(tmp_path):
 
     # 3. Episodic memory must be retained
     assert engine2.store.count() >= 1
-    similar_cases = engine2.store.search_similar(embedding_service.encode("Catalyst Stability Assay"))
+    similar_cases = engine2.store.search_similar(
+        embedding_service.encode("Catalyst Stability Assay")
+    )
     assert len(similar_cases) >= 1
     assert "Catalyst Stability Assay" in similar_cases[0]["title"]
 
@@ -100,7 +98,9 @@ def test_synaptic_consolidation_persists(tmp_path):
     # Instance 2: Check consolidated state is preserved in DB
     engine2 = SuperDuperProblemSolvingEngine(db_path=db_file)
     assert len(engine2.repulsor.dead_ends) == 2
-    assert any("Consolidated Hazard Cluster" in desc for desc in engine2.repulsor.dead_end_descriptions)
+    assert any(
+        "Consolidated Hazard Cluster" in desc for desc in engine2.repulsor.dead_end_descriptions
+    )
     assert any("vacuum leak" in desc for desc in engine2.repulsor.dead_end_descriptions)
     engine2.store.close()
 
@@ -117,7 +117,10 @@ def test_self_improvement_parameter_persistence_and_wiring(tmp_path):
 
     # Run auto-tuning and audit
     record = engine1.self_improver.auto_tune_parameters(target_goal_alignment=0.99)
-    assert "guidance_scale" in record["updates_applied"] or engine1.self_improver.params["guidance_scale"] > 1.4
+    assert (
+        "guidance_scale" in record["updates_applied"]
+        or engine1.self_improver.params["guidance_scale"] > 1.4
+    )
     tuned_guidance = engine1.self_improver.params["guidance_scale"]
     tuned_repulsion = engine1.self_improver.params["repulsion_scale"]
     tuned_threshold = engine1.self_improver.params["proximity_threshold"]
