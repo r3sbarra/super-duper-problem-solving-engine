@@ -281,6 +281,93 @@ RECENT_CASES = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Math + coding problem-solving corpus (classical algorithms / math results)
+# ---------------------------------------------------------------------------
+MATH_CODING_CASES = [
+    {
+        "title": "Gauss Arithmetic Series",
+        "problem": "How to sum a long arithmetic series of consecutive numbers quickly without adding each term",
+        "query": "Add up all the integers from 1 to 100 in your head without a calculator",
+        "solution": "Pair the first and last terms and sum them, then multiply by the count divided by two (Gauss's formula n(n+1)/2)",
+        "path": ["recognize arithmetic series", "pair first and last terms", "multiply by count over two", "sum instantly"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Euclid GCD",
+        "problem": "How to find the greatest common divisor of two large numbers without factoring them",
+        "query": "What is the biggest number that divides both 48 and 36 evenly, found quickly",
+        "solution": "Repeatedly replace the larger number by the remainder of dividing it by the smaller to find the greatest common divisor (Euclid's algorithm)",
+        "path": ["divide larger by smaller", "replace with remainder", "repeat until zero", "last nonzero is GCD"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Sieve of Eratosthenes",
+        "problem": "How to count the prime numbers up to a large limit efficiently",
+        "query": "List all the primes below 1000 without testing each number individually",
+        "solution": "Iteratively mark multiples of each prime as composite, skipping already-marked numbers (Sieve of Eratosthenes)",
+        "path": ["start at 2", "mark multiples composite", "skip marked", "collect primes"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Binary Search",
+        "problem": "How to search for a value in a large sorted list faster than checking every element",
+        "query": "Find a name in a sorted phone book without reading every entry",
+        "solution": "Repeatedly halve the search range by comparing against the middle element (binary search)",
+        "path": ["compare middle", "halve range", "repeat", "find target"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Merge Sort",
+        "problem": "How to sort a large list of items efficiently without nested comparison of every pair",
+        "query": "Order a million records by name without a slow quadratic comparison",
+        "solution": "Recursively split the list in half, sort each half, and merge the sorted halves (merge sort)",
+        "path": ["split in half", "sort each half", "merge sorted halves", "sorted list"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Dijkstra Shortest Path",
+        "problem": "How to find the shortest path between two points in a weighted graph",
+        "query": "Find the fastest driving route between two cities on a road map",
+        "solution": "Repeatedly relax edges from the nearest unvisited node, updating tentative distances (Dijkstra's algorithm)",
+        "path": ["start at source", "relax nearest edges", "update distances", "reach target"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Hash Table Lookup",
+        "problem": "How to look up a value by key in constant time without scanning the whole collection",
+        "query": "Retrieve a user's record by their ID instantly from a huge database",
+        "solution": "Map each key to a bucket index via a hash function and store the value there (hash table)",
+        "path": ["hash the key", "map to bucket", "store value", "constant-time lookup"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Dynamic Programming Fibonacci",
+        "problem": "How to compute the nth Fibonacci number without exponential recursion",
+        "query": "Calculate the 50th Fibonacci number without a slow recursive explosion",
+        "solution": "Build the Fibonacci sequence iteratively from the bottom up, storing each result (dynamic programming)",
+        "path": ["start from base", "build upward", "store each result", "reach nth"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Floyd Cycle Detection",
+        "problem": "How to detect whether a linked list contains a cycle without extra memory",
+        "query": "Tell if a chain of nodes loops back on itself using only two pointers",
+        "solution": "Advance two pointers at different speeds; if they meet, a cycle exists (Floyd's tortoise and hare)",
+        "path": ["two pointers", "different speeds", "if they meet", "cycle exists"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+    {
+        "title": "Kadane Max Subarray",
+        "problem": "How to find the maximum subarray sum in a sequence without checking every subarray",
+        "query": "Find the contiguous slice of a stock price array with the largest total gain",
+        "solution": "Scan once, keeping the best sum ending at each position and the global best (Kadane's algorithm)",
+        "path": ["scan once", "best sum ending here", "track global best", "max subarray"],
+        "operators": ["KT", "TRIZ#1", "TRIZ#35", "PLATT"],
+    },
+]
+
+
 def seed_and_test(cases, backend_name: str, db_path: str, hybrid: bool = False) -> dict:
     svc = VectorizationService(backend=get_backend(backend_name), db_path=db_path)
     for case in cases:
@@ -325,11 +412,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--embedder", default="ollama", choices=["polarity", "ollama"])
     parser.add_argument("--recent", action="store_true", help="Include recent cases")
+    parser.add_argument("--math-coding", action="store_true", help="Include math + coding cases")
     parser.add_argument("--hybrid", action="store_true", help="Use hybrid (problem+solution) retrieval")
     args = parser.parse_args()
 
-    cases = CLASSICAL_CASES + (RECENT_CASES if args.recent else [])
-    mode = "classical + recent" if args.recent else "classical only"
+    cases = CLASSICAL_CASES + (RECENT_CASES if args.recent else []) + (MATH_CODING_CASES if args.math_coding else [])
+    mode = "classical" + (" + recent" if args.recent else "") + (" + math/coding" if args.math_coding else "")
     retr = "hybrid" if args.hybrid else "pure"
     print(f"Training on {len(cases)} cases ({mode}) with {args.embedder} embedder, {retr} retrieval")
 
