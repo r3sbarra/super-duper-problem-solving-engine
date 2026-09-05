@@ -80,6 +80,47 @@ def test_analogical_transfer(tmp_path):
     assert "hybrid logical clock" in analogs[0]["solution"]["content"]
 
 
+def test_hybrid_analogize_ranks_by_solution(tmp_path):
+    """Hybrid retrieval blends problem + solution similarity and exposes both."""
+    import json
+
+    svc = VectorizationService(db_path=str(tmp_path / "vec.db"))
+    pid1 = svc.store_problem("How to make a canoe hull that floats despite being made of dense concrete", title="Concrete Canoe")
+    sid1 = svc.store_solution("Use lightweight aggregates and air-entraining agents to make concrete less dense than water", method="TRIZ", domain="engineering")
+    pid2 = svc.store_problem("How to bake a moist chocolate cake with no eggs", title="Cake")
+    sid2 = svc.store_solution("Use applesauce as an egg substitute and buttermilk for moisture", method="TRIZ", domain="baking")
+    svc.index._conn.execute("UPDATE vectors SET metadata_json=? WHERE id=?", (json.dumps({"solution_id": sid1}), pid1))
+    svc.index._conn.execute("UPDATE vectors SET metadata_json=? WHERE id=?", (json.dumps({"solution_id": sid2}), pid2))
+    svc.index._conn.commit()
+
+    qv = svc.encode_problem("Build a boat out of heavy cement that still stays on top of the water", title="Concrete Canoe")
+    hyb = svc.hybrid_analogize(qv, top_k=2)
+    assert hyb[0]["problem"]["title"] == "Concrete Canoe"
+    assert "solution_similarity" in hyb[0]["problem"]
+    assert "problem_similarity" in hyb[0]["problem"]
+
+
+def test_hybrid_analogize_ranks_correct(tmp_path):
+    """Hybrid retrieval (problem+solution vectors) ranks the correct analog first
+    and exposes solution_similarity."""
+    import json
+
+    svc = VectorizationService(db_path=str(tmp_path / "vec.db"))
+    pid1 = svc.store_problem("How to make a canoe hull that floats despite being made of dense concrete", title="Concrete Canoe")
+    sid1 = svc.store_solution("Use lightweight aggregates and air-entraining agents to make concrete less dense than water", method="TRIZ", domain="engineering")
+    pid2 = svc.store_problem("How to bake a moist chocolate cake with no eggs", title="Cake")
+    sid2 = svc.store_solution("Use applesauce as an egg substitute and buttermilk for moisture", method="TRIZ", domain="baking")
+    svc.index._conn.execute("UPDATE vectors SET metadata_json=? WHERE id=?", (json.dumps({"solution_id": sid1}), pid1))
+    svc.index._conn.execute("UPDATE vectors SET metadata_json=? WHERE id=?", (json.dumps({"solution_id": sid2}), pid2))
+    svc.index._conn.commit()
+
+    qv = svc.encode_problem("Build a boat out of heavy cement that still stays on top of the water", title="Concrete Canoe")
+    hyb = svc.hybrid_analogize(qv, top_k=2)
+    assert hyb[0]["problem"]["title"] == "Concrete Canoe"
+    assert "solution_similarity" in hyb[0]["problem"]
+    assert hyb[0]["solution"] is not None
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

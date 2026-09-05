@@ -134,6 +134,17 @@ class VectorizationService:
     ) -> List[Dict[str, Any]]:
         return self.index.analogize(problem_vector, top_k=top_k, min_similarity=min_similarity)
 
+    def hybrid_analogize(
+        self,
+        problem_vector: np.ndarray,
+        top_k: int = 3,
+        min_similarity: float = 0.0,
+        solution_weight: float = 0.4,
+    ) -> List[Dict[str, Any]]:
+        return self.index.hybrid_analogize(
+            problem_vector, top_k=top_k, min_similarity=min_similarity, solution_weight=solution_weight
+        )
+
     def close(self):
         self.index.close()
 

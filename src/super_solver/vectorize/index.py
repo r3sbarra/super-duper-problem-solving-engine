@@ -175,27 +175,73 @@ class VectorIndex:
         )
         out = []
         for p in similar_problems:
-            meta = p["metadata"]
-            linked = {
-                "problem": p,
-                "solution": None,
-                "path": None,
-            }
-            # Resolve linked solution/path ids stored in the problem's metadata
-            for link_kind, key in (("solution", "solution_id"), ("path", "path_id")):
-                link_id = meta.get(key)
-                if link_id:
-                    row = self._get_by_id(link_id)
-                    if row:
-                        linked[link_kind] = {
-                            "id": row[0],
-                            "kind": row[1],
-                            "title": row[2],
-                            "content": row[3],
-                            "metadata": json.loads(row[5]) if row[5] else {},
-                        }
+            linked = self._link(p)
             out.append(linked)
         return out
+
+    def hybrid_analogize(
+        self,
+        problem_vector: np.ndarray,
+        top_k: int = 3,
+        min_similarity: float = 0.0,
+        solution_weight: float = 0.4,
+    ) -> List[Dict[str, Any]]:
+        """Analogical transfer with hybrid scoring: problem-vector + solution-vector.
+
+        Standard dense retrieval matches the query only against stored problem
+        vectors. This variant ALSO matches the query against each candidate's
+        linked solution vector and blends the two scores, so a problem whose
+        *solution* is semantically close to the query ranks higher even if its
+        problem wording differs. ``solution_weight`` controls the blend
+        (0 = pure problem match, 1 = pure solution match).
+        """
+        # Candidate problems (broad recall)
+        candidates = self.search(
+            problem_vector, kind="problem", top_k=max(top_k * 3, 10), min_similarity=min_similarity
+        )
+        scored = []
+        for p in candidates:
+            linked = self._link(p)
+            prob_sim = p["similarity"]
+            sol_sim = 0.0
+            if linked["solution"] is not None:
+                sol_vec = self._vector_of(linked["solution"]["id"])
+                if sol_vec is not None:
+                    sol_sim = self.backend.cosine_similarity(problem_vector, sol_vec)
+            blended = (1.0 - solution_weight) * prob_sim + solution_weight * sol_sim
+            scored.append((blended, prob_sim, sol_sim, linked))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        out = []
+        for blended, prob_sim, sol_sim, linked in scored[:top_k]:
+            linked["problem"]["similarity"] = round(blended, 4)
+            linked["problem"]["problem_similarity"] = round(prob_sim, 4)
+            linked["problem"]["solution_similarity"] = round(sol_sim, 4)
+            out.append(linked)
+        return out
+
+    def _link(self, p: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve a problem row's linked solution + path into a dict."""
+        meta = p["metadata"]
+        linked = {"problem": p, "solution": None, "path": None}
+        for link_kind, key in (("solution", "solution_id"), ("path", "path_id")):
+            link_id = meta.get(key)
+            if link_id:
+                row = self._get_by_id(link_id)
+                if row:
+                    linked[link_kind] = {
+                        "id": row[0],
+                        "kind": row[1],
+                        "title": row[2],
+                        "content": row[3],
+                        "metadata": json.loads(row[5]) if row[5] else {},
+                    }
+        return linked
+
+    def _vector_of(self, item_id: str) -> Optional[np.ndarray]:
+        row = self._get_by_id(item_id)
+        if not row:
+            return None
+        return np.frombuffer(row[4], dtype=np.float32)
 
     def _get_by_id(self, item_id: str) -> Optional[tuple]:
         cur = self._conn.cursor()
