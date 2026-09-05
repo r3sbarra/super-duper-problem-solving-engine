@@ -148,8 +148,8 @@ def vectorize():
 @click.option("--no-store", is_flag=True, help="Do not persist to the vector index")
 def vectorize_problem_cmd(specification: str, title: str, goal: List[str], embedder: Optional[str], no_store: bool):
     """Encode a problem specification into a vector."""
-    from super_solver.vectorize import VectorizationService
     from super_solver.core.embedder import get_backend
+    from super_solver.vectorize import VectorizationService
 
     svc = VectorizationService(backend=get_backend(embedder))
     vec = svc.encode_problem(specification, title=title, goal_criteria=list(goal))
@@ -171,8 +171,8 @@ def vectorize_problem_cmd(specification: str, title: str, goal: List[str], embed
 @click.option("--no-store", is_flag=True)
 def vectorize_solution_cmd(solution_text: str, method: str, domain: str, operator: List[str], title: str, embedder: Optional[str], no_store: bool):
     """Encode a solution into a vector."""
-    from super_solver.vectorize import VectorizationService
     from super_solver.core.embedder import get_backend
+    from super_solver.vectorize import VectorizationService
 
     svc = VectorizationService(backend=get_backend(embedder))
     vec = svc.encode_solution(solution_text, method=method, domain=domain, operators=list(operator))
@@ -192,8 +192,8 @@ def vectorize_solution_cmd(solution_text: str, method: str, domain: str, operato
 @click.option("--no-store", is_flag=True)
 def vectorize_path_cmd(steps: List[str], operator: List[str], breakthrough: str, title: str, embedder: Optional[str], no_store: bool):
     """Encode a discovery path (sequence of reasoning steps) into a vector."""
-    from super_solver.vectorize import VectorizationService
     from super_solver.core.embedder import get_backend
+    from super_solver.vectorize import VectorizationService
 
     svc = VectorizationService(backend=get_backend(embedder))
     vec = svc.encode_path(list(steps), operator_types=list(operator) or None, final_breakthrough=breakthrough)
@@ -212,8 +212,8 @@ def vectorize_path_cmd(steps: List[str], operator: List[str], breakthrough: str,
 @click.option("--embedder", default=None)
 def vectorize_search_cmd(query: str, kind: Optional[str], top_k: int, min_sim: float, embedder: Optional[str]):
     """Search the vector index for entries similar to a query text."""
-    from super_solver.vectorize import VectorizationService
     from super_solver.core.embedder import get_backend
+    from super_solver.vectorize import VectorizationService
 
     svc = VectorizationService(backend=get_backend(embedder))
     vec = svc.backend.encode(query)
@@ -236,8 +236,8 @@ def vectorize_search_cmd(query: str, kind: Optional[str], top_k: int, min_sim: f
 @click.option("--embedder", default=None)
 def vectorize_analogize_cmd(specification: str, title: str, top_k: int, min_sim: float, embedder: Optional[str]):
     """Find similar past problems and return their linked solutions + paths."""
-    from super_solver.vectorize import VectorizationService
     from super_solver.core.embedder import get_backend
+    from super_solver.vectorize import VectorizationService
 
     svc = VectorizationService(backend=get_backend(embedder))
     vec = svc.encode_problem(specification, title=title)
@@ -269,8 +269,8 @@ def vectorize_primitive_analogize_cmd(specification: str, top_k: int, min_overla
     differ. This is the cross-domain path that surface vector retrieval fails
     at (e.g. 'climbing pad that grips walls' -> Velcro/gecko mimicry).
     """
-    from super_solver.vectorize import VectorizationService
     from super_solver.core.embedder import get_backend
+    from super_solver.vectorize import VectorizationService
 
     svc = VectorizationService(backend=get_backend())
     hits = svc.primitive_analogize(specification, top_k=top_k, min_overlap=min_overlap)

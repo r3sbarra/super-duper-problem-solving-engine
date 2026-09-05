@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from super_solver.vectorize import VectorizationService
 
 import numpy as np
 
@@ -670,7 +673,7 @@ class SuperDuperProblemSolvingEngine:
         goal_criteria: Optional[List[str]] = None,
         top_principles: int = 4,
         ground_truth_outcomes: Optional[Dict[str, str]] = None,
-        domain_knowledge: Optional["VectorizationService"] = None,
+        domain_knowledge: Optional[VectorizationService] = None,
         concrete_top_k: int = 3,
     ) -> DiscoveryPath:
         """Runs the full discovery pipeline with TRIZ-grounded engineering abduction.

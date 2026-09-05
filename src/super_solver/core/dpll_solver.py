@@ -12,6 +12,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
+from super_solver.core.llm_parser import llm_client
+
 
 class DPLLSolver:
     """Zero-daemon, deterministic Boolean Satisfiability and Resolution Refutation Engine."""
@@ -138,6 +140,7 @@ class DPLLSolver:
         symbol_map: Dict[str, int] = {}
         rev_map: Dict[int, str] = {}
         clauses: List[List[int]] = []
+        parser_used = "regex_propositional"
 
         def get_var(name: str) -> int:
             clean = name.strip().lower().replace(" ", "_")
@@ -147,26 +150,42 @@ class DPLLSolver:
                 rev_map[idx] = clean
             return symbol_map[clean]
 
-        # Parse premises into CNF clauses
-        for p in premises:
-            p_clean = p.strip()
-            # Simple rule parsing: "IF A THEN B" -> not A or B
-            if "->" in p_clean or "=>" in p_clean:
-                parts = re.split(r"->|=>", p_clean)
-                antecedent = get_var(parts[0])
-                consequent = get_var(parts[1])
-                clauses.append([-antecedent, consequent])
-            elif " OR " in p_clean:
-                parts = p_clean.split(" OR ")
-                clauses.append([get_var(part) for part in parts])
-            elif "NOT " in p_clean:
-                var = get_var(p_clean.replace("NOT ", ""))
-                clauses.append([-var])
-            else:
-                clauses.append([get_var(p_clean)])
+        # 1. Attempt optional small LLM semantic clause extraction if enabled
+        llm_data = llm_client.extract_propositional_clauses(premises, target_claim)
+        if llm_data and "clauses" in llm_data and "target_var" in llm_data:
+            parser_used = "optional_llm"
+            for raw_clause in llm_data["clauses"]:
+                clause_ints = []
+                for lit_str in raw_clause:
+                    is_neg = lit_str.startswith("-") or lit_str.startswith("~")
+                    clean_name = lit_str.lstrip("-~")
+                    v = get_var(clean_name)
+                    clause_ints.append(-v if is_neg else v)
+                if clause_ints:
+                    clauses.append(clause_ints)
+            target_var = get_var(llm_data["target_var"])
+        else:
+            # 2. Standard zero-daemon regex parsing
+            for p in premises:
+                p_clean = p.strip()
+                # Simple rule parsing: "IF A THEN B" -> not A or B
+                if "->" in p_clean or "=>" in p_clean:
+                    parts = re.split(r"->|=>", p_clean)
+                    antecedent = get_var(parts[0])
+                    consequent = get_var(parts[1])
+                    clauses.append([-antecedent, consequent])
+                elif " OR " in p_clean:
+                    parts = p_clean.split(" OR ")
+                    clauses.append([get_var(part) for part in parts])
+                elif "NOT " in p_clean:
+                    var = get_var(p_clean.replace("NOT ", ""))
+                    clauses.append([-var])
+                else:
+                    clauses.append([get_var(p_clean)])
+
+            target_var = get_var(target_claim)
 
         # Add negation of target claim: ~target_claim
-        target_var = get_var(target_claim)
         clauses_with_negated_goal = [list(c) for c in clauses]
         clauses_with_negated_goal.append([-target_var])
 
@@ -177,9 +196,10 @@ class DPLLSolver:
             return {
                 "proved": True,
                 "verdict": "LOGICALLY_SOUND_PROOF",
-                "summary": f"Target claim '{target_claim}' is strictly entailed by premises. Negation yielded an empty resolution clause.",
+                "summary": f"Target claim '{target_claim}' is strictly entailed by premises under propositional resolution refutation. Negation yielded an empty resolution clause.",
                 "countermodel": None,
                 "clauses_evaluated": len(clauses_with_negated_goal),
+                "parser": parser_used,
             }
         else:
             # Countermodel found where premises hold but claim is false
@@ -189,9 +209,10 @@ class DPLLSolver:
             return {
                 "proved": False,
                 "verdict": "COUNTERMODEL_EXISTS",
-                "summary": f"Target claim '{target_claim}' is NOT strictly entailed. Countermodel satisfies premises with target false.",
+                "summary": f"Target claim '{target_claim}' is NOT strictly entailed under propositional parsing ({parser_used}). Countermodel satisfies premises with target false.",
                 "countermodel": readable_countermodel,
                 "clauses_evaluated": len(clauses_with_negated_goal),
+                "parser": parser_used,
             }
 
 

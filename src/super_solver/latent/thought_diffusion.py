@@ -1,7 +1,12 @@
-"""Diffusion of Thoughts (DoT, Ye et al. NeurIPS 2024).
+"""Diffusion of Thoughts (DoT inspired, Ye et al. NeurIPS 2024).
 
-Implements iterative latent denoising of thought trajectories with
-Classifier-Free Guidance (CFG) pulling toward goals and repelling from dead ends.
+Implements iterative latent trajectory optimization with Classifier-Free Guidance (CFG)
+heuristics pulling toward goal attractors and repelling from negative dead-end manifolds.
+
+Implementation Note:
+This module implements an artificial potential-field optimization in vector space
+(combining temporal smoothness, centroid attraction, and inverse-distance dead-end repulsion)
+serving as an analytical, zero-daemon analogue of continuous score-based diffusion denoising.
 """
 
 from __future__ import annotations

@@ -14,6 +14,13 @@ combined with George Pólya's heuristics and continuous vector-space barrier aud
    against obstruction manifolds and evasion criteria.
 4. Generates adversarial boundary instances and counterexamples (Lakatos local/global counterexamples).
 5. Produces formal mathematical verification verdicts (VERIFIED_SOUND, REFUTED_FLAWED, GAP_DETECTED).
+
+DISCLAIMER ON MATHEMATICAL SCOPE:
+This engine performs heuristic barrier screening and counterexample template mapping based on
+semantic similarity of abstract prose to canonical mathematical obstructions. It does not parse
+formal mathematical ASTs, execute step-by-step symbolic proofs, or replace interactive theorem
+provers (e.g. Lean 4, Isabelle, Coq). A verdict of VERIFIED_SOUND indicates that the paper's techniques
+avoid known canonical barriers in its stated domain under semantic screening.
 """
 
 from __future__ import annotations
@@ -319,21 +326,21 @@ class LakatosProofVerificationEngine:
             verdict = VerificationStatus.REFUTED_FLAWED
             confidence = 0.98 if all_counterexamples else 0.85
             summary = (
-                f"PROOF REFUTED: Fatal mathematical flaw located at {flawed_lemmas[0]}. "
-                f"The proof violates established mathematical barriers ({len(all_barrier_violations)} detected) "
-                f"and is refuted by adversarial instance testing."
+                f"BARRIER CONFLICT DETECTED: Technique matches the obstruction manifold for {flawed_lemmas[0]}. "
+                f"The claimed approach aligns with established mathematical barriers ({len(all_barrier_violations)} detected) "
+                f"and conflicts with canonical boundary instances."
             )
         elif len(sound_lemmas) == len(lemmas):
             verdict = VerificationStatus.VERIFIED_SOUND
-            confidence = 0.95
+            confidence = 0.90
             summary = (
-                f"PROOF VERIFIED SOUND: All {len(lemmas)} critical lemma steps preserve truth invariants. "
-                f"No barrier violations detected."
+                f"HEURISTIC SCREENING PASS (VERIFIED SOUND): All {len(lemmas)} critical lemma steps avoid known canonical barriers. "
+                f"No barrier violations detected. (Note: Heuristic screening only; does not constitute formal interactive theorem verification)."
             )
         else:
             verdict = VerificationStatus.GAP_DETECTED
             confidence = 0.60
-            summary = "PROOF INCONCLUSIVE: Gaps or unverified inductive bounds detected."
+            summary = "PROOF INCONCLUSIVE: Gaps or unverified inductive bounds detected in heuristic screening."
 
         reasoning_trace.append(
             f"3. Verification Verdict: {verdict.value} (Confidence: {confidence * 100:.1f}%)"

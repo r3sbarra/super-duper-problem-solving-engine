@@ -24,9 +24,7 @@ The structural signature is the core action-object pattern, e.g.:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
-
-import numpy as np
+from typing import Dict, List
 
 from super_solver.core.embedder import get_backend
 

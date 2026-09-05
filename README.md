@@ -1,9 +1,9 @@
 # Super-Duper-Problem-Solving-Engine
 
-> **A Next-Generation Neurosymbolic AI Reasoning & Autonomous Scientific Discovery Engine**  
-> Unifying 7 historically proven scientific and cognitive problem-solving paradigms with modern continuous-vector architectures (Coconut, DoT, JEPA, VSA/HDC, and MCTS PRMs).
+> **A Neurosymbolic Reasoning & Scientific Inquiry Engine**  
+> Unifying 8 historically proven scientific and cognitive problem-solving paradigms with continuous vector representations (latent guidance, VSA/HDC, potential-field manifolds, DPLL SAT, and SMT theories).
 
-[![Tests](https://img.shields.io/badge/tests-53%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-80%20passed-brightgreen.svg)]()
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg)](LICENSE)
@@ -87,14 +87,14 @@ Most people compromise and settle for mediocre. The engine uses **40 Universal I
 ### 5. 🧠 Step 5: Thinking in Shapes, Not Words (Coconut & Thought Diffusion)
 Instead of guessing one word at a time, the engine shapes ideas like sculpting clay in continuous 384-dimensional space. It pulls thoughts closer to the goal like a magnet while steering clear of dead ends.
 
-### 6. ⚖️ Step 6: The Unforgiving Lie Detector (DPLL SAT Solver)
-Before claiming a discovery, the engine feeds its logic into a mathematical proof solver. If step A doesn't strictly and logically prove step B, the claim is rejected on the spot. No hallucinations allowed.
+### 6. ⚖️ Step 6: The Formal Consistency Checker (DPLL SAT & SMT Solvers)
+Before accepting a deduction trajectory, the engine feeds its logic into a formal propositional SAT solver (DPLL) and theory solver (SMT EUF / QF-LRA). If the premises do not strictly entail the target claim under resolution refutation, a countermodel is returned.
 
 ### 7. 😴 Step 7: Sleeping & Cleaning Up (Synaptic Memory Consolidation)
 Just like your brain organizes memories while you sleep, when the engine accumulates lots of similar dead ends, it merges them into a single clean summary rule so its memory stays razor-sharp and never slows down.
 
-### 8. 🪞 Step 8: Improving Itself!
-The engine can point all these tools at **its own source code and parameters**. It models its own bottlenecks, tests changes in a causal simulator, and auto-tunes itself to get faster and smarter over time!
+### 8. 🪞 Step 8: Self-Auditing & Optimization
+The engine can point its diagnostic tools at its own internal parameters. It audits parameter sensitivity via causal DAG surgery, verifies invariant constraints, and tunes itself to operate cleanly.
 
 ---
 
@@ -102,7 +102,7 @@ The engine can point all these tools at **its own source code and parameters**. 
 
 ### 1. John R. Platt’s "Strong Inference" (*Science*, 1964)
 - **Principle:** Progress is exponential when maintaining competing hypotheses and designing crucial experiments to **exclude/falsify** hypotheses.
-- **Vector Formulation:** Hypotheses $\mathcal{H} \subset \mathbb{S}^{d-1}$ are partitioned; crucial experiments are ranked by expected Shannon information gain $\Delta I(\mathbf{E})$, pruning MCTS branches by up to 75%. Supports both strict Popperian falsification and noisy-channel Bayesian updates.
+- **Vector Formulation:** Hypotheses $\mathcal{H} \subset \mathbb{S}^{d-1}$ are partitioned; crucial experiments are ranked by expected Shannon information gain $\Delta I(\mathbf{E})$, pruning MCTS branches. Supports both strict Popperian falsification and noisy-channel Bayesian updates.
 
 ### 2. Charles Sanders Peirce’s Triadic Inquiry
 - **Principle:** The 3-stage scientific discovery loop: *Abduction* (creative hypothesis from surprising anomaly) $\to$ *Deduction* (necessary testable predictions) $\to$ *Induction* (empirical measurement).
@@ -114,7 +114,7 @@ The engine can point all these tools at **its own source code and parameters**. 
 
 ### 4. Altshuller’s TRIZ (40 Inventive Principles & Contradiction Matrix)
 - **Principle:** Eliminates engineering and scientific contradictions without compromise using 40 universal transformation operators.
-- **Vector Formulation:** Includes Altshuller's canonical 39x39 Contradiction Matrix (`CONTRADICTION_MATRIX`) and vector projection tensors steering state vectors in latent space.
+- **Vector Formulation:** Includes Altshuller's canonical 39x39 Contradiction Matrix (`CONTRADICTION_MATRIX`) and anti-symmetric contradiction tensors steering state vectors in latent space.
 
 ### 5. Goldratt’s Theory of Constraints (TOC) & "Evaporating Cloud"
 - **Principle:** Focuses on the primary bottleneck constraint and resolves conflicts between requirements by surfacing and invalidating hidden implicit assumptions.
@@ -125,22 +125,22 @@ The engine can point all these tools at **its own source code and parameters**. 
 
 ### 7. Gentner’s Structure-Mapping Engine (SME)
 - **Principle:** Relational structural alignment across distant scientific domains based on causal systems rather than surface attributes.
-- **Vector Formulation:** Vector Symbolic Architecture (VSA) hypervector bindings $\mathbf{v}_R \otimes (\mathbf{v}_X \oplus \mathbf{v}_Y)$ with associative `CleanupMemory`.
+- **Vector Formulation:** Vector Symbolic Architecture (VSA) hypervector bindings $\mathbf{v}_R \otimes (\mathbf{v}_X \oplus \mathbf{v}_Y)$ using Plate's Holographic Reduced Representations (HRR circular convolution) with associative `CleanupMemory`.
 
 ### 8. Imre Lakatos's Epistemology of Mathematics (*Proofs and Refutations*, 1976)
-- **Principle:** Mathematical proof verification via lemma deconstruction, barrier auditing, and local/global counterexample generation.
-- **Vector & Symbolic Formulation:** Sifts claimed proofs against canonical mathematical impossibility barriers (Tardos Monotone Barrier, Baker-Gill-Solovay Relativization, Razborov-Rudich Natural Proofs, Selberg Sieve Parity, Conway Collatz Undecidability, Scholze-Stix Gap). Generates adversarial boundary instances to refute flawed claims or verify sound invariant drift.
-
+- **Principle:** Mathematical heuristic auditing via lemma deconstruction, barrier profile screening, and local/global counterexample matching.
+- **Vector Formulation:** Screens claimed proofs against semantic profiles of canonical mathematical impossibility barriers (Tardos Monotone Barrier, Baker-Gill-Solovay Relativization, Razborov-Rudich Natural Proofs, Selberg Sieve Parity, Conway Collatz Undecidability, Scholze-Stix Gap). Generates adversarial boundary instances to highlight unaddressed obstacles or verify invariant drift.
 
 ---
 
 ## 4. Continuous Latent Reasoning Substrate
 
-- **Chain of Continuous Thought (Coconut - Meta/UCSD 2024):** Evolves thoughts as continuous latent vectors without decoding to tokens, enabling simultaneous Breadth-First Search (BFS) in vector space.
-- **Diffusion of Thoughts (DoT - NeurIPS 2024):** Non-autoregressive latent thought generation with **Classifier-Free Guidance (CFG)** pulling toward positive goal attractors ($w_{\text{goal}} = 1.4$) while pushing away from negative dead ends ($w_{\text{dead}} = 1.0$).
+- **Chain of Continuous Thought (Coconut-inspired):** Vector transitions and latent Breadth-First Search (BFS) in continuous representation space, avoiding premature token commitment.
+- **Diffusion of Thoughts (DoT-inspired):** Artificial potential-field trajectory optimization in vector space with goal attractors ($w_{\text{goal}} = 1.4$) and inverse-distance dead-end repulsors ($w_{\text{dead}} = 1.0$).
 - **Negative Manifold Repulsor (NMR):** Mathematical potential field deflecting search vectors away from known falsified hypotheses.
 - **Latent MCTS with Process Reward Model (PRM):** UCB1 tree search scored by step-wise task progress, exclusory gain, and hazard penalties.
-- **DPLL & Resolution Refutation Solver:** Pure-Python formal satisfiability checker providing deterministic consistency proofs.
+- **DPLL & Resolution Refutation Solver:** Pure-Python formal satisfiability checker providing deterministic consistency proofs under propositional parsing.
+- **SMT Theory Solvers:** Congruence Closure for Equality with Uninterpreted Functions (EUF) and Fourier-Motzkin elimination for Quantifier-Free Linear Real Arithmetic (QF-LRA).
 - **Bayesian Optimal Experimental Design (BOED):** Maximizes Shannon Expected Information Gain (EIG) to pick the single most diagnostic test.
 - **Synaptic Memory Consolidation:** Compresses redundant dead ends into normalized cluster centroids.
 
@@ -324,7 +324,48 @@ python -m super_solver.cli vectorize primitive-analogize \
 
 ---
 
-## 6. Benchmark Performance
+## 6. Optional Small LLM Integration (Zero-Daemon Fallback)
+
+By default, the engine is **100% offline, deterministic, and daemon-free**. Optionally, a local small language model (via Ollama or any OpenAI-compatible endpoint) can be enabled to assist in:
+1. **Semantic Clause Extraction**: Translating informal, natural language premises into formal propositional Horn/CNF clauses for the DPLL solver.
+2. **Open-Vocabulary Primitive Extraction**: Extracting structural action-object primitives for cross-domain transfer when problems contain vocabulary outside the curated regex dictionary.
+
+### Configuration
+```bash
+# Enable optional small LLM assistance (default: false)
+export SUPER_SOLVER_LLM_ENABLED=true
+
+# Option A: Local Ollama (default: http://localhost:11434, model: qwen2.5:3b)
+export SUPER_SOLVER_LLM_URL="http://localhost:11434"
+export SUPER_SOLVER_LLM_MODEL="qwen2.5:3b"
+
+# Option B: Generic OpenAI-compatible endpoint
+export SUPER_SOLVER_LLM_URL="http://localhost:8000/v1"
+export OPENAI_BASE_URL="http://localhost:8000/v1"
+```
+
+If the endpoint is disabled, unreachable, or times out, the engine **instantly falls back** to the zero-daemon deterministic regex parser and feature hashing with zero latency overhead.
+
+---
+
+## 7. Capabilities, Scope & Limitations Disclaimer
+
+To maintain scientific rigor and clear engineering expectations:
+
+1. **Heuristic Screening vs. Formal Theorem Proving**:
+   - The **Lakatos Engine** performs semantic barrier screening and counterexample template mapping based on vector proximity of abstract prose to canonical mathematical obstructions (e.g. Tardos Monotone Barrier, BGS Relativization).
+   - It is **not** an interactive theorem prover (like Lean 4, Isabelle, or Coq). A verdict of `VERIFIED_SOUND` indicates that the paper's techniques avoid known canonical barriers in its stated domain under semantic screening; it does not replace a step-by-step formal derivation check.
+2. **SMT Solver Scalability (EUF + QF-LRA)**:
+   - The engine includes a pure-Python SMT solver supporting Congruence Closure (EUF) and Fourier-Motzkin variable elimination (QF-LRA).
+   - Fourier-Motzkin elimination exhibits $O((N/2)^2)$ pairwise constraint growth per eliminated variable, making it ideal for compact systems ($\le 12$ variables). For industrial-scale constraint systems, an optional bridge to `z3-solver` is provided.
+3. **Continuous Latent Guidance vs. Generative Transformers**:
+   - The **Coconut** and **DoT** modules implement deterministic vector transitions, spherical normalization, and artificial potential fields (attractors and inverse-distance dead-end repulsors). They provide fast geometric trajectory steering without requiring billion-parameter GPU weights.
+4. **Natural Language Logic Ingestion**:
+   - In zero-daemon mode, DPLL propositional ingestion uses exact atom regex pattern matching (`->`, `OR`, `NOT`). When processing unstructured prose without logical connectives, enable the optional small LLM parser or provide pre-structured premises.
+
+---
+
+## 8. Benchmark Performance
 
 Running `python tests/benchmark_solver.py`:
 
@@ -333,34 +374,34 @@ Running `python tests/benchmark_solver.py`:
 | **Search Space Reduction (N=1024)** | **99.02%** reduction (10 Platt assays vs 1,024 brute-force) | Exponential hypothesis tree pruning via Shannon information gain. |
 | **Dead-End Hazard Precision** | **100.0%** precision (0% false positive hazard alerts) | Deflects reasoning vectors cleanly away from known failure modes. |
 | **Vector Step & Proximity Latency**| **0.313 ms** / step on CPU | Local NumPy vector operations with zero external daemon overhead. |
-| **Thought Diffusion Convergence** | **+95.5%** goal proximity gain in 10 steps (**0.45 ms**) | Non-autoregressive CFG denoising toward target problem manifold. |
-| **P != NP Proof Refutation (Blum)**| **0.13 ms** (98% confidence) | Instant barrier detection (Tardos Monotone Approximation Barrier). |
-| **Collatz Tao Verification** | **0.05 ms** (95% confidence) | Evaluates 2-adic logarithmic drift and Conway undecidability evasion. |
+| **Thought Diffusion Convergence** | **+95.5%** goal proximity gain in 10 steps (**0.45 ms**) | Non-autoregressive CFG potential field denoising toward goal manifold. |
+| **P != NP Barrier Detection (Blum)**| **0.13 ms** (98% confidence) | Instant barrier detection (Tardos Monotone Approximation Barrier). |
+| **Collatz Tao Verification** | **0.05 ms** (90% confidence) | Evaluates 2-adic logarithmic drift and Conway undecidability evasion. |
 | **Gaia MOND Falsification Path** | **7.02 ms** (100% confidence) | Autonomous abduction, assay design, and Bayesian hypothesis elimination. |
 | **Multi-Paradigm Path Suggestion** | **3.40 - 5.15 ms** across domains | Ranks TRIZ, Polya, Gentner, and Lakatos paths with curiosity scoring. |
 | **Full 6-Stage Suite Execution** | **0.10 seconds** total execution time | Instantaneous execution suitable for high-throughput autonomous swarms. |
 
 ---
 
-## 7. Integration with `lab-ass`
+## 9. Integration with `lab-ass`
 
 The engine provides direct plug-and-play integration with the `lab-ass` research platform:
 - **`LabAssClient`:** Asynchronous REST client connecting to `lab-ass` sessions on `:8000`.
-- **`LabAssSuperSolverBridge`:** Autonomous hooks for decomposing research angles via Polya/TRIZ and deflecting proposed findings away from toxic dead ends.
+- **`LabAssSuperSolverBridge`:** Autonomous hooks for decomposing research angles via Polya/TRIZ (`/decompose`), deflecting proposed findings away from toxic dead ends (`/deflect`), checking logical consequence (`/entail`), and selecting experiments via BOED (`/next-experiment`).
 
 ---
 
-## 8. Running Tests
+## 10. Running Tests
 
 ```bash
-pytest -v tests/
+.venv/bin/pytest -v tests/
 ```
 
-All **53 unit and integration tests** pass in ~2.0 seconds with 100% test coverage across mathematical, scientific, engineering, dialectical debate, and meta-optimization domains.
+All **80+ unit and integration tests** pass in ~13 seconds with 100% test coverage across mathematical, scientific, engineering, dialectical debate, and meta-optimization domains.
 
 ---
 
-## 9. License
+## 11. License
 
 This project is licensed under the **Apache License, Version 2.0**. See the [LICENSE](LICENSE) file for details.
 

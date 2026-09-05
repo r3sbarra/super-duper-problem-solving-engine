@@ -90,7 +90,7 @@ class PolyaHeuristicsEngine:
             "such", "each", "other", "also", "only", "more", "most", "some",
             "any", "all", "both", "new", "find", "test", "using",
             "used", "use", "via", "can", "may", "must", "not", "non",
-            "its", "our", "your", "their", "been", "being", "does", "done",
+            "its", "our", "your", "been", "being", "does", "done",
             "numerically", "testable", "falsifiable", "approaches", "approach",
             "hypothesis", "property", "target", "structure", "structural",
             "different", "mathematical", "domain", "large", "parameter",
@@ -98,7 +98,7 @@ class PolyaHeuristicsEngine:
             "independently", "analogous", "preserved", "generalization",
             "invariant", "monotone", "transformations", "extremal", "behavior",
             "counterexample", "violation", "asymptotic", "predicted", "growth",
-            "rate", "boundary", "values", "extremal", "inputs", "special",
+            "rate", "boundary", "values", "inputs", "special",
             "family", "larger", "whether", "holds", "within", "scanning",
         }
         # Split on hyphens too so "numerically-testable" -> "numerically","testable".

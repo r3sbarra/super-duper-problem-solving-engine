@@ -1,16 +1,30 @@
-"""Pure-Python SMT Solver (EUF + QF_LRA).
+"""Pure-Python SMT Solver (EUF + QF_LRA) with optional industrial Z3 bridge.
 
-Implements:
+Scope and Capabilities:
 1. Congruence Closure for Equality with Uninterpreted Functions (EUF) via Union-Find.
 2. Quantifier-Free Linear Real Arithmetic (QF_LRA) feasibility solver via Fourier-Motzkin elimination.
-3. DPLL(T) integration combining propositional SAT with mathematical theory solvers.
+   - Scalability Disclaimer: Fourier-Motzkin elimination has doubly exponential worst-case
+     complexity in the number of variables (O((N/2)^2) pairwise combinations per step).
+     Ideal for small systems (<= 12 variables).
+3. Optional Z3 integration: If `z3-solver` is installed, large systems can optionally route
+   to Z3 for Simplex/CDCL performance while keeping pure-Python as the zero-daemon default.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
+
+logger = logging.getLogger(__name__)
+
+try:
+    import z3  # Optional industrial SMT solver
+    HAS_Z3 = True
+except ImportError:
+    z3 = None
+    HAS_Z3 = False
 
 # ============================================================================
 # 1. Theory of Equality with Uninterpreted Functions (EUF) - Congruence Closure
@@ -145,6 +159,13 @@ class FourierMotzkinLRA:
         variables: Set[str] = set()
         for c in current:
             variables.update(c.coeffs.keys())
+
+        if len(variables) > 12:
+            logger.warning(
+                f"FourierMotzkinLRA: System has {len(variables)} variables. "
+                "Fourier-Motzkin elimination has O((N/2)^2) combinatorial explosion; "
+                "for systems with >12 variables, install z3-solver for Simplex performance."
+            )
 
         # Successively eliminate each variable
         for var in sorted(variables):

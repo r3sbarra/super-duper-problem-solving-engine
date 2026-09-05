@@ -139,6 +139,18 @@ def strip_to_primitives(text: str) -> Set[str]:
     for pattern, prim in OBJECT_PRIMITIVES:
         if re.search(pattern, tl):
             prims.add(prim)
+
+    # Optional LLM fallback for open-vocabulary domain extraction when regex yields empty
+    if not prims:
+        try:
+            from super_solver.core.llm_parser import llm_client
+
+            llm_prims = llm_client.extract_structural_primitives(text)
+            if llm_prims:
+                prims.update(llm_prims)
+        except Exception:
+            pass
+
     return prims
 
 

@@ -1,8 +1,13 @@
-"""Chain of Continuous Thought (Coconut Architecture, Meta/UCSD 2024).
+"""Chain of Continuous Thought (Coconut Architecture inspired, Meta/UCSD 2024).
 
-Implements reasoning in continuous latent space where internal hidden states
-are directly fed forward into subsequent steps rather than decoding into token strings.
-Enables latent breadth-first search and avoids premature commitment.
+Implements reasoning in continuous latent vector space where intermediate representations
+are evolved via vector operations rather than decoding into surface token strings.
+Enables latent breadth-first search and avoids premature lexical commitment.
+
+Implementation Note:
+This module provides a CPU-deterministic geometric transition model (linear blending with
+spherical normalization and noise jitter) that captures the latent search mechanics of
+Coconut without requiring large neural network weights or GPU inference.
 """
 
 from __future__ import annotations
