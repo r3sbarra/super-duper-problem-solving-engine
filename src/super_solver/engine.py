@@ -634,6 +634,54 @@ class SuperDuperProblemSolvingEngine:
         """Audits internal reasoning metrics, memory depth, and active hyperparameters."""
         return self.self_improver.run_self_diagnostic()
 
+    def solve_engineering_problem(
+        self,
+        title: str,
+        specification: str,
+        goal_criteria: Optional[List[str]] = None,
+        top_principles: int = 4,
+        ground_truth_outcomes: Optional[Dict[str, str]] = None,
+    ) -> DiscoveryPath:
+        """Runs the full discovery pipeline with TRIZ-grounded engineering abduction.
+
+        Unlike the physics-flavored autonomous_abduct (which generates generic
+        'observational artifact / fundamental law / phase transition' frames),
+        this generates candidate hypotheses from the actual TRIZ Inventive
+        Principles matched to the problem, so the engine can GENERATE novel
+        engineering solutions rather than retrieve known ones.
+
+        Each matched principle becomes a candidate explanation phrased as an
+        actionable design move; the pipeline then runs KT filtering, latent
+        rollout, MCTS, and breakthrough identification on those candidates.
+        """
+        prob = self.formulate_problem(
+            title=title,
+            specification=specification,
+            goal_criteria=goal_criteria or ["Find a novel solution to this problem"],
+        )
+
+        # TRIZ-grounded abduction: turn matched inventive principles into
+        # candidate design-move hypotheses APPLIED to the specific problem.
+        principles = self.triz.suggest_principles(specification, top_k=top_principles)
+        candidates = []
+        for p in principles:
+            name = p["name"]
+            desc = p["description"]
+            # Phrase as an applied design move: principle + how it acts on the
+            # problem's subject, so the generated hypothesis is a concrete
+            # solution direction, not a bare principle name.
+            candidates.append(
+                f"To solve '{specification}', apply the TRIZ principle '{name}': {desc} "
+                f"— concretely, redesign the subject so that {name.lower()} achieves the goal."
+            )
+
+        return self.deduce_discovery_path(
+            problem=prob,
+            candidate_hypotheses=candidates,
+            crucial_experiments=None,
+            ground_truth_outcomes=ground_truth_outcomes,
+        )
+
     def solve_universal_vectorized(
         self,
         problem_description: str,

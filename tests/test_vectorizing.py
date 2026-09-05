@@ -121,6 +121,23 @@ def test_hybrid_analogize_ranks_correct(tmp_path):
     assert hyb[0]["solution"] is not None
 
 
+def test_solve_engineering_problem_triz_grounded():
+    """solve_engineering_problem runs full discovery with TRIZ-grounded abduction
+    and returns an UNVERIFIED breakthrough (no ground truth -> honest)."""
+    from super_solver.engine import SuperDuperProblemSolvingEngine
+
+    engine = SuperDuperProblemSolvingEngine(db_path=":memory:")
+    path = engine.solve_engineering_problem(
+        title="Concrete Canoe",
+        specification="How to make a canoe hull that floats despite being made of dense concrete",
+        top_principles=4,
+        ground_truth_outcomes=None,
+    )
+    assert path.total_steps >= 4  # abduction + rollout + MCTS + breakthrough
+    assert "UNVERIFIED" in path.final_breakthrough  # no ground truth -> honest
+    assert "TRIZ principle" in path.final_breakthrough  # TRIZ-grounded
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""
