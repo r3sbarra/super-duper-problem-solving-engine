@@ -43,7 +43,7 @@ def cosine(a, b):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--embedder", default="ollama", choices=["polarity", "ollama"])
+    ap.add_argument("--embedder", default="ollama", choices=["polarity", "ollama", "neural", "rich", "hybrid"])
     ap.add_argument("--recent", action="store_true", help="include recent 2024-26 cases")
     ap.add_argument("--limit", type=int, default=0, help="max cases to run (0 = all)")
     args = ap.parse_args()

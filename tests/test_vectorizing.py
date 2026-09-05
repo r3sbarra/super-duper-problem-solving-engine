@@ -32,6 +32,21 @@ def test_rich_backend_deterministic():
     assert abs(np.linalg.norm(v1) - 1.0) < 1e-5
 
 
+def test_neural_backend_loads_and_deterministic():
+    b = get_backend("neural")
+    v1 = b.encode("How to reduce latency in a distributed database")
+    v2 = b.encode("How to reduce latency in a distributed database")
+    assert b.dim == 256
+    assert np.allclose(v1, v2)
+    assert abs(np.linalg.norm(v1) - 1.0) < 1e-5
+    # Aggregate relatedness margin over the engine benchmark should be positive.
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
+    from train_neural_embedder import build_benchmark, evaluate
+    m, acc, _, _ = evaluate(b, build_benchmark())
+    assert m > 0.0
+
+
 def test_ollama_backend_falls_back_when_unreachable(monkeypatch):
     b = OllamaBackend(base_url="http://127.0.0.1:1", timeout=0.1)
     v = b.encode("test")
