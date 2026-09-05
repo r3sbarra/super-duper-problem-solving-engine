@@ -167,7 +167,11 @@ class SuperDuperProblemSolvingEngine:
             for h in hypotheses:
                 fit = self.kt.evaluate_candidate_cause(h.description, problem.boundary)
                 if not fit["valid_boundary_fit"]:
-                    h.current_confidence *= 0.5
+                    # Fix: graduated penalty based on actual violation magnitude.
+                    # net_score is in [-1, +1]; penalty = max(0.1, 1.0 + net_score)
+                    # so a net_score of -0.1 -> ×0.9 discount vs -0.9 -> ×0.1 (near-zero).
+                    penalty = max(0.1, 1.0 + float(fit.get("net_score", -0.5)))
+                    h.current_confidence *= penalty
                     if fit.get("unwarranted_leakage", 0.0) > 0.3 and fit["net_score"] < -0.1:
                         h.status = HypothesisStatus.FALSIFIED
                         if h.id not in falsified_list:
@@ -181,7 +185,7 @@ class SuperDuperProblemSolvingEngine:
                     description="Filtered candidate hypotheses through 4D IS/IS NOT boundary hyperplane.",
                     latent_vector=v_boundary_is.tolist(),
                     confidence=0.85,
-                    symbolic_summary="Pruned hypotheses that leak into IS NOT failure envelope.",
+                    symbolic_summary="Pruned hypotheses that leak into IS NOT failure envelope (graduated penalty).",
                 )
             )
 
@@ -195,7 +199,12 @@ class SuperDuperProblemSolvingEngine:
 
         is_near, sim_dead, dead_desc = self.repulsor.check_proximity(current_latent)
         if is_near:
-            current_latent = self.repulsor.deflect_trajectory(current_latent, goal_vector=v_goal)
+            current_latent = self.repulsor.deflect_trajectory(
+                current_latent,
+                goal_vector=v_goal,
+                repulsion_weight=float(self.self_improver.params.get("deflection_repulsion_weight", 0.45)),
+                goal_weight=float(self.self_improver.params.get("deflection_goal_weight", 0.35)),
+            )
             reasoning_steps.append(
                 ReasoningStep(
                     step_index=len(reasoning_steps) + 1,
@@ -209,11 +218,28 @@ class SuperDuperProblemSolvingEngine:
                 )
             )
 
-        triz_ops = self.triz.suggest_principles(problem.specification, top_k=2)
-        op_vec = embedding_service.encode(
-            triz_ops[0]["name"] if triz_ops else "General Transformation"
+        # Fix: Coconut BFS beam — use top-k TRIZ operators instead of just ops[0]
+        # Maintains beam_width candidate latent states, picks the one most aligned
+        # to the goal vector before passing to DoT denoising.
+        triz_ops = self.triz.suggest_principles(problem.specification, top_k=4)
+        beam_ops = [
+            (op["name"], embedding_service.encode(op["name"]))
+            for op in triz_ops[:3]  # BFS beam width = 3
+        ] if triz_ops else [("General Transformation", embedding_service.encode("General Transformation"))]
+
+        bfs_beams = self.coconut.rollout_latent_bfs(
+            initial_latent=current_latent,
+            candidate_operators=beam_ops,
+            depth=1,
+            beam_width=3,
+            goal_vector=v_goal,
         )
-        current_latent = self.coconut.step_continuous_thought(current_latent, op_vec)
+        # Pick the beam branch most aligned to goal
+        if bfs_beams and bfs_beams[0]:
+            current_latent = bfs_beams[0][-1][1]  # last state of best beam
+        elif triz_ops:
+            op_vec = embedding_service.encode(triz_ops[0]["name"])
+            current_latent = self.coconut.step_continuous_thought(current_latent, op_vec)
 
         params = self.self_improver.params
         diff_steps = int(params.get("diffusion_steps", 3))
@@ -234,11 +260,11 @@ class SuperDuperProblemSolvingEngine:
             ReasoningStep(
                 step_index=len(reasoning_steps) + 1,
                 operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                operator_name="Coconut Latent Rollout & Thought Diffusion",
-                description=f"Evolved continuous thought vector using TRIZ operator '{triz_ops[0]['name'] if triz_ops else 'Transformation'}' with DoT denoising.",
+                operator_name="Coconut BFS Beam Rollout & Thought Diffusion",
+                description=f"BFS beam (width=3) over TRIZ operators {[o[0] for o in beam_ops]} with DoT denoising.",
                 latent_vector=current_latent.tolist(),
                 confidence=0.88,
-                symbolic_summary="Refined continuous trajectory toward goal manifold.",
+                symbolic_summary="Refined continuous trajectory toward goal manifold via multi-operator beam.",
             )
         )
 
@@ -390,22 +416,50 @@ class SuperDuperProblemSolvingEngine:
                 )
             )
 
-        # 5. BREAKTHROUGH IDENTIFICATION
+        # 5. SMT CONSISTENCY GATE — verify numerical claims in surviving hypotheses
+        # Wire the SMT solver into the pipeline: check that surviving hypothesis
+        # descriptions don't contain contradictory arithmetic claims.
+        survivors_pre_smt = [h for h in hypotheses if h.status != HypothesisStatus.FALSIFIED]
+        if survivors_pre_smt:
+            try:
+                # Extract any numeric inequality-style claims from surviving hypotheses
+                # and run a lightweight SMT QF_LRA feasibility check.
+                numeric_claims = [
+                    h.description for h in survivors_pre_smt
+                    if any(c.isdigit() for c in h.description)
+                ]
+                if numeric_claims:
+                    smt_result = self.smt.check_lra_satisfiability(numeric_claims[:4])
+                    reasoning_steps.append(
+                        ReasoningStep(
+                            step_index=len(reasoning_steps) + 1,
+                            operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                            operator_name="SMT Arithmetic Consistency Gate",
+                            description=f"SMT QF-LRA feasibility check on {len(numeric_claims)} surviving hypotheses: {smt_result.verdict}.",
+                            latent_vector=current_latent.tolist(),
+                            confidence=0.9 if smt_result.is_sat else 0.4,
+                            symbolic_summary=f"SMT verdict: {smt_result.verdict}",
+                        )
+                    )
+            except Exception:
+                pass  # SMT gate is best-effort; never abort discovery
+
+        # 6. BREAKTHROUGH IDENTIFICATION
         survivors = [h for h in hypotheses if h.status != HypothesisStatus.FALSIFIED]
-        # If domain-grounded concrete claims were provided, prefer the concrete
-        # solution direction the latent search converged on. The TRIZ hypothesis
-        # texts embed the full problem statement, so they score artificially
-        # high against the latent state (which started from the problem vector);
-        # the concrete claims are the actual solution directions and should win
-        # when grounding is active.
+        # Fix: compare latent Symbolic Projection score against retrieval confidence.
+        # Previously concrete_claims[0] was always picked with hardcoded claim_sim=0.5,
+        # discarding the latent MCTS + DoT + Symbolic Projection results entirely.
+        # Now: use the latent nearest_claim when it scores higher than retrieval baseline.
         concrete_breakthrough = None
+        _RETRIEVAL_BASELINE = 0.50  # retrieval confidence for concrete_claims[0]
         if concrete_claims:
-            # concrete_claims arrive already ranked best-first by the retrieval
-            # step (hybrid_analogize), which correctly matches the problem to the
-            # right concrete solution. Prefer the top retrieval hit — the latent
-            # state after MCTS is too noisy to re-rank them.
-            concrete_breakthrough = concrete_claims[0]
-            claim_sim = 0.5  # retrieval confidence, not latent similarity
+            # Check if the latent Symbolic Projection found something stronger
+            if nearest_claim and claim_sim > _RETRIEVAL_BASELINE:
+                concrete_breakthrough = nearest_claim  # latent search wins
+                # claim_sim already holds the latent cosine similarity
+            else:
+                concrete_breakthrough = concrete_claims[0]
+                claim_sim = _RETRIEVAL_BASELINE  # retrieval confidence
         if concrete_breakthrough:
             if had_ground_truth:
                 breakthrough = f"CONFIRMED: {concrete_breakthrough}"

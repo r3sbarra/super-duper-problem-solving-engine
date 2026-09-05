@@ -108,26 +108,51 @@ class EpisodicVectorStore:
     ) -> List[Dict[str, Any]]:
         cursor = self._conn.cursor()
         query = "SELECT id, category, title, content, vector_blob, metadata_json FROM episodes"
-        params = ()
+        params: tuple = ()
         if category:
             query += " WHERE category = ?"
             params = (category,)
 
         rows = cursor.execute(query, params).fetchall()
-        results = []
+        if not rows:
+            return []
 
+        # --- Vectorised batch cosine similarity (fix: replaces O(N) Python loop) ---
+        # Normalise query once
+        q = np.asarray(query_vector, dtype=np.float32)
+        q_norm = np.linalg.norm(q)
+        if q_norm > 0:
+            q = q / q_norm
+
+        # Stack all stored vectors into a single matrix and compute similarities in one matmul
+        ids, cats, titles, contents, metas = [], [], [], [], []
+        vecs = []
         for r_id, r_cat, r_title, r_content, blob, meta_str in rows:
-            vec = np.frombuffer(blob, dtype=np.float32)
-            sim = embedding_service.cosine_similarity(query_vector, vec)
-            if sim >= min_similarity:
+            v = np.frombuffer(blob, dtype=np.float32).copy()
+            v_norm = np.linalg.norm(v)
+            if v_norm > 0:
+                v = v / v_norm
+            vecs.append(v)
+            ids.append(r_id)
+            cats.append(r_cat)
+            titles.append(r_title)
+            contents.append(r_content)
+            metas.append(meta_str)
+
+        matrix = np.vstack(vecs)          # (N, D)
+        sims = matrix @ q                 # (N,)  — dot product of unit vecs = cosine sim
+
+        results = []
+        for i, sim in enumerate(sims):
+            if float(sim) >= min_similarity:
                 results.append(
                     {
-                        "id": r_id,
-                        "category": r_cat,
-                        "title": r_title,
-                        "content": r_content,
+                        "id": ids[i],
+                        "category": cats[i],
+                        "title": titles[i],
+                        "content": contents[i],
                         "similarity": float(sim),
-                        "metadata": json.loads(meta_str) if meta_str else {},
+                        "metadata": json.loads(metas[i]) if metas[i] else {},
                     }
                 )
 

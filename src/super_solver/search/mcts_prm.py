@@ -24,15 +24,21 @@ class MCTSNode:
         step_index: int = 0,
         operator_name: str = "ROOT",
         parent: Optional[MCTSNode] = None,
+        op_vec: Optional[np.ndarray] = None,
+        exclusory_gain: float = 0.0,
     ):
         self.state_vector = state_vector
         self.step_index = step_index
         self.operator_name = operator_name
         self.parent = parent
+        self.op_vec = op_vec
+        self.exclusory_gain = exclusory_gain
         self.children: List[MCTSNode] = []
         self.visits: int = 0
         self.total_value: float = 0.0
         self.prm_step_score: float = 0.0
+        # Track which operator indices have already been expanded
+        self._expanded_op_indices: set = set()
 
     @property
     def value(self) -> float:
@@ -66,7 +72,13 @@ class ProcessRewardModel:
 
 
 class LatentMCTSEngine:
-    """Monte Carlo Tree Search over continuous/discrete reasoning graphs."""
+    """Monte Carlo Tree Search over continuous/discrete reasoning graphs.
+
+    Fix (was degenerate): previously, expand_and_evaluate() created ALL children
+    in a single call, making N simulations equivalent to 1. Now each simulation
+    expands exactly ONE previously-unexplored operator child (UCB1-guided), so
+    num_simulations=N actually explores N distinct reasoning trajectories.
+    """
 
     def __init__(self, prm: Optional[ProcessRewardModel] = None, c_puct: float = 1.414):
         self.prm = prm or ProcessRewardModel()
@@ -90,14 +102,22 @@ class LatentMCTSEngine:
 
         return best_child or node.children[0]
 
-    def expand_and_evaluate(
+    def expand_one_child(
         self,
         node: MCTSNode,
         candidate_actions: List[Tuple[str, np.ndarray, float]],
         goal_vector: np.ndarray,
-    ) -> MCTSNode:
-        """Expands node with candidate actions and scores them via PRM."""
-        for op_name, op_vec, exclusory_gain in candidate_actions:
+    ) -> Optional[MCTSNode]:
+        """Expands exactly ONE unexplored operator child from the candidate list.
+
+        Picks the first operator not yet tried from this node (in original order).
+        Returns the new child, or None if all operators have been expanded.
+        """
+        for idx, (op_name, op_vec, exclusory_gain) in enumerate(candidate_actions):
+            if idx in node._expanded_op_indices:
+                continue
+            # Expand this operator
+            node._expanded_op_indices.add(idx)
             next_state = 0.7 * node.state_vector + 0.3 * op_vec
             norm = np.linalg.norm(next_state)
             if norm > 0:
@@ -108,6 +128,8 @@ class LatentMCTSEngine:
                 step_index=node.step_index + 1,
                 operator_name=op_name,
                 parent=node,
+                op_vec=op_vec,
+                exclusory_gain=exclusory_gain,
             )
             reward = self.prm.score_transition(
                 node.state_vector,
@@ -119,8 +141,9 @@ class LatentMCTSEngine:
             child.total_value = reward
             child.visits = 1
             node.children.append(child)
+            return child
 
-        return node.children[0] if node.children else node
+        return None  # All operators already expanded from this node
 
     def backpropagate(self, node: MCTSNode, value: float):
         """Backpropagates value up to root."""
@@ -137,20 +160,30 @@ class LatentMCTSEngine:
         goal_vector: np.ndarray,
         num_simulations: int = 15,
     ) -> List[Tuple[str, np.ndarray, float]]:
-        """Conducts MCTS and returns the highest-value trajectory."""
+        """Conducts MCTS and returns the highest-value trajectory.
+
+        Each simulation expands one new operator child (fix for previously degenerate
+        all-at-once expansion). N simulations now explore up to N distinct operators,
+        with backpropagation updating UCB1 scores between simulations.
+        """
         root = MCTSNode(state_vector=initial_state, step_index=0)
 
         for _ in range(num_simulations):
             curr = root
-            # Selection
-            while curr.children:
+
+            # Selection: walk down already-expanded nodes using UCB1
+            while curr.children and len(curr._expanded_op_indices) >= len(candidate_actions := candidate_operator_generators):
                 curr = self.select_child(curr)
 
-            # Expansion & Evaluation
-            if curr.visits == 0 or not curr.children:
-                leaf = self.expand_and_evaluate(curr, candidate_operator_generators, goal_vector)
-                value = leaf.prm_step_score
-                self.backpropagate(leaf, value)
+            # Expansion: add exactly one new child to the selected node
+            new_child = self.expand_one_child(curr, candidate_operator_generators, goal_vector)
+            if new_child is not None:
+                # Simulation & backprop from the new child
+                self.backpropagate(new_child, new_child.prm_step_score)
+            elif curr.children:
+                # All operators expanded at this node; backprop from best child
+                best = max(curr.children, key=lambda c: c.prm_step_score)
+                self.backpropagate(best, best.prm_step_score)
 
         # Extract best path by following highest-visited children
         path = []

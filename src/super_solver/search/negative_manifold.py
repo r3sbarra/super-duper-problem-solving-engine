@@ -2,6 +2,12 @@
 
 Models verified dead ends and falsified hypotheses as repulsive potential fields
 in vector space, mathematically deflecting active search trajectories away from failure modes.
+
+Fixes applied:
+- Vectorized batch similarity using stacked numpy matrix (O(1) amortised matrix multiply)
+  instead of Python for-loops over individual dead-end vectors.
+- deflect_trajectory now accepts tunable repulsion_weight / goal_weight kwargs so that
+  self_improver.params can override the previously hardcoded mixing weights (0.45 / 0.35).
 """
 
 from __future__ import annotations
@@ -32,6 +38,9 @@ class NegativeManifoldRepulsor:
         self.store = store
         self.dead_ends: List[np.ndarray] = []
         self.dead_end_descriptions: List[str] = []
+        # Cached stacked matrix for vectorised batch cosine similarity.
+        # Shape: (M, D) where M = len(dead_ends), D = embedding dim.
+        self._matrix: Optional[np.ndarray] = None
 
         if self.store is not None:
             loaded = self.store.load_dead_ends()
@@ -41,6 +50,34 @@ class NegativeManifoldRepulsor:
                     vec = vec / norm
                 self.dead_ends.append(vec)
                 self.dead_end_descriptions.append(desc)
+            self._rebuild_matrix()
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _rebuild_matrix(self) -> None:
+        """Rebuilds the stacked matrix cache after dead_ends list changes."""
+        if self.dead_ends:
+            self._matrix = np.vstack(self.dead_ends)   # (M, D)
+        else:
+            self._matrix = None
+
+    def _batch_similarities(self, state_vector: np.ndarray) -> np.ndarray:
+        """Returns cosine similarities between state_vector and all dead ends in one op.
+
+        Assumes all dead_end vectors are already unit-normalised (done on register).
+        state_vector need not be unit-normalised — we normalise it here.
+        """
+        if self._matrix is None:
+            return np.array([], dtype=np.float32)
+        norm = np.linalg.norm(state_vector)
+        q = state_vector / norm if norm > 0 else state_vector
+        return self._matrix @ q  # (M,)  — dot product = cosine sim for unit vecs
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
 
     def register_dead_end(
         self, description: str, vector: Optional[np.ndarray] = None
@@ -53,6 +90,7 @@ class NegativeManifoldRepulsor:
             vector = vector / norm
         self.dead_ends.append(vector)
         self.dead_end_descriptions.append(description)
+        self._rebuild_matrix()
 
         if self.store is not None:
             self.store.insert_dead_end(description=description, vector=vector)
@@ -69,29 +107,28 @@ class NegativeManifoldRepulsor:
             return False, 0.0, None
 
         thresh = threshold if threshold is not None else self.PROXIMITY_ALERT_THRESHOLD
-        max_sim = -1.0
-        closest_desc = None
-
-        for d_vec, desc in zip(self.dead_ends, self.dead_end_descriptions, strict=False):
-            sim = embedding_service.cosine_similarity(state_vector, d_vec)
-            if sim > max_sim:
-                max_sim = sim
-                closest_desc = desc
+        sims = self._batch_similarities(state_vector)
+        idx = int(np.argmax(sims))
+        max_sim = float(sims[idx])
+        closest_desc = self.dead_end_descriptions[idx]
 
         is_near = max_sim >= thresh
-        return is_near, float(max_sim), closest_desc
+        return is_near, max_sim, closest_desc
 
     def compute_repulsive_force(self, state_vector: np.ndarray) -> np.ndarray:
         """Computes the net repulsive gradient vector steering state away from dead ends."""
         if not self.dead_ends:
             return np.zeros_like(state_vector)
 
-        f_net = np.zeros_like(state_vector)
-        for d_vec in self.dead_ends:
-            diff = state_vector - d_vec
-            dist_sq = float(np.sum(diff**2)) + self.epsilon
-            magnitude = self.repulsor_weight / dist_sq
-            f_net += magnitude * diff
+        # Vectorised: compute all diff vectors and magnitudes in one shot
+        # _matrix: (M, D);  state_vector: (D,)
+        if self._matrix is None:
+            return np.zeros_like(state_vector)
+
+        diff = state_vector[np.newaxis, :] - self._matrix          # (M, D)
+        dist_sq = np.sum(diff ** 2, axis=1, keepdims=True) + self.epsilon  # (M, 1)
+        magnitudes = self.repulsor_weight / dist_sq                 # (M, 1)
+        f_net = np.sum(magnitudes * diff, axis=0)                   # (D,)
 
         norm = np.linalg.norm(f_net)
         if norm > 0:
@@ -102,17 +139,26 @@ class NegativeManifoldRepulsor:
         self,
         candidate_vector: np.ndarray,
         goal_vector: Optional[np.ndarray] = None,
+        repulsion_weight: float = 0.45,
+        goal_weight: float = 0.35,
     ) -> np.ndarray:
-        """Deflects a candidate trajectory step away from toxic dead ends."""
+        """Deflects a candidate trajectory step away from toxic dead ends.
+
+        Args:
+            repulsion_weight: Mixing weight for the repulsive force component.
+                Defaults to 0.45 but can be overridden by self_improver.params.
+            goal_weight: Mixing weight for the goal attractor component.
+                Defaults to 0.35 but can be overridden by self_improver.params.
+        """
         is_near, max_sim, desc = self.check_proximity(candidate_vector)
         if not is_near:
             return candidate_vector
 
         f_rep = self.compute_repulsive_force(candidate_vector)
-        deflected = candidate_vector + (0.45 * f_rep)
+        deflected = candidate_vector + (repulsion_weight * f_rep)
 
         if goal_vector is not None:
-            deflected = deflected + (0.35 * goal_vector)
+            deflected = deflected + (goal_weight * goal_vector)
 
         norm = np.linalg.norm(deflected)
         if norm > 0:
@@ -162,6 +208,7 @@ class NegativeManifoldRepulsor:
 
         self.dead_ends = consolidated_vecs
         self.dead_end_descriptions = consolidated_descs
+        self._rebuild_matrix()
 
         if self.store is not None:
             self.store.sync_dead_ends(

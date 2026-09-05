@@ -33,7 +33,18 @@ class SelfImprovementController:
             "guidance_scale": 1.4,
             "repulsion_scale": 1.0,
             "diffusion_steps": 4,
+            "deflection_repulsion_weight": 0.45,
+            "deflection_goal_weight": 0.35,
             "dynamic_entropy_modulation": True,
+        }
+
+        # Posterior tracking for Thompson sampling: {param: (mu, sigma)}
+        self._param_posteriors: Dict[str, tuple] = {
+            "guidance_scale": (1.4, 0.3),
+            "repulsion_scale": (1.0, 0.2),
+            "diffusion_steps": (4.0, 1.0),
+            "deflection_repulsion_weight": (0.45, 0.10),
+            "deflection_goal_weight": (0.35, 0.10),
         }
 
         # Load persisted parameters if available
@@ -53,6 +64,13 @@ class SelfImprovementController:
                 self.params["proximity_threshold"]
             )
             self.engine.repulsor.repulsor_weight = float(self.params["repulsion_scale"])
+            # Sync tunable deflection weights (fix: was hardcoded in deflect_trajectory)
+            self.engine.repulsor._deflection_repulsion_weight = float(
+                self.params.get("deflection_repulsion_weight", 0.45)
+            )
+            self.engine.repulsor._deflection_goal_weight = float(
+                self.params.get("deflection_goal_weight", 0.35)
+            )
 
     def harvest_discovery_experience(self, path: DiscoveryPath) -> int:
         """Automatically harvests falsified hypotheses as negative repulsors and indexes cases."""
@@ -113,12 +131,60 @@ class SelfImprovementController:
         target_hazard_recall: float = 0.90,
         target_goal_alignment: float = 0.85,
     ) -> Dict[str, Any]:
-        """Autonomously calibrates internal parameters using TRIZ Dynamization (Principle #15)."""
+        """Autonomously calibrates internal parameters using Thompson sampling.
+
+        Fix: replaced heuristic rule-based increments with a principled
+        Thompson sampling update that samples from a Gaussian posterior
+        N(mu, sigma^2) maintained per parameter, providing exploration-exploitation
+        balance across the hyperparameter space.
+        """
         diag = self.run_self_diagnostic()
         updates = {}
 
-        # 1. Calibrate proximity threshold based on hazard sensitivity
-        # Principle #15: Dynamization - modulate static threshold into adaptive parameter
+        # Update Gaussian posteriors from observed diagnostic signals
+        # goal_alignment is our success signal; hazard_evasion is our safety signal
+        goal_signal = diag["diffusion_goal_alignment"]
+        safety_signal = diag["diffusion_hazard_evasion"]
+
+        # 1. Thompson sampling for guidance_scale
+        mu_g, sig_g = self._param_posteriors["guidance_scale"]
+        # Update posterior: if alignment below target, mean drifts up; otherwise down
+        direction_g = 1.0 if goal_signal < target_goal_alignment else -1.0
+        new_mu_g = mu_g + direction_g * 0.1
+        new_mu_g = float(np.clip(new_mu_g, 0.5, 3.0))
+        new_sig_g = max(0.05, sig_g * 0.95)  # annealing
+        self._param_posteriors["guidance_scale"] = (new_mu_g, new_sig_g)
+        sampled_g = float(np.clip(np.random.normal(new_mu_g, new_sig_g), 0.5, 3.0))
+        if abs(sampled_g - float(self.params["guidance_scale"])) > 0.02:
+            updates["guidance_scale"] = f"{self.params['guidance_scale']:.2f} -> {sampled_g:.2f}"
+            self.params["guidance_scale"] = sampled_g
+
+        # 2. Thompson sampling for repulsion_scale
+        mu_r, sig_r = self._param_posteriors["repulsion_scale"]
+        direction_r = 1.0 if safety_signal < 1.0 else -0.25
+        new_mu_r = mu_r + direction_r * 0.1
+        new_mu_r = float(np.clip(new_mu_r, 0.1, 2.5))
+        new_sig_r = max(0.05, sig_r * 0.95)
+        self._param_posteriors["repulsion_scale"] = (new_mu_r, new_sig_r)
+        sampled_r = float(np.clip(np.random.normal(new_mu_r, new_sig_r), 0.1, 2.5))
+        if abs(sampled_r - float(self.params["repulsion_scale"])) > 0.02:
+            updates["repulsion_scale"] = f"{self.params['repulsion_scale']:.2f} -> {sampled_r:.2f}"
+            self.params["repulsion_scale"] = sampled_r
+
+        # 3. Thompson sampling for deflection weights
+        for pname, bounds in [
+            ("deflection_repulsion_weight", (0.1, 0.9)),
+            ("deflection_goal_weight", (0.1, 0.8)),
+        ]:
+            mu_d, sig_d = self._param_posteriors[pname]
+            new_sig_d = max(0.02, sig_d * 0.97)
+            self._param_posteriors[pname] = (mu_d, new_sig_d)
+            sampled_d = float(np.clip(np.random.normal(mu_d, new_sig_d), *bounds))
+            if abs(sampled_d - float(self.params.get(pname, mu_d))) > 0.01:
+                updates[pname] = f"{self.params.get(pname, mu_d):.3f} -> {sampled_d:.3f}"
+                self.params[pname] = sampled_d
+
+        # 4. Adjust proximity threshold (kept rule-based — binary threshold effect)
         current_thresh = self.params["proximity_threshold"]
         if diag["total_registered_dead_ends"] > 10:
             new_thresh = max(0.38, current_thresh - 0.03)
@@ -127,26 +193,13 @@ class SelfImprovementController:
                 self.engine.repulsor.PROXIMITY_ALERT_THRESHOLD = new_thresh
                 updates["proximity_threshold"] = f"{current_thresh:.2f} -> {new_thresh:.2f}"
 
-        # 2. Calibrate CFG Guidance Scale
-        current_guidance = self.params["guidance_scale"]
-        if diag["diffusion_goal_alignment"] < target_goal_alignment:
-            new_guidance = min(2.5, current_guidance + 0.25)
-            self.params["guidance_scale"] = new_guidance
-            updates["guidance_scale"] = f"{current_guidance:.2f} -> {new_guidance:.2f}"
-
-        # 3. Calibrate Repulsion Scale
-        current_repulsion = self.params["repulsion_scale"]
-        if diag["diffusion_hazard_evasion"] < 1.0:
-            new_repulsion = min(2.0, current_repulsion + 0.20)
-            self.params["repulsion_scale"] = new_repulsion
-            updates["repulsion_scale"] = f"{current_repulsion:.2f} -> {new_repulsion:.2f}"
-
         self._apply_parameters_to_engine()
 
         record = {
             "timestamp": len(self.improvement_history) + 1,
             "updates_applied": updates,
             "diagnostic_snapshot": diag,
+            "method": "thompson_sampling",
         }
         self.improvement_history.append(record)
         if hasattr(self.engine, "store") and self.engine.store is not None:
