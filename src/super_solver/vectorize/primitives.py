@@ -166,23 +166,52 @@ def match_by_primitives(
     """Match a target problem to source solutions by primitive overlap.
 
     Each source solution is stripped to primitives and compared against the
-    target's primitives. Action primitives (e.g. reduce_density, hashing) are
-    weighted higher than object-type primitives (e.g. object_math) because an
-    action match means the solution addresses the SAME KIND of problem, while
-    an object-type match only means it involves a similar subject. This breaks
-    ties where many solutions share a broad object-type primitive.
+    target's primitives. Scoring:
+    - Action primitives (e.g. reduce_density, hashing) are weighted higher than
+      object-type primitives (e.g. object_math).
+    - DISTINCTIVE actions (rare across solutions, e.g. quickselect) are weighted
+      higher than common ones (e.g. sorting), so a solution sharing the target's
+      specific action beats one sharing only generic primitives.
     """
     t_prims = strip_to_primitives(target_text)
     t_actions = {p for p in t_prims if not p.startswith("object_")}
+    t_objs = t_prims - t_actions
+
+    # IDF: how rare is each action across the source solutions? Rare actions
+    # are more distinctive and should dominate the match.
+    action_doc_freq: Dict[str, int] = {}
+    for sol in source_solutions:
+        s_actions = {p for p in strip_to_primitives(sol["solution"]) if not p.startswith("object_")}
+        for a in s_actions:
+            action_doc_freq[a] = action_doc_freq.get(a, 0) + 1
+    n_docs = max(len(source_solutions), 1)
+
     scored = []
     for sol in source_solutions:
         s_prims = strip_to_primitives(sol["solution"])
         s_actions = {p for p in s_prims if not p.startswith("object_")}
-        # Containment on action primitives (weighted 2x) + object primitives.
-        action_contain = len(t_actions & s_actions) / len(t_actions) if t_actions else 0.0
-        obj_contain = len((t_prims - t_actions) & (s_prims - s_actions)) / len(t_prims - t_actions) if (t_prims - t_actions) else 0.0
-        # Blend: action matches dominate (2x weight), object matches break ties.
-        overlap = 0.7 * action_contain + 0.3 * obj_contain
+        s_objs = s_prims - s_actions
+
+        # Action containment, IDF-weighted: distinctive shared actions dominate.
+        if t_actions:
+            shared_actions = t_actions & s_actions
+            if shared_actions:
+                idf_sum = sum(
+                    (1.0 + (n_docs / (action_doc_freq.get(a, 1) + 1))) for a in shared_actions
+                )
+                idf_total = sum(
+                    (1.0 + (n_docs / (action_doc_freq.get(a, 1) + 1))) for a in t_actions
+                )
+                action_contain = idf_sum / idf_total
+            else:
+                action_contain = 0.0
+        else:
+            action_contain = 0.0
+
+        # Object containment (unweighted, breaks ties).
+        obj_contain = len(t_objs & s_objs) / len(t_objs) if t_objs else 0.0
+
+        overlap = 0.8 * action_contain + 0.2 * obj_contain
         scored.append(
             {
                 "content": sol["solution"],
