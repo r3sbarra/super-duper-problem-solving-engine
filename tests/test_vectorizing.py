@@ -246,6 +246,28 @@ def test_validate_solution_rejects_vague_and_accepts_concrete():
     assert "no action primitive" in v3["reason"]
 
 
+def test_primitive_analogize_service_cross_domain():
+    """Service primitive_analogize finds cross-domain structural matches."""
+    from super_solver.vectorize import VectorizationService
+
+    svc = VectorizationService(db_path=":memory:")
+    svc.store_solution(
+        solution_text="Mimic the hook-and-loop structure of burrs that stick to fabric (Velcro)",
+        method="source", domain="engineering", title="Velcro",
+    )
+    svc.store_solution(
+        solution_text="Use lightweight aggregates to reduce the material's density below that of water",
+        method="source", domain="engineering", title="Canoe",
+    )
+    hits = svc.primitive_analogize(
+        "How to make a climbing pad that grips smooth vertical walls without glue",
+        top_k=1,
+    )
+    assert hits
+    assert hits[0]["title"] == "Velcro"
+    assert hits[0]["primitive_overlap"] > 0
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

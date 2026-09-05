@@ -145,6 +145,40 @@ class VectorizationService:
             problem_vector, top_k=top_k, min_similarity=min_similarity, solution_weight=solution_weight
         )
 
+    def primitive_analogize(
+        self,
+        target_text: str,
+        top_k: int = 3,
+        min_overlap: float = 0.0,
+    ) -> List[Dict[str, Any]]:
+        """Cross-domain analogical transfer via structural primitives.
+
+        Strips the target problem into structural atoms (action + object-type
+        primitives) and matches against all stored solutions by containment
+        overlap. Robust to surface differences: two problems in different
+        domains share a structure when they share primitives, even if their
+        surface entities differ. This is the cross-domain path that surface
+        vector retrieval fails at.
+        """
+        from super_solver.vectorize.primitives import match_by_primitives
+
+        sources = [
+            {"title": row[2] or "", "solution": row[3]}
+            for row in self.index._rows("solution")
+        ]
+        hits = match_by_primitives(target_text, sources, top_k=top_k)
+        return [
+            {
+                "content": h["content"],
+                "title": h["title"],
+                "primitive_overlap": h["primitive_overlap"],
+                "target_primitives": h["target_primitives"],
+                "source_primitives": h["source_primitives"],
+            }
+            for h in hits
+            if h["primitive_overlap"] >= min_overlap
+        ]
+
     def close(self):
         self.index.close()
 

@@ -255,5 +255,37 @@ def vectorize_analogize_cmd(specification: str, title: str, top_k: int, min_sim:
         ))
 
 
+@vectorize.command(name="primitive-analogize")
+@click.argument("specification")
+@click.option("--top-k", default=3, type=int)
+@click.option("--min-overlap", default=0.0, type=float)
+def vectorize_primitive_analogize_cmd(specification: str, top_k: int, min_overlap: float):
+    """Cross-domain analogical transfer via structural primitives.
+
+    Strips the target problem into structural atoms (action + object-type
+    primitives) and matches against stored solutions by containment overlap.
+    Robust to surface differences: two problems in different domains share a
+    structure when they share primitives, even if their surface entities
+    differ. This is the cross-domain path that surface vector retrieval fails
+    at (e.g. 'climbing pad that grips walls' -> Velcro/gecko mimicry).
+    """
+    from super_solver.vectorize import VectorizationService
+    from super_solver.core.embedder import get_backend
+
+    svc = VectorizationService(backend=get_backend())
+    hits = svc.primitive_analogize(specification, top_k=top_k, min_overlap=min_overlap)
+    if not hits:
+        console.print("[yellow]No primitive matches found.[/yellow]")
+        return
+    for i, h in enumerate(hits, 1):
+        console.print(Panel(
+            f"[bold]Solution:[/bold] {h['content']}\n"
+            f"[bold]Overlap:[/bold] {h['primitive_overlap']:.3f}\n"
+            f"[bold]Target primitives:[/bold] {', '.join(h['target_primitives'])}\n"
+            f"[bold]Source primitives:[/bold] {', '.join(h['source_primitives'])}",
+            title=f"Primitive match #{i} ({h['title']})",
+        ))
+
+
 if __name__ == "__main__":
     main()
