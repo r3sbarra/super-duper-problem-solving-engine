@@ -27,6 +27,8 @@ htmlcov/
 *.db-shm
 *.db-wal
 *.log
+.super_solver_data/
+
 
 # IDE & OS
 .DS_Store

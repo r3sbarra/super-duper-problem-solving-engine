@@ -55,3 +55,181 @@ class LabAssSuperSolverBridge:
             "closest_dead_end": closest,
             "deflected": bool(is_near),
         }
+
+    def suggest_paths(
+        self,
+        problem_specification: str,
+        context: Optional[str] = None,
+        top_k: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Synthesize and rank alternative discovery paths (TRIZ/Polya/Gentner/Lakatos/Platt).
+
+        Exposes the engine's suggest_paths() to lab-ass so agents can get
+        ranked research directions instead of only a decomposition.
+        """
+        paths = self.engine.suggest_paths(
+            problem_specification=problem_specification,
+            context=context,
+            top_k=top_k,
+        )
+        return [
+            {
+                "title": getattr(p, "title", ""),
+                "description": getattr(p, "description", ""),
+                "framework": getattr(p, "framework", ""),
+                "feasibility": float(getattr(p, "feasibility_score", 0.0) or 0.0),
+                "novelty": float(getattr(p, "novelty_score", 0.0) or 0.0),
+                "dead_end_margin": float(getattr(p, "dead_end_margin", 0.0) or 0.0),
+            }
+            for p in paths
+        ]
+
+    def run_tournament(
+        self,
+        candidate_hypotheses: List[str],
+        context: Optional[str] = None,
+        top_k: int = 2,
+    ) -> List[Dict[str, Any]]:
+        """Run an adversarial dialectical debate across hypotheses; return ranked winners.
+
+        Useful as a pre-filter before adding hypotheses to a lab-ass session.
+        """
+        results = self.engine.run_tournament(
+            candidate_hypotheses=candidate_hypotheses,
+            context=context,
+            top_k=top_k,
+        )
+        return [
+            {
+                "hypothesis": getattr(r, "hypothesis", ""),
+                "score": float(getattr(r, "score", 0.0) or 0.0),
+                "verdict": getattr(r, "verdict", ""),
+            }
+            for r in results
+        ]
+
+    def verify_math_paper(
+        self,
+        paper_title: str,
+        abstract_text: str,
+        target_conjecture: str,
+    ) -> Dict[str, Any]:
+        """Audit/verify/refute an unverified mathematical claim (Lakatos engine).
+
+        Exposes the engine's math verification to lab-ass so a claim can be
+        checked for logical soundness before being promoted to a Claim Card.
+        """
+        result = self.engine.verify_math_paper(
+            paper_id="bridge",
+            paper_title=paper_title,
+            abstract_text=abstract_text,
+            target_conjecture=target_conjecture,
+        )
+        return {
+            "verdict": getattr(result, "verdict", ""),
+            "summary": getattr(result, "summary", ""),
+            "confidence": float(getattr(result, "confidence", 0.0) or 0.0),
+        }
+
+    def deduce_discovery_path(
+        self,
+        problem_specification: str,
+        candidate_hypotheses: List[str],
+        ground_truth_outcomes: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        """Run the full discovery pipeline (abduction → MCTS → Platt → breakthrough).
+
+        Returns a JSON-safe summary. Without ground truth, the result is marked
+        UNVERIFIED (never self-confirmed).
+        """
+        from super_solver.core.embeddings import embedding_service
+        from super_solver.core.types import ProblemState
+
+        prob = ProblemState(
+            id="bridge",
+            title=problem_specification[:120],
+            specification=problem_specification,
+            goal_criteria=["resolve"],
+            state_vector=embedding_service.encode(problem_specification).tolist(),
+            goal_vector=embedding_service.encode(problem_specification).tolist(),
+        )
+        path = self.engine.deduce_discovery_path(
+            problem=prob,
+            candidate_hypotheses=candidate_hypotheses,
+            ground_truth_outcomes=ground_truth_outcomes,
+        )
+        return {
+            "final_breakthrough": path.final_breakthrough,
+            "confidence": float(path.confidence),
+            "total_steps": path.total_steps,
+            "falsified_paths": path.falsified_paths,
+            "steps": [
+                {"operator": s.operator_name, "summary": s.symbolic_summary}
+                for s in path.steps
+            ],
+        }
+
+    def dpll_entail(
+        self,
+        premises: List[str],
+        target_claim: str,
+    ) -> Dict[str, Any]:
+        """Check whether the premises logically entail the target claim (DPLL).
+
+        Uses resolution refutation: if (premises AND NOT target) is
+        unsatisfiable, the claim is a necessary logical consequence. Returns a
+        JSON-safe verdict with the countermodel when entailment fails.
+        """
+        result = self.engine.dpll.refute_conjecture(
+            premises=premises,
+            target_claim=target_claim,
+        )
+        return {
+            "proved": bool(result.get("proved")),
+            "verdict": result.get("verdict", ""),
+            "summary": result.get("summary", ""),
+            "countermodel": result.get("countermodel"),
+            "clauses_evaluated": int(result.get("clauses_evaluated", 0)),
+        }
+
+    def next_experiment(
+        self,
+        hypothesis_priors: Dict[str, float],
+        candidate_designs: List[Dict[str, Any]],
+        likelihood_matrix: Dict[str, Dict[str, Dict[str, float]]],
+    ) -> List[Dict[str, Any]]:
+        """Rank candidate experiments by Expected Information Gain (BOED).
+
+        Selects the single most informative experiment to run next. Each
+        candidate design is ``{design_id, name, description, parameters, cost}``
+        and the likelihood matrix is ``{design_id: {outcome: {hyp_id: P}}}``.
+        Returns designs ranked by cost-penalized EIG (best first).
+        """
+        from super_solver.frameworks.boed_designer import CandidateExperimentDesign
+
+        designs = [
+            CandidateExperimentDesign(
+                design_id=d.get("design_id", f"d{i}"),
+                name=d.get("name", ""),
+                description=d.get("description", ""),
+                parameters=d.get("parameters", {}),
+                cost=float(d.get("cost", 1.0)),
+            )
+            for i, d in enumerate(candidate_designs)
+        ]
+        ranked = self.engine.boed.rank_optimal_experiments(
+            hypothesis_priors=hypothesis_priors,
+            candidate_designs=designs,
+            likelihood_matrix=likelihood_matrix,
+        )
+        return [
+            {
+                "design_id": r.get("design_id", ""),
+                "name": r.get("name", ""),
+                "expected_information_gain": float(r.get("expected_information_gain", 0.0)),
+                "cost_penalized_utility": float(r.get("cost_penalized_utility", 0.0)),
+                "prior_entropy": float(r.get("prior_entropy", 0.0)),
+                "expected_posterior_entropy": float(r.get("expected_posterior_entropy", 0.0)),
+            }
+            for r in ranked
+        ]

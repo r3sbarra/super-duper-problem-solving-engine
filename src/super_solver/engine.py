@@ -51,7 +51,7 @@ from super_solver.search.negative_manifold import NegativeManifoldRepulsor
 class SuperDuperProblemSolvingEngine:
     """The master problem-solving engine."""
 
-    def __init__(self, db_path: str = ":memory:"):
+    def __init__(self, db_path: Optional[str] = None):
         self.store = EpisodicVectorStore(db_path=db_path)
         self.harvester = CaseHarvester(store=self.store)
 
@@ -71,11 +71,12 @@ class SuperDuperProblemSolvingEngine:
         self.coconut = ContinuousThoughtController()
         self.dot = ThoughtDiffusionRefiner()
         self.projector = SymbolicProjector()
-        self.repulsor = NegativeManifoldRepulsor()
+        self.repulsor = NegativeManifoldRepulsor(store=self.store)
         self.curiosity = CuriosityEngine()
         self.prm = ProcessRewardModel(repulsor=self.repulsor)
         self.mcts = LatentMCTSEngine(prm=self.prm)
         self.self_improver = SelfImprovementController(engine=self)
+
 
         # New audit-driven extensions
         self.tournament = DialecticalTournamentEngine(
@@ -123,6 +124,7 @@ class SuperDuperProblemSolvingEngine:
         error_rate: float = 0.0,
     ) -> DiscoveryPath:
         ground_truth = ground_truth_outcomes or {}
+        had_ground_truth = bool(ground_truth_outcomes)
         reasoning_steps: List[ReasoningStep] = []
         falsified_list: List[str] = []
 
@@ -199,13 +201,21 @@ class SuperDuperProblemSolvingEngine:
         op_vec = embedding_service.encode(triz_ops[0]["name"] if triz_ops else "General Transformation")
         current_latent = self.coconut.step_continuous_thought(current_latent, op_vec)
 
+        params = self.self_improver.params
+        diff_steps = int(params.get("diffusion_steps", 3))
+        guidance = float(params.get("guidance_scale", 1.4))
+        repulsion = float(params.get("repulsion_scale", 1.0))
+
         refined_traj = self.dot.denoise_trajectory(
             trajectory=[current_latent],
             constraint_attractors=[v_goal],
             negative_repulsors=self.repulsor.dead_ends,
-            diffusion_steps=3,
+            diffusion_steps=diff_steps,
+            guidance_scale=guidance,
+            repulsion_scale=repulsion,
         )
         current_latent = refined_traj[0] if refined_traj else current_latent
+
 
         reasoning_steps.append(ReasoningStep(
             step_index=len(reasoning_steps) + 1,
@@ -216,6 +226,74 @@ class SuperDuperProblemSolvingEngine:
             confidence=0.88,
             symbolic_summary="Refined continuous trajectory toward goal manifold.",
         ))
+
+        # 3b. LATENT MCTS SEARCH (PRM-scored tree search over candidate operators)
+        # The MCTS engine was instantiated but never invoked in the discovery
+        # pipeline — wire it in here to actually search, not just do a single
+        # linear Coconut step. Candidate operators come from TRIZ principles +
+        # the surviving hypotheses' descriptions.
+        candidate_ops: List[Tuple[str, np.ndarray, float]] = []
+        for op in triz_ops[:4]:
+            candidate_ops.append((op["name"], embedding_service.encode(op["name"]), 0.5))
+        for h in hypotheses[:3]:
+            candidate_ops.append((f"hypothesis:{h.id}", embedding_service.encode(h.description), h.current_confidence))
+        if candidate_ops:
+            mcts_path = self.mcts.search_best_path(
+                initial_state=current_latent,
+                candidate_operator_generators=candidate_ops,
+                goal_vector=v_goal,
+                num_simulations=10,
+            )
+            if mcts_path:
+                best_op_name, best_state, best_score = mcts_path[0]
+                current_latent = np.asarray(best_state)
+                reasoning_steps.append(ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                    operator_name="Latent MCTS Search (PRM)",
+                    description=f"MCTS selected operator '{best_op_name}' (PRM score {best_score:.2f}) across {len(candidate_ops)} candidates.",
+                    latent_vector=current_latent.tolist(),
+                    confidence=0.85,
+                    symbolic_summary="Tree-searched the latent space instead of a single linear step.",
+                ))
+
+        # 3c. SYMBOLIC PROJECTION — decode the latent state back to a testable claim
+        # The SymbolicProjector was instantiated but never used; without it the
+        # latent vectors accumulate but never project back to auditable claims.
+        candidate_claims = [h.description for h in hypotheses]
+        nearest_claim, claim_sim = self.projector.project_to_nearest_claim(current_latent, candidate_claims)
+        if nearest_claim:
+            reasoning_steps.append(ReasoningStep(
+                step_index=len(reasoning_steps) + 1,
+                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                operator_name="Symbolic Projection",
+                description=f"Latent state decoded to nearest claim (similarity {claim_sim:.2f}): {nearest_claim[:120]}",
+                latent_vector=current_latent.tolist(),
+                confidence=float(claim_sim),
+                symbolic_summary=nearest_claim[:200],
+            ))
+
+        # 3d. DPLL LOGICAL CONSISTENCY CHECK on the surviving hypotheses
+        # The DPLL solver was instantiated but never called in the pipeline;
+        # check that the candidate hypotheses are not logically contradictory.
+        try:
+            result = self.dpll.refute_conjecture(
+                premises=[h.description for h in hypotheses],
+                target_claim=problem.specification,
+            )
+            proved = bool(result.get("proved"))
+            reasoning_steps.append(ReasoningStep(
+                step_index=len(reasoning_steps) + 1,
+                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                operator_name="DPLL Logical Consistency",
+                description=f"Hypotheses logically {'entail' if proved else 'do not entail'} the problem statement.",
+                latent_vector=current_latent.tolist(),
+                confidence=0.9 if proved else 0.3,
+                symbolic_summary=result.get("summary", "DPLL refutation check on candidate premises.")[:200],
+            ))
+        except Exception:
+            # DPLL is best-effort; a failure here should not abort discovery.
+            pass
 
         # 4. PLATT STRONG INFERENCE: CRUCIAL EXPERIMENTS (Autonomous if not provided)
         is_autonomous_exp = (crucial_experiments is None)
@@ -233,9 +311,22 @@ class SuperDuperProblemSolvingEngine:
 
             actual_outcome = ground_truth.get(exp.id)
             if not actual_outcome:
-                actual_outcome = exp.exclusory_predictions.get(active_survivors[0].id)
-                if not actual_outcome:
-                    actual_outcome = list(exp.exclusory_predictions.values())[0]
+                # No ground truth for this experiment. Do NOT default to the
+                # first surviving hypothesis's prediction — that guarantees
+                # self-confirmation and makes the pipeline non-falsifiable.
+                # Instead, skip pruning (we cannot judge) and record that the
+                # outcome is unverified.
+                reasoning_steps.append(ReasoningStep(
+                    step_index=len(reasoning_steps) + 1,
+                    operator_type=OperatorType.PLATT_CRUCIAL_EXPERIMENT,
+                    operator_name=f"Crucial Experiment: {exp.name}",
+                    description=f"No ground truth provided — outcome UNVERIFIED, no hypotheses pruned. Info gain: {info_gain:.2f} bits.",
+                    latent_vector=current_latent.tolist(),
+                    confidence=0.5,
+                    symbolic_summary="Experiment skipped (no ground truth); result unverified.",
+                ))
+                executed_experiments.append(exp)
+                continue
 
             hypotheses, newly_falsified = self.platt.execute_and_prune(
                 experiment=exp,
@@ -264,9 +355,17 @@ class SuperDuperProblemSolvingEngine:
         if survivors:
             survivors.sort(key=lambda h: h.current_confidence, reverse=True)
             winner = survivors[0]
-            winner.status = HypothesisStatus.CONFIRMED
-            breakthrough = f"CONFIRMED: {winner.description}"
-            final_conf = winner.current_confidence
+            if had_ground_truth:
+                winner.status = HypothesisStatus.CONFIRMED
+                breakthrough = f"CONFIRMED: {winner.description}"
+                final_conf = winner.current_confidence
+            else:
+                # No ground truth was provided — we cannot claim confirmation.
+                # Mark UNVERIFIED (a distinct, honest state) instead of
+                # self-confirming the top survivor.
+                winner.status = HypothesisStatus.PROPOSED
+                breakthrough = f"UNVERIFIED: {winner.description} (no ground truth — needs falsification)"
+                final_conf = winner.current_confidence * 0.5
         else:
             breakthrough = "INCONCLUSIVE: All candidates falsified. Need new abductive generation."
             final_conf = 0.1

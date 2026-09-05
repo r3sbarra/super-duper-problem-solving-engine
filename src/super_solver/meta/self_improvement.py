@@ -28,13 +28,30 @@ class SelfImprovementController:
         self.improvement_history: List[Dict[str, Any]] = []
 
         # Tunable parameters with established defaults
-        self.params = {
+        self.params: Dict[str, Any] = {
             "proximity_threshold": 0.45,
             "guidance_scale": 1.4,
             "repulsion_scale": 1.0,
             "diffusion_steps": 4,
             "dynamic_entropy_modulation": True,
         }
+
+        # Load persisted parameters if available
+        if hasattr(self.engine, "store") and self.engine.store is not None:
+            saved_params = self.engine.store.load_parameters()
+            for k, v in saved_params.items():
+                if k in self.params:
+                    self.params[k] = v
+            self.improvement_history = self.engine.store.load_improvement_history()
+
+        self._apply_parameters_to_engine()
+
+    def _apply_parameters_to_engine(self):
+        """Synchronizes active controller parameters to connected engine components."""
+        if hasattr(self.engine, "repulsor") and self.engine.repulsor is not None:
+            self.engine.repulsor.PROXIMITY_ALERT_THRESHOLD = float(self.params["proximity_threshold"])
+            self.engine.repulsor.repulsor_weight = float(self.params["repulsion_scale"])
+
 
     def harvest_discovery_experience(self, path: DiscoveryPath) -> int:
         """Automatically harvests falsified hypotheses as negative repulsors and indexes cases."""
@@ -123,13 +140,19 @@ class SelfImprovementController:
             self.params["repulsion_scale"] = new_repulsion
             updates["repulsion_scale"] = f"{current_repulsion:.2f} -> {new_repulsion:.2f}"
 
+        self._apply_parameters_to_engine()
+
         record = {
             "timestamp": len(self.improvement_history) + 1,
             "updates_applied": updates,
             "diagnostic_snapshot": diag,
         }
         self.improvement_history.append(record)
+        if hasattr(self.engine, "store") and self.engine.store is not None:
+            self.engine.store.save_parameters(self.params)
+            self.engine.store.save_improvement_record(record)
         return record
+
 
     def solve_self_optimization_task(self) -> DiscoveryPath:
         """The engine formulates and solves the problem of optimizing its own architecture."""
@@ -243,16 +266,23 @@ class SelfImprovementController:
             "tuned_parameters": dict(self.params),
         }
         self.improvement_history.append(audit_summary)
+        if hasattr(self.engine, "store") and self.engine.store is not None:
+            self.engine.store.save_parameters(self.params)
+            self.engine.store.save_improvement_record(audit_summary)
         return audit_summary
 
     def consolidate_synaptic_memory(self, similarity_threshold: float = 0.75) -> int:
         """Consolidates accumulated negative repulsors into compact centroid schemas."""
         pruned = self.engine.repulsor.consolidate_memory(similarity_threshold=similarity_threshold)
         if pruned > 0:
-            self.improvement_history.append({
+            rec = {
                 "timestamp": len(self.improvement_history) + 1,
                 "action": "SYNAPTIC_MEMORY_CONSOLIDATION",
                 "pruned_redundant_vectors": pruned,
                 "active_centroid_repulsors": len(self.engine.repulsor.dead_ends),
-            })
+            }
+            self.improvement_history.append(rec)
+            if hasattr(self.engine, "store") and self.engine.store is not None:
+                self.engine.store.save_improvement_record(rec)
         return pruned
+

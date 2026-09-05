@@ -6,11 +6,14 @@ in vector space, mathematically deflecting active search trajectories away from 
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service
+
+if TYPE_CHECKING:
+    from super_solver.memory.episodic_store import EpisodicVectorStore
 
 
 class NegativeManifoldRepulsor:
@@ -18,11 +21,26 @@ class NegativeManifoldRepulsor:
 
     PROXIMITY_ALERT_THRESHOLD = 0.48
 
-    def __init__(self, repulsor_weight: float = 0.5, epsilon: float = 1e-4):
+    def __init__(
+        self,
+        repulsor_weight: float = 0.5,
+        epsilon: float = 1e-4,
+        store: Optional[EpisodicVectorStore] = None,
+    ):
         self.repulsor_weight = repulsor_weight
         self.epsilon = epsilon
+        self.store = store
         self.dead_ends: List[np.ndarray] = []
         self.dead_end_descriptions: List[str] = []
+
+        if self.store is not None:
+            loaded = self.store.load_dead_ends()
+            for desc, vec in loaded:
+                norm = np.linalg.norm(vec)
+                if norm > 0:
+                    vec = vec / norm
+                self.dead_ends.append(vec)
+                self.dead_end_descriptions.append(desc)
 
     def register_dead_end(self, description: str, vector: Optional[np.ndarray] = None) -> np.ndarray:
         """Registers a verified dead end or falsified trajectory."""
@@ -33,6 +51,10 @@ class NegativeManifoldRepulsor:
             vector = vector / norm
         self.dead_ends.append(vector)
         self.dead_end_descriptions.append(description)
+
+        if self.store is not None:
+            self.store.insert_dead_end(description=description, vector=vector)
+
         return vector
 
     def check_proximity(
@@ -138,5 +160,10 @@ class NegativeManifoldRepulsor:
 
         self.dead_ends = consolidated_vecs
         self.dead_end_descriptions = consolidated_descs
+
+        if self.store is not None:
+            self.store.sync_dead_ends(list(zip(self.dead_end_descriptions, self.dead_ends, strict=False)))
+
         pruned_count = initial_count - len(self.dead_ends)
         return pruned_count
+
