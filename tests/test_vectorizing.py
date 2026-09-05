@@ -157,6 +157,25 @@ def test_domain_knowledge_retrieval_ranks_correct_solution():
     assert "lightweight aggregates" in hits[0]["content"]
 
 
+def test_structural_matcher_aligns_shared_pattern():
+    """Structural matcher aligns solutions sharing an action pattern across domains."""
+    from super_solver.vectorize.structural import match_structural, structural_signature
+
+    # Post-it and reusable label share the 'low-tack adhesive' pattern.
+    assert structural_signature("Use a low-tack adhesive that peels off cleanly") == \
+        "use a low-tack adhesive"
+    sources = [
+        {"title": "Post-it", "solution": "Use a low-tack adhesive that was originally a failed super-strong glue (Post-it)"},
+        {"title": "Velcro", "solution": "Mimic the hook-and-loop structure of burrs that stick to fabric (Velcro)"},
+    ]
+    hits = match_structural(
+        "How to make a reusable price tag that sticks but peels off cleanly",
+        sources,
+        top_k=1,
+    )
+    assert hits[0]["title"] == "Post-it"
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

@@ -730,6 +730,27 @@ class SuperDuperProblemSolvingEngine:
                 # Domain grounding is best-effort; never abort discovery on it.
                 concrete_claims = []
 
+        # Structural cross-domain fallback: if surface retrieval was weak (no
+        # concrete claims or low similarity), try structural signature matching
+        # so a target problem in a different domain can still find the
+        # structurally-similar source solution.
+        if not concrete_claims:
+            try:
+                from super_solver.vectorize.structural import match_structural
+
+                # Build the source-solution list from the domain-knowledge index.
+                source_solutions = []
+                for row in domain_knowledge.index._rows("solution"):
+                    source_solutions.append(
+                        {"title": row[2] or "", "solution": row[3]}
+                    )
+                for hit in match_structural(
+                    specification, source_solutions, top_k=concrete_top_k
+                ):
+                    concrete_claims.append(hit["content"])
+            except Exception:
+                pass
+
         return self.deduce_discovery_path(
             problem=prob,
             candidate_hypotheses=candidates,
