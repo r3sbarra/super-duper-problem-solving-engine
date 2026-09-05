@@ -138,6 +138,25 @@ def test_solve_engineering_problem_triz_grounded():
     assert "TRIZ principle" in path.final_breakthrough  # TRIZ-grounded
 
 
+def test_domain_knowledge_retrieval_ranks_correct_solution():
+    """Domain-knowledge grounding retrieves the right concrete solution for a problem."""
+    from super_solver.vectorize import VectorizationService
+    from super_solver.vectorize.domain_knowledge import (
+        build_domain_knowledge_index,
+        retrieve_concrete_solutions,
+    )
+
+    dk = VectorizationService(db_path=":memory:")
+    build_domain_knowledge_index(dk)
+    hits = retrieve_concrete_solutions(
+        dk,
+        "How to make a canoe hull that floats despite being made of dense concrete",
+        top_k=3,
+    )
+    assert hits, "domain knowledge should return concrete solutions"
+    assert "lightweight aggregates" in hits[0]["content"]
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

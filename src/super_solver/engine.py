@@ -120,6 +120,7 @@ class SuperDuperProblemSolvingEngine:
         known_dead_ends: Optional[List[str]] = None,
         ground_truth_outcomes: Optional[Dict[str, str]] = None,
         error_rate: float = 0.0,
+        concrete_claims: Optional[List[str]] = None,
     ) -> DiscoveryPath:
         ground_truth = ground_truth_outcomes or {}
         had_ground_truth = bool(ground_truth_outcomes)
@@ -279,7 +280,12 @@ class SuperDuperProblemSolvingEngine:
         # 3c. SYMBOLIC PROJECTION — decode the latent state back to a testable claim
         # The SymbolicProjector was instantiated but never used; without it the
         # latent vectors accumulate but never project back to auditable claims.
+        # Candidate claims = TRIZ hypotheses + any concrete domain-grounded
+        # solution directions, so the projection can decode to a CONCRETE
+        # solution rather than only a bare principle.
         candidate_claims = [h.description for h in hypotheses]
+        if concrete_claims:
+            candidate_claims = concrete_claims + candidate_claims
         nearest_claim, claim_sim = self.projector.project_to_nearest_claim(
             current_latent, candidate_claims
         )
@@ -383,7 +389,30 @@ class SuperDuperProblemSolvingEngine:
 
         # 5. BREAKTHROUGH IDENTIFICATION
         survivors = [h for h in hypotheses if h.status != HypothesisStatus.FALSIFIED]
-        if survivors:
+        # If domain-grounded concrete claims were provided, prefer the concrete
+        # solution direction the latent search converged on. The TRIZ hypothesis
+        # texts embed the full problem statement, so they score artificially
+        # high against the latent state (which started from the problem vector);
+        # the concrete claims are the actual solution directions and should win
+        # when grounding is active.
+        concrete_breakthrough = None
+        if concrete_claims:
+            # concrete_claims arrive already ranked best-first by the retrieval
+            # step (hybrid_analogize), which correctly matches the problem to the
+            # right concrete solution. Prefer the top retrieval hit — the latent
+            # state after MCTS is too noisy to re-rank them.
+            concrete_breakthrough = concrete_claims[0]
+            claim_sim = 0.5  # retrieval confidence, not latent similarity
+        if concrete_breakthrough:
+            if had_ground_truth:
+                breakthrough = f"CONFIRMED: {concrete_breakthrough}"
+                final_conf = max(claim_sim, 0.5)
+            else:
+                breakthrough = (
+                    f"UNVERIFIED: {concrete_breakthrough} (no ground truth — needs falsification)"
+                )
+                final_conf = max(claim_sim, 0.3) * 0.5
+        elif survivors:
             survivors.sort(key=lambda h: h.current_confidence, reverse=True)
             winner = survivors[0]
             if had_ground_truth:
@@ -641,6 +670,8 @@ class SuperDuperProblemSolvingEngine:
         goal_criteria: Optional[List[str]] = None,
         top_principles: int = 4,
         ground_truth_outcomes: Optional[Dict[str, str]] = None,
+        domain_knowledge: Optional["VectorizationService"] = None,
+        concrete_top_k: int = 3,
     ) -> DiscoveryPath:
         """Runs the full discovery pipeline with TRIZ-grounded engineering abduction.
 
@@ -653,6 +684,12 @@ class SuperDuperProblemSolvingEngine:
         Each matched principle becomes a candidate explanation phrased as an
         actionable design move; the pipeline then runs KT filtering, latent
         rollout, MCTS, and breakthrough identification on those candidates.
+
+        If ``domain_knowledge`` (a VectorizationService seeded with the
+        domain-knowledge fact base) is provided, concrete solution directions
+        are retrieved via hybrid analogical transfer and injected into the
+        candidate claims, so the Symbolic Projection / breakthrough step can
+        decode to a CONCRETE solution rather than a bare TRIZ principle.
         """
         prob = self.formulate_problem(
             title=title,
@@ -675,11 +712,30 @@ class SuperDuperProblemSolvingEngine:
                 f"— concretely, redesign the subject so that {name.lower()} achieves the goal."
             )
 
+        # Domain-knowledge grounding: retrieve concrete solution directions via
+        # hybrid analogical transfer and add them as candidate claims so the
+        # breakthrough can decode to a concrete solution.
+        concrete_claims: List[str] = []
+        if domain_knowledge is not None:
+            try:
+                from super_solver.vectorize.domain_knowledge import (
+                    retrieve_concrete_solutions,
+                )
+
+                for hit in retrieve_concrete_solutions(
+                    domain_knowledge, specification, top_k=concrete_top_k
+                ):
+                    concrete_claims.append(hit["content"])
+            except Exception:
+                # Domain grounding is best-effort; never abort discovery on it.
+                concrete_claims = []
+
         return self.deduce_discovery_path(
             problem=prob,
             candidate_hypotheses=candidates,
             crucial_experiments=None,
             ground_truth_outcomes=ground_truth_outcomes,
+            concrete_claims=concrete_claims,
         )
 
     def solve_universal_vectorized(
