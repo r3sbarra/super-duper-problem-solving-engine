@@ -176,6 +176,30 @@ def test_structural_matcher_aligns_shared_pattern():
     assert hits[0]["title"] == "Post-it"
 
 
+def test_primitive_matcher_cross_domain():
+    """Primitive stripper matches structurally-similar problems across domains."""
+    from super_solver.vectorize.primitives import (
+        match_by_primitives,
+        strip_to_primitives,
+    )
+
+    # Concrete canoe and lightweight foam share 'reduce_density' + material.
+    canoe = strip_to_primitives(
+        "How to make a canoe hull that floats despite being made of dense concrete"
+    )
+    assert "reduce_density" in canoe
+    sources = [
+        {"title": "Canoe", "solution": "Use lightweight aggregates to reduce the material's density below that of water"},
+        {"title": "Velcro", "solution": "Mimic the hook-and-loop structure of burrs that stick to fabric"},
+    ]
+    hits = match_by_primitives(
+        "How to make a building panel that is strong but light enough to lift",
+        sources,
+        top_k=1,
+    )
+    assert hits[0]["title"] == "Canoe"
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

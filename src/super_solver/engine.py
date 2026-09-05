@@ -730,26 +730,29 @@ class SuperDuperProblemSolvingEngine:
                 # Domain grounding is best-effort; never abort discovery on it.
                 concrete_claims = []
 
-        # Structural cross-domain fallback: if surface retrieval was weak (no
-        # concrete claims or low similarity), try structural signature matching
-        # so a target problem in a different domain can still find the
-        # structurally-similar source solution.
-        if not concrete_claims:
-            try:
-                from super_solver.vectorize.structural import match_structural
+        # Structural cross-domain matching: strip the target problem and the
+        # source solutions into structural primitives and match on overlap.
+        # This is robust to surface differences (Richard's primitives idea):
+        # two problems in different domains share a structure when they share
+        # primitives (e.g. both 'reduce_density' + 'material'), even if the
+        # surface entities differ. Prefer primitive matches over surface
+        # retrieval when they are strong.
+        try:
+            from super_solver.vectorize.primitives import match_by_primitives
 
-                # Build the source-solution list from the domain-knowledge index.
-                source_solutions = []
-                for row in domain_knowledge.index._rows("solution"):
-                    source_solutions.append(
-                        {"title": row[2] or "", "solution": row[3]}
-                    )
-                for hit in match_structural(
-                    specification, source_solutions, top_k=concrete_top_k
-                ):
-                    concrete_claims.append(hit["content"])
-            except Exception:
-                pass
+            source_solutions = []
+            for row in domain_knowledge.index._rows("solution"):
+                source_solutions.append(
+                    {"title": row[2] or "", "solution": row[3]}
+                )
+            prim_hits = match_by_primitives(
+                specification, source_solutions, top_k=concrete_top_k
+            )
+            # If a primitive match is strong, use it as the concrete claim.
+            if prim_hits and prim_hits[0]["primitive_overlap"] >= 0.15:
+                concrete_claims = [h["content"] for h in prim_hits]
+        except Exception:
+            pass
 
         return self.deduce_discovery_path(
             problem=prob,
