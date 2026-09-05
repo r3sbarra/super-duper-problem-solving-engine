@@ -268,6 +268,31 @@ def test_primitive_analogize_service_cross_domain():
     assert hits[0]["primitive_overlap"] > 0
 
 
+def test_math_coding_primitive_matching():
+    """Math + coding problems match the right solution via primitives."""
+    from super_solver.vectorize import VectorizationService
+    from super_solver.vectorize.domain_knowledge import build_domain_knowledge_index
+
+    svc = VectorizationService(db_path=":memory:")
+    build_domain_knowledge_index(svc)
+
+    cases = [
+        ("How to add up all the numbers from 1 to 100 quickly", "Gauss"),
+        ("How to search a sorted phone book for a name fast", "binary search"),
+        ("How to sort a million records without comparing every pair", "merge sort"),
+        ("How to find the shortest driving route between two cities", "Dijkstra"),
+        ("How to look up a user by ID instantly in a large database", "hash table"),
+        ("How to find the greatest common divisor of 48 and 36", "Euclid"),
+        ("How to compute the nth Fibonacci number without slow recursion", "dynamic programming"),
+    ]
+    correct = 0
+    for prob, expect in cases:
+        hits = svc.primitive_analogize(prob, top_k=1)
+        if hits and expect.lower() in hits[0]["content"].lower():
+            correct += 1
+    assert correct >= 6, f"math/coding primitive matching too weak: {correct}/{len(cases)}"
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

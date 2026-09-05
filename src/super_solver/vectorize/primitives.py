@@ -72,6 +72,27 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"shave|blade|razor|cut.*skin", "blade_guard"),
     (r"bifocal|near.*far vision|lens power|glasses", "combined_lens"),
     (r"note.*stick|paper note|remove.*residue", "temporary_adhesive"),
+    # mathematics
+    (r"sum.*number|add.*number|add up|arithmetic series|consecutive numbers|total.*1 to|sum.*series|sum them|pair.*terms", "arithmetic_sum"),
+    (r"greatest common divisor|gcd|factor.*number|largest.*factor|prime factor", "gcd"),
+    (r"prime|primality|sieve|composite|prime factor", "primality"),
+    (r"area under.*curve|integral|antiderivative|numerical integration|area.*curve", "integration"),
+    (r"linear equations|system of equations|gaussian elimination|row operations|solve.*equation", "linear_solve"),
+    (r"shortest.*path|shortest.*route|weighted graph|dijkstra|relax.*edge|driving route", "shortest_path"),
+    (r"prove.*all natural|induction|base case|holds for n|prove.*every", "induction"),
+    (r"maximum.*function|critical point|derivative.*zero|extreme value|maximize|minimize", "optimization"),
+    (r"fibonacci|nth.*sequence|exponential recursion|recurrence", "dynamic_programming"),
+    # coding / algorithms
+    (r"search.*sorted|binary search|halve.*range|middle element|find.*in.*sorted|search.*phone book", "binary_search"),
+    (r"sort.*list|sort.*record|merge sort|split.*half|sorted halves|order.*items", "sorting"),
+    (r"look up.*key|hash table|hash function|constant time.*lookup|find.*by.*id|find.*by.*key|instant.*lookup|look up.*by.*id", "hashing"),
+    (r"longest common subsequence|prefix lengths|table.*cells|common subsequence", "dynamic_programming"),
+    (r"traverse.*tree|depth-first|breadth-first|visited nodes|graph.*search|visit.*node", "graph_traversal"),
+    (r"minimum spanning tree|kruskal|cheapest edge|no cycle|connect.*all.*node", "spanning_tree"),
+    (r"linked list.*cycle|tortoise|hare|two pointers.*speed|detect.*cycle", "cycle_detection"),
+    (r"compress.*text|huffman|shorter codes|frequent characters|compress.*file", "compression"),
+    (r"maximum subarray|kadane|best sum ending|largest.*subarray", "max_subarray"),
+    (r"evaluate.*expression|postfix|shunting-yard|operator precedence|parse.*expression", "expression_eval"),
 ]
 
 # Object-type primitives: what kind of thing the problem is about.
@@ -86,6 +107,8 @@ OBJECT_PRIMITIVES: List[tuple] = [
     (r"material|concrete|foam|polymer|silicone|cement|coating", "object_material"),
     (r"food|meat|cell|tissue", "object_biological"),
     (r"energy|battery|solar|fusion|power", "object_energy"),
+    (r"series|sequence|number|integer|prime|gcd|equation|function|integral|derivative", "object_math"),
+    (r"list|array|string|graph|tree|linked list|hash|subarray|expression|code|algorithm", "object_code"),
 ]
 
 
@@ -126,13 +149,23 @@ def match_by_primitives(
     """Match a target problem to source solutions by primitive overlap.
 
     Each source solution is stripped to primitives and compared against the
-    target's primitives. Returns ranked matches with the overlap score.
+    target's primitives. Action primitives (e.g. reduce_density, hashing) are
+    weighted higher than object-type primitives (e.g. object_math) because an
+    action match means the solution addresses the SAME KIND of problem, while
+    an object-type match only means it involves a similar subject. This breaks
+    ties where many solutions share a broad object-type primitive.
     """
     t_prims = strip_to_primitives(target_text)
+    t_actions = {p for p in t_prims if not p.startswith("object_")}
     scored = []
     for sol in source_solutions:
         s_prims = strip_to_primitives(sol["solution"])
-        overlap = primitive_overlap(t_prims, s_prims)
+        s_actions = {p for p in s_prims if not p.startswith("object_")}
+        # Containment on action primitives (weighted 2x) + object primitives.
+        action_contain = len(t_actions & s_actions) / len(t_actions) if t_actions else 0.0
+        obj_contain = len((t_prims - t_actions) & (s_prims - s_actions)) / len(t_prims - t_actions) if (t_prims - t_actions) else 0.0
+        # Blend: action matches dominate (2x weight), object matches break ties.
+        overlap = 0.7 * action_contain + 0.3 * obj_contain
         scored.append(
             {
                 "content": sol["solution"],

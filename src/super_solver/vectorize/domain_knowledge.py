@@ -170,6 +170,88 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "make a clock or time source that stays accurate across distributed nodes",
         "solution_direction": "Use a hybrid logical clock combining physical time with logical counters",
     },
+    # --- Mathematics ---
+    {
+        "problem_context": "sum a long arithmetic series of consecutive numbers quickly without adding each term",
+        "solution_direction": "Pair the first and last terms and sum them, then multiply by the count divided by two (Gauss's formula n(n+1)/2)",
+    },
+    {
+        "problem_context": "find the greatest common divisor of two large numbers without factoring them",
+        "solution_direction": "Repeatedly replace the larger number by the remainder of dividing it by the smaller to find the greatest common divisor (Euclid's algorithm)",
+    },
+    {
+        "problem_context": "count the prime numbers up to a large limit efficiently",
+        "solution_direction": "Iteratively mark multiples of each prime as composite, skipping already-marked numbers (Sieve of Eratosthenes)",
+    },
+    {
+        "problem_context": "compute the area under a curve that has no simple antiderivative",
+        "solution_direction": "Approximate the area by summing thin rectangles or trapezoids under the curve (Riemann sum / numerical integration)",
+    },
+    {
+        "problem_context": "solve a system of linear equations with many variables",
+        "solution_direction": "Eliminate variables one at a time by row operations to reach triangular form (Gaussian elimination)",
+    },
+    {
+        "problem_context": "find the shortest path between two points in a weighted graph",
+        "solution_direction": "Repeatedly relax edges from the nearest unvisited node, updating tentative distances (Dijkstra's algorithm)",
+    },
+    {
+        "problem_context": "prove a statement holds for all natural numbers without checking each one",
+        "solution_direction": "Prove the base case, then show that if it holds for n it holds for n+1 (mathematical induction)",
+    },
+    {
+        "problem_context": "find the maximum value of a function on a closed interval",
+        "solution_direction": "Check critical points where the derivative is zero plus the interval endpoints (extreme value theorem)",
+    },
+    {
+        "problem_context": "determine whether a large number is prime without trial division by every smaller number",
+        "solution_direction": "Use a probabilistic test that checks modular exponentiation witnesses (Miller-Rabin primality test)",
+    },
+    {
+        "problem_context": "compute the nth Fibonacci number without exponential recursion",
+        "solution_direction": "Build the Fibonacci sequence iteratively from the bottom up, storing each result (dynamic programming)",
+    },
+    # --- Coding / algorithms ---
+    {
+        "problem_context": "search for a value in a large sorted list faster than checking every element",
+        "solution_direction": "Repeatedly halve the search range by comparing against the middle element (binary search)",
+    },
+    {
+        "problem_context": "sort a large list of items efficiently without nested comparison of every pair",
+        "solution_direction": "Recursively split the list in half, sort each half, and merge the sorted halves (merge sort)",
+    },
+    {
+        "problem_context": "look up a value by key in constant time without scanning the whole collection",
+        "solution_direction": "Map each key to a bucket index via a hash function and store the value there (hash table)",
+    },
+    {
+        "problem_context": "find the longest common subsequence of two strings without trying all subsequences",
+        "solution_direction": "Fill a table of prefix lengths, building the answer from previously computed cells (dynamic programming)",
+    },
+    {
+        "problem_context": "traverse or search a tree or graph visiting each node exactly once",
+        "solution_direction": "Use a stack to explore depth-first or a queue to explore breadth-first, marking visited nodes",
+    },
+    {
+        "problem_context": "find the minimum spanning tree connecting all nodes of a graph with least total weight",
+        "solution_direction": "Repeatedly add the cheapest edge that connects a new node without forming a cycle (Kruskal's algorithm)",
+    },
+    {
+        "problem_context": "detect whether a linked list contains a cycle without extra memory",
+        "solution_direction": "Advance two pointers at different speeds; if they meet, a cycle exists (Floyd's tortoise and hare)",
+    },
+    {
+        "problem_context": "compress a text file by replacing frequent patterns with shorter codes",
+        "solution_direction": "Build a binary tree of character frequencies and assign shorter codes to more frequent characters (Huffman coding)",
+    },
+    {
+        "problem_context": "find the maximum subarray sum in a sequence without checking every subarray",
+        "solution_direction": "Scan once, keeping the best sum ending at each position and the global best (Kadane's algorithm)",
+    },
+    {
+        "problem_context": "evaluate a mathematical expression with operator precedence without ambiguity",
+        "solution_direction": "Convert the expression to postfix notation and evaluate with a stack (shunting-yard algorithm)",
+    },
 ]
 
 
