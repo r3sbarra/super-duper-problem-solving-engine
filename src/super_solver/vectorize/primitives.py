@@ -144,3 +144,50 @@ def match_by_primitives(
         )
     scored.sort(key=lambda x: x["primitive_overlap"], reverse=True)
     return scored[:top_k]
+
+
+# ---------------------------------------------------------------------------
+# Solution validation: is a generated solution worth learning?
+# ---------------------------------------------------------------------------
+# Vague principle phrases that indicate the engine did NOT produce a concrete
+# solution (it fell back to a TRIZ principle description).
+VAGUE_MARKERS = [
+    "phase transition", "inert atmosphere", "segmentation", "dynamization",
+    "self-service", "copying", "cheap disposable", "mechanical vibration",
+    "periodic action", "porosity", "color change", "thermal expansion",
+    "composite", "parameter change", "spheroidality", "prior action",
+    "cushion in advance", "equipotentiality", "another dimension",
+    "feedback", "intermediary", "blessing in disguise", "homogeneity",
+    "discarding", "reversing", "partial action", "asymmetry", "extraction",
+    "merging", "universality", "nested doll", "counterweight", "preventive",
+    "pre-arrangement", "replacement", "flexible shell", "thin film",
+    "porous material", "optical property", "local quality", "taking out",
+]
+
+
+def validate_solution(generated: str, target_problem: str) -> dict:
+    """Validate a generated solution. Returns {valid, reason, primitives}.
+
+    A solution is valid (worth learning) if it is:
+    1. Concrete — not a vague TRIZ principle description.
+    2. Non-trivial — has structural primitives (not an empty echo).
+    3. A real solution — has at least one action primitive (e.g.
+       reduce_density, mimic_structure, liquefy), not just object types.
+    """
+    gl = generated.lower()
+    # 1. Concreteness: must not be a vague TRIZ principle.
+    for marker in VAGUE_MARKERS:
+        if marker in gl:
+            return {"valid": False, "reason": f"vague principle: '{marker}'", "primitives": set()}
+
+    # 2. Non-triviality: must not just echo the problem.
+    gen_prims = strip_to_primitives(generated)
+    if not gen_prims:
+        return {"valid": False, "reason": "no structural primitives", "primitives": set()}
+
+    # 3. Structural relevance: must have at least one action primitive.
+    action_prims = {p for p in gen_prims if not p.startswith("object_")}
+    if not action_prims:
+        return {"valid": False, "reason": "no action primitive (not a solution)", "primitives": gen_prims}
+
+    return {"valid": True, "reason": "concrete action primitive", "primitives": gen_prims}

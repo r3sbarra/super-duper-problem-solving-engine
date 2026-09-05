@@ -218,6 +218,26 @@ def test_entity_substitution_adapts_to_target_domain():
     assert "roof" in adapted2
 
 
+def test_validate_solution_rejects_vague_and_accepts_concrete():
+    """Validation gate rejects vague principles, accepts concrete solutions."""
+    from super_solver.vectorize.primitives import validate_solution
+
+    # Vague TRIZ principle -> rejected.
+    v = validate_solution(
+        "Use phase transition to change the state of the material",
+        "How to make a building panel that is light enough to lift",
+    )
+    assert not v["valid"]
+    assert "vague" in v["reason"]
+
+    # Concrete solution -> accepted.
+    v2 = validate_solution(
+        "Use lightweight aggregates to reduce the panel's density",
+        "How to make a building panel that is light enough to lift",
+    )
+    assert v2["valid"]
+
+
 def test_relatedness_margin_polarity_vs_ollama():
     """The ollama custom embedder should separate related from unrelated pairs
     better than the deterministic polarity embedder (semantic relatedness)."""

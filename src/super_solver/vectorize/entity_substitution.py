@@ -36,7 +36,6 @@ ENTITY_PATTERNS: List[tuple] = [
 # object being acted on), not the target solution's more specific phrasing.
 KNOWN_SUBSTITUTIONS: Dict[str, Dict[str, str]] = {
     "burrs": {"climbing pad": "climbing pad", "pad": "climbing pad"},
-    "hook-and-loop": {"climbing pad": "climbing pad"},
     "cement": {"windows": "windows", "glass": "glass"},
     "gas": {"hydrogen": "hydrogen"},
     "factory roof": {"base": "base"},
@@ -88,22 +87,57 @@ def substitute_entity(
        source's key entity in the solution text.
     """
     known = known or {}
+    result = source_solution
+    tgt_ent = None
     # Try known substitutions first (source entity -> target entity).
     for src_ent, tgt_map in KNOWN_SUBSTITUTIONS.items():
-        if src_ent in source_solution.lower():
+        if src_ent in result.lower():
             # Find which target entity appears in the target problem.
-            for tgt_ent in tgt_map:
-                if tgt_ent in target_problem.lower():
+            for tgt_ent_cand in tgt_map:
+                if tgt_ent_cand in target_problem.lower():
                     # Substitute the source entity with the target entity.
-                    return re.sub(
-                        re.escape(src_ent), tgt_ent, source_solution, flags=re.IGNORECASE
+                    result = re.sub(
+                        re.escape(src_ent), tgt_ent_cand, result, flags=re.IGNORECASE
                     )
+                    tgt_ent = tgt_ent_cand
+                    break
 
     # Fallback: extract target entity and substitute for source entity.
-    tgt_ent = extract_target_entity(target_problem)
-    src_ent = extract_source_entity(source_solution)
-    if tgt_ent and src_ent and src_ent.lower() != tgt_ent.lower():
-        return re.sub(
-            re.escape(src_ent), tgt_ent, source_solution, flags=re.IGNORECASE
+    if tgt_ent is None:
+        tgt_ent = extract_target_entity(target_problem)
+        src_ent = extract_source_entity(result)
+        if tgt_ent and src_ent and src_ent.lower() != tgt_ent.lower():
+            result = re.sub(
+                re.escape(src_ent), tgt_ent, result, flags=re.IGNORECASE
+            )
+
+    return _fix_grammar(result, tgt_ent)
+
+
+def _fix_grammar(text: str, target_entity: Optional[str] = None) -> str:
+    """Fix common grammar issues introduced by entity substitution.
+
+    Conservative: only fixes patterns that are clearly broken by substitution.
+    - Missing article before the substituted entity ('of climbing pad' -> 'of a climbing pad')
+    - Verb agreement after a singular subject ('that stick' -> 'that sticks')
+    """
+    # Missing article before the substituted entity (only if it's a known
+    # entity from the target problem, not arbitrary words).
+    if target_entity and not target_entity.startswith(("a ", "an ", "the ")):
+        # 'of <entity>' / 'with <entity>' / 'on <entity>' -> 'of a <entity>'
+        text = re.sub(
+            r"\b(of|with|on|in|to|from|for) " + re.escape(target_entity) + r"\b",
+            lambda m: m.group(1) + " a " + target_entity,
+            text,
+            flags=re.IGNORECASE,
         )
-    return source_solution
+    # Verb agreement: 'that stick' -> 'that sticks' after a singular subject.
+    # Only when the subject is the substituted entity (singular).
+    if target_entity and not target_entity.endswith("s"):
+        text = re.sub(
+            r"\bthat (stick|adhere|attach|grip)s?\b",
+            lambda m: "that " + m.group(1) + "s",
+            text,
+            flags=re.IGNORECASE,
+        )
+    return text
