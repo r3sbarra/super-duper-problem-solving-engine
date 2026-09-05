@@ -232,3 +232,121 @@ class LabAssSuperSolverBridge:
             }
             for r in ranked
         ]
+
+    # ------------------------------------------------------------------
+    # Problem / Solution / Path vectorizing (custom embedder + vector index)
+    # ------------------------------------------------------------------
+
+    def _vector_service(self):
+        from super_solver.vectorize import VectorizationService
+
+        if getattr(self, "_vec_svc", None) is None:
+            self._vec_svc = VectorizationService()
+        return self._vec_svc
+
+    def vectorize_problem(
+        self,
+        specification: str,
+        title: str = "",
+        goal_criteria: Optional[List[str]] = None,
+        boundary_is: Optional[List[str]] = None,
+        boundary_is_not: Optional[List[str]] = None,
+        store: bool = True,
+    ) -> Dict[str, Any]:
+        """Encode a problem into a vector; optionally index it for later retrieval."""
+        svc = self._vector_service()
+        vec = svc.encode_problem(
+            specification, title, goal_criteria, boundary_is, boundary_is_not
+        )
+        result = {
+            "kind": "problem",
+            "title": title,
+            "specification": specification,
+            "dim": int(vec.shape[0]),
+            "vector": vec.tolist(),
+        }
+        if store:
+            result["id"] = svc.store_problem(
+                specification, title, goal_criteria, boundary_is, boundary_is_not
+            )
+        return result
+
+    def vectorize_solution(
+        self,
+        solution_text: str,
+        method: str = "",
+        domain: str = "",
+        operators: Optional[List[str]] = None,
+        title: str = "",
+        store: bool = True,
+    ) -> Dict[str, Any]:
+        """Encode a solution into a vector; optionally index it."""
+        svc = self._vector_service()
+        vec = svc.encode_solution(solution_text, method, domain, operators)
+        result = {
+            "kind": "solution",
+            "title": title,
+            "solution": solution_text,
+            "dim": int(vec.shape[0]),
+            "vector": vec.tolist(),
+        }
+        if store:
+            result["id"] = svc.store_solution(
+                solution_text, method, domain, operators, title=title
+            )
+        return result
+
+    def vectorize_path(
+        self,
+        steps: List[str],
+        operator_types: Optional[List[str]] = None,
+        final_breakthrough: str = "",
+        title: str = "",
+        store: bool = True,
+    ) -> Dict[str, Any]:
+        """Encode a discovery path (sequence of reasoning steps) into a vector."""
+        svc = self._vector_service()
+        vec = svc.encode_path(steps, operator_types, final_breakthrough)
+        result = {
+            "kind": "path",
+            "title": title,
+            "steps": steps,
+            "dim": int(vec.shape[0]),
+            "vector": vec.tolist(),
+        }
+        if store:
+            result["id"] = svc.store_path(
+                steps, operator_types, final_breakthrough, title=title
+            )
+        return result
+
+    def search_vectors(
+        self,
+        query_text: str,
+        kind: Optional[str] = None,
+        top_k: int = 5,
+        min_similarity: float = 0.0,
+    ) -> Dict[str, Any]:
+        """Search the vector index for entries similar to ``query_text``."""
+        svc = self._vector_service()
+        vec = svc.backend.encode(query_text)
+        hits = svc.search(vec, kind=kind, top_k=top_k, min_similarity=min_similarity)
+        return {"query": query_text, "kind": kind, "hits": hits}
+
+    def analogize_problem(
+        self,
+        specification: str,
+        title: str = "",
+        top_k: int = 3,
+        min_similarity: float = 0.0,
+    ) -> Dict[str, Any]:
+        """Find similar past problems and return their linked solutions + paths.
+
+        This is the analogical-transfer primitive: given a new problem, retrieve
+        the most similar previously-solved problem and its proven solution and
+        discovery path so the solver can reuse a successful trajectory.
+        """
+        svc = self._vector_service()
+        vec = svc.encode_problem(specification, title=title)
+        analogs = svc.analogize(vec, top_k=top_k, min_similarity=min_similarity)
+        return {"problem": specification, "analogs": analogs}
