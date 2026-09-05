@@ -291,6 +291,37 @@ python -m super_solver.cli self-improve
 python -m super_solver.cli consolidate-memory --threshold 0.75
 ```
 
+### 8. Cross-Domain Analogical Transfer (Structural Primitives)
+
+Surface vector retrieval fails when a problem in one domain is structurally
+similar to a problem in another (e.g. a climbing pad that grips walls and
+Velcro's hook-and-loop mimicry). The engine strips problems and solutions into
+structural primitives — atomic action + object-type atoms (e.g. `reduce_density`,
+`mimic_structure`, `adhesion`) — and matches on those, which is robust to
+surface entity differences.
+
+```python
+from super_solver.vectorize import VectorizationService
+
+svc = VectorizationService()
+# ... store source solutions ...
+
+# Cross-domain retrieval: climbing pad -> Velcro/gecko mimicry
+hits = svc.primitive_analogize(
+    "How to make a climbing pad that grips smooth vertical walls without glue",
+    top_k=3,
+)
+for h in hits:
+    print(f"{h['primitive_overlap']:.2f}: {h['content']}")
+```
+
+Or via the CLI:
+
+```bash
+python -m super_solver.cli vectorize primitive-analogize \
+  "How to make a climbing pad that grips smooth vertical walls without glue"
+```
+
 ---
 
 ## 6. Benchmark Performance
