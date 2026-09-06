@@ -49,6 +49,10 @@ from super_solver.meta.self_improvement import SelfImprovementController
 from super_solver.search.curiosity import CuriosityEngine
 from super_solver.search.mcts_prm import LatentMCTSEngine, ProcessRewardModel
 from super_solver.search.negative_manifold import NegativeManifoldRepulsor
+from super_solver.core.llm_parser import llm_client
+from super_solver.core.tool_registry import ToolRegistry, default_tool_registry
+from super_solver.frameworks.code_synthesizer import CodeSynthesizer, SynthesisResult
+from super_solver.frameworks.diagnostician import AutomatedDiagnostician, DiagnosticReport
 
 
 class SuperDuperProblemSolvingEngine:
@@ -90,6 +94,97 @@ class SuperDuperProblemSolvingEngine:
         self.smt = smt_solver
         self.sandbox = code_sandbox
         self.manuscript = manuscript_generator
+
+        # Small/Low-end model neurosymbolic extensions
+        self.tools: ToolRegistry = default_tool_registry
+        self.synthesizer = CodeSynthesizer(client=llm_client, sandbox=self.sandbox)
+        self.diagnostician = AutomatedDiagnostician(client=llm_client, kt_engine=self.kt)
+
+    def program(
+        self,
+        specification: str,
+        test_cases: Optional[str] = None,
+        context: Optional[str] = None,
+    ) -> SynthesisResult:
+        """Synthesizes code from specification, executing and verifying in the sandbox."""
+        return self.synthesizer.synthesize_and_verify(
+            specification=specification, test_cases=test_cases, context=context
+        )
+
+    def diagnose(
+        self,
+        error_log_or_description: str,
+        context: Optional[str] = None,
+        candidate_causes: Optional[List[str]] = None,
+    ) -> DiagnosticReport:
+        """Diagnoses a bug or failure using Kepner-Tregoe 4D contrastive hyperplane separation."""
+        return self.diagnostician.diagnose_failure(
+            error_log_or_description=error_log_or_description,
+            context=context,
+            candidate_causes=candidate_causes,
+        )
+
+    def run_agentic_tool_loop(
+        self,
+        goal: str,
+        prune_top_k: int = 3,
+        max_steps: int = 6,
+    ) -> Dict[str, Any]:
+        """Runs a tool-assisted problem-solving loop with small-model schema pruning & loop breaker."""
+        from super_solver.core.tool_registry import ToolLoopCircuitBreaker
+
+        circuit_breaker = ToolLoopCircuitBreaker(max_repetitions=3, max_total_steps=max_steps)
+        history: List[Dict[str, Any]] = []
+        current_state = goal
+
+        for step_idx in range(1, max_steps + 1):
+            # Dynamic pruning: select only top_k tools relevant to current sub-goal
+            candidate_tools = self.tools.prune_tools_for_query(current_state, top_k=prune_top_k)
+            tool_schemas = [t.to_schema() for t in candidate_tools]
+
+            # Ask small model to pick tool & format call
+            tool_call = llm_client.call_with_tools(current_state, tool_schemas)
+            if not tool_call or tool_call.get("name") in ("none", "", None):
+                break
+
+            tool_name = tool_call["name"]
+            arguments = tool_call.get("arguments", {})
+
+            # Circuit breaker check for infinite repetition
+            is_loop, loop_reason = circuit_breaker.record_and_check(tool_name, arguments)
+            if is_loop:
+                history.append({
+                    "step": step_idx,
+                    "tool": tool_name,
+                    "arguments": arguments,
+                    "error": loop_reason,
+                    "deflected": True,
+                })
+                break
+
+            # Execute tool
+            res = self.tools.execute(tool_name, arguments)
+            step_record = {
+                "step": step_idx,
+                "tool": tool_name,
+                "arguments": arguments,
+                "success": res.success,
+                "output": res.output,
+                "error": res.error,
+                "execution_time_ms": res.execution_time_ms,
+            }
+            history.append(step_record)
+
+            # Update state for next step
+            obs_summary = str(res.output)[:400] if res.success else f"Error: {res.error}"
+            current_state = f"Goal: {goal}\nPrevious Action: {tool_name} with {arguments}\nObservation: {obs_summary}\nWhat is the next step?"
+
+        return {
+            "goal": goal,
+            "steps_taken": len(history),
+            "history": history,
+            "success": any(h.get("success") for h in history) if history else False,
+        }
 
     def formulate_problem(
         self,

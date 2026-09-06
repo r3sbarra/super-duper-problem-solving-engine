@@ -595,3 +595,48 @@ class LabAssSuperSolverBridge:
 
         batch_result = await client.add_findings_batch(session_id, findings)
         return {"audit_summary": audit, "findings_written": batch_result}
+
+    async def diagnose_failure_and_record(
+        self,
+        session_id: str,
+        error_log_or_description: str,
+        angle_id: Optional[str] = None,
+        agent_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Runs Kepner-Tregoe 4D diagnosis on a failure and logs finding to lab-ass."""
+        report = self.engine.diagnose(error_log_or_description)
+        client = LabAssClient()
+
+        top_cause = report.top_root_cause.cause if report.top_root_cause else "Undetermined"
+        score = report.top_root_cause.net_score if report.top_root_cause else 0.0
+
+        content = (
+            f"[KT-Diagnosis] Root Cause: {top_cause} (score={score:.2f}, resolved={report.is_resolved}). "
+            f"Boundary IS: {report.boundary.identity_is} at {report.boundary.location_is}. "
+            f"Boundary IS NOT: {report.boundary.identity_is_not}."
+        )
+
+        res = await client.add_finding(
+            session_id=session_id,
+            content=content,
+            confidence=0.92 if report.is_resolved else 0.65,
+            agent_id=agent_id,
+            angle_id=angle_id,
+        )
+        return {"diagnostic_report": report, "finding": res}
+
+    def synthesize_verified_code(
+        self,
+        specification: str,
+        test_cases: Optional[str] = None,
+        context: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Synthesizes code and runs sandbox verification for agentic tasks."""
+        res = self.engine.program(specification, test_cases, context)
+        return {
+            "success": res.success,
+            "code": res.code,
+            "iterations": res.iterations,
+            "error": res.error,
+        }
+
