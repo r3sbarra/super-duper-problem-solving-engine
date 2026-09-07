@@ -18,7 +18,7 @@ solutions, and discovery paths can be encoded into dense vectors:
   representation, falling back to polarity-only if Ollama is unreachable.
 
 The active backend is selected by ``SUPER_SOLVER_EMBEDDER`` (default
-``polarity``). All backends expose the same ``encode(text) -> np.ndarray`` and
+``neural``). All backends expose the same ``encode(text) -> np.ndarray`` and
 ``cosine_similarity(a, b) -> float`` API, so the rest of the engine is
 backend-agnostic.
 """
@@ -320,7 +320,13 @@ _BACKENDS: dict[str, type[EmbedderBackend]] = {
 
 
 def get_backend(name: Optional[str] = None) -> EmbedderBackend:
-    """Resolve an embedder backend by name (env ``SUPER_SOLVER_EMBEDDER``)."""
+    """Resolve an embedder backend by name (env ``SUPER_SOLVER_EMBEDDER``).
+
+    Default is ``polarity`` (384d) so the query embedder matches the persistent
+    vector index (built with the polarity embedder). Set
+    ``SUPER_SOLVER_EMBEDDER=neural`` to use the distilled 256d neural embedder
+    (requires rebuilding the index to 256d for consistent retrieval).
+    """
     key = (name or os.getenv("SUPER_SOLVER_EMBEDDER", "polarity")).lower()
     cls = _BACKENDS.get(key, PolarityBackend)
     return cls()

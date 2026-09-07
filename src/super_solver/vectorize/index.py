@@ -143,6 +143,10 @@ class VectorIndex:
         results = []
         for r_id, r_kind, r_title, r_content, blob, meta in self._rows(kind):
             vec = np.frombuffer(blob, dtype=np.float32)
+            # Guard against mixed-dimension vectors (embedder config changed between
+            # writes). Skip mismatched rows instead of crashing the whole search.
+            if vec.shape[0] != query_vector.shape[0]:
+                continue
             sim = self.backend.cosine_similarity(query_vector, vec)
             if sim >= min_similarity:
                 results.append(
@@ -206,7 +210,7 @@ class VectorIndex:
             sol_sim = 0.0
             if linked["solution"] is not None:
                 sol_vec = self._vector_of(linked["solution"]["id"])
-                if sol_vec is not None:
+                if sol_vec is not None and sol_vec.shape[0] == problem_vector.shape[0]:
                     sol_sim = self.backend.cosine_similarity(problem_vector, sol_vec)
             blended = (1.0 - solution_weight) * prob_sim + solution_weight * sol_sim
             scored.append((blended, prob_sim, sol_sim, linked))
