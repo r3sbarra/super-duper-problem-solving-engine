@@ -110,6 +110,30 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"median.*two sorted|partition point|logarithmic.*median", "median_sorted"),
     (r"palindrome|compare.*both ends|skip.*non-alphanumeric", "palindrome"),
     (r"number of islands|flood-fill|grid.*land.*water|count.*island", "flood_fill"),
+    # --- networking / distributed systems ---
+    (r"fail over|replica|replicate.*node|leader.*die|primary.*down|keep.*running.*server|high availability|failover", "failover"),
+    (r"agree.*same|consensus|raft|paxos|majority.*agree|same.*order|settle.*order", "consensus"),
+    (r"exactly once|deduplicat|duplicate.*message|processed once|unique id.*message", "exactly_once"),
+    (r"load balanc|distribute.*traffic|balance.*request|too many.*server|spread.*load", "load_balance"),
+    (r"circuit breaker|fail fast|slow.*backend|timeout.*drag|timing out|dragging down|protect.*from.*slow|one.*service.*down", "circuit_breaker"),
+    (r"retry.*backoff|exponential backoff|jitter|retry.*flaky|back off", "backoff_retry"),
+    (r"scale.*spike|auto-scale|horizontal.*scale|more instances|handle.*surge|sudden.*traffic", "horizontal_scale"),
+    (r"queue.*survive|durable queue|lease.*crash|work.*not lost|persist.*queue", "durable_queue"),
+    # --- security / reliability ---
+    (r"unauthorized|authentication|authorization|verify identity|check permission|stranger.*get.*in|prevent.*access", "auth"),
+    (r"encrypt|eavesdrop|sniff.*traffic|protect.*data.*read|cipher|secure.*transmission", "encryption"),
+    (r"compromised|anomaly|known-bad|baseline behavior|intrusion|behaving abnormally", "anomaly_detection"),
+    (r"recover.*crash|backup|restore|disaster|recovery time|get.*data.*back", "backup_recovery"),
+    (r"fail gracefully|graceful degradation|partial failure|contain.*failure|not.*go down|fallback", "graceful_degradation"),
+    (r"malicious input|sanitize|validate.*input|sandbox|exploit.*program|untrusted code", "input_sanitization"),
+    # --- data engineering / ops ---
+    (r"does not fit.*memory|partition.*data|process.*parallel.*cluster|large dataset|aggregate.*result", "data_partitioning"),
+    (r"schema.*change|schema validation|contract test|fail loudly|unexpected data shape", "schema_validation"),
+    (r"slow.*query|add.*index|full scan|index.*column|where.*join.*clause|crawls.*table|takes forever|search.*slow", "indexing"),
+    (r"checkpoint|resume.*last|interrupted.*job|lose progress|restart.*scratch", "checkpointing"),
+    (r"rolling baseline|deviate.*threshold|drift.*normal|metric.*out of range", "baseline_monitoring"),
+    (r"blue-green|canary|deploy.*without downtime|fraction.*traffic|new version.*risk", "canary_deploy"),
+    (r"root cause|intermittent|hard to reproduce|structured logging|tracing|reconstruct.*evidence|only happens sometimes|figure out where", "root_cause_tracing"),
 ]
 
 # Object-type primitives: what kind of thing the problem is about.
@@ -126,6 +150,9 @@ OBJECT_PRIMITIVES: List[tuple] = [
     (r"energy|battery|solar|fusion|power", "object_energy"),
     (r"series|sequence|number|integer|prime|gcd|equation|function|integral|derivative", "object_math"),
     (r"list|array|string|graph|tree|linked list|hash|subarray|expression|code|algorithm", "object_code"),
+    (r"server|node|replica|cluster|network|traffic|load balancer|queue|message|distributed", "object_infra"),
+    (r"user|request|access|permission|password|credential|attack|threat|intrusion", "object_security"),
+    (r"data|dataset|schema|query|index|metric|log|pipeline|backup|deploy|version", "object_data"),
 ]
 
 

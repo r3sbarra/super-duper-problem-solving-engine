@@ -314,6 +314,93 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "find the number of islands in a grid of land and water cells",
         "solution_direction": "Flood-fill each unvisited land cell with depth-first search, counting each fill as one island",
     },
+    # --- Networking / distributed systems ---
+    {
+        "problem_context": "keep a distributed system available when one server or node fails",
+        "solution_direction": "Replicate state across multiple nodes and fail over to a healthy replica when the leader dies",
+    },
+    {
+        "problem_context": "make all nodes in a distributed system agree on the same value or order",
+        "solution_direction": "Use a consensus protocol (Raft or Paxos) where a majority of nodes must agree before committing",
+    },
+    {
+        "problem_context": "deliver a message exactly once across an unreliable network that may drop or duplicate",
+        "solution_direction": "Assign each message a unique id and deduplicate on the receiver while retrying on timeout",
+    },
+    {
+        "problem_context": "balance incoming traffic across many servers so no single one is overloaded",
+        "solution_direction": "Put a load balancer in front that distributes requests round-robin or by least connections",
+    },
+    {
+        "problem_context": "make a service continue working when the database or backend is slow or down",
+        "solution_direction": "Add a circuit breaker that fails fast and serves cached or degraded responses during outages",
+    },
+    {
+        "problem_context": "retry a network call that intermittently fails without hammering the server",
+        "solution_direction": "Retry with exponential backoff and jitter, capping the number of attempts",
+    },
+    {
+        "problem_context": "scale a service to handle a sudden spike in traffic without downtime",
+        "solution_direction": "Auto-scale horizontally by adding more instances behind a load balancer based on load metrics",
+    },
+    {
+        "problem_context": "keep a queue of work that survives a worker crash and is not lost",
+        "solution_direction": "Persist the queue to durable storage and use leases so a crashed worker's work is retried",
+    },
+    # --- Security / reliability ---
+    {
+        "problem_context": "prevent unauthorized users from accessing a system or resource",
+        "solution_direction": "Require authentication (verify identity) and authorization (check permissions) on every request",
+    },
+    {
+        "problem_context": "protect data stored or transmitted so an eavesdropper cannot read it",
+        "solution_direction": "Encrypt the data with a strong cipher and manage keys separately from the data",
+    },
+    {
+        "problem_context": "detect that a system has been compromised or is behaving abnormally",
+        "solution_direction": "Monitor for anomalies and known-bad signatures, alerting on deviations from baseline behavior",
+    },
+    {
+        "problem_context": "recover a system quickly after a crash or disaster without losing data",
+        "solution_direction": "Take regular backups and define a tested restore procedure with a recovery time objective",
+    },
+    {
+        "problem_context": "make a system fail gracefully instead of crashing completely when a component errors",
+        "solution_direction": "Isolate failures with timeouts, fallbacks, and graceful degradation so partial failure is contained",
+    },
+    {
+        "problem_context": "prevent a malicious input from crashing or exploiting a program",
+        "solution_direction": "Validate and sanitize all input, and run untrusted code in a sandbox with limited privileges",
+    },
+    # --- Data engineering / ops ---
+    {
+        "problem_context": "process a very large dataset that does not fit in memory on one machine",
+        "solution_direction": "Partition the data and process it in parallel across a cluster, then aggregate the results",
+    },
+    {
+        "problem_context": "keep a data pipeline from failing silently when a source schema changes",
+        "solution_direction": "Add schema validation and contract tests that fail loudly on unexpected data shapes",
+    },
+    {
+        "problem_context": "make a slow database query fast without changing the application code",
+        "solution_direction": "Add an index on the columns used in the WHERE and JOIN clauses to avoid full scans",
+    },
+    {
+        "problem_context": "keep a long-running job from losing progress if it is interrupted",
+        "solution_direction": "Checkpoint progress periodically so the job can resume from the last checkpoint",
+    },
+    {
+        "problem_context": "detect when a metric or system behavior drifts outside its normal range",
+        "solution_direction": "Track a rolling baseline and alert when the current value deviates by more than a threshold",
+    },
+    {
+        "problem_context": "deploy new code without downtime or risk to the running system",
+        "solution_direction": "Use blue-green or canary deployment, routing a small fraction of traffic to the new version first",
+    },
+    {
+        "problem_context": "find the root cause of an intermittent failure that is hard to reproduce",
+        "solution_direction": "Add structured logging and tracing so the failure path can be reconstructed from evidence",
+    },
 ]
 
 
