@@ -89,6 +89,14 @@ class BOEDDesigner:
             h_post = self.compute_shannon_entropy(posteriors_per_outcome[outcome])
             expected_posterior_entropy += p_y * h_post
 
+        # An experiment with no observable outcomes yields ZERO information: the
+        # posterior can never change, so expected posterior entropy equals prior
+        # entropy and EIG = 0. Without this guard, an empty outcome set would
+        # rank as maximally informative (prior_entropy - 0.0), letting a no-op
+        # experiment beat genuinely informative ones in rank_optimal_experiments.
+        if not outcome_marginals:
+            expected_posterior_entropy = prior_entropy
+
         eig = max(0.0, prior_entropy - expected_posterior_entropy)
         # Cost-penalized utility
         cost_penalized_utility = eig / max(0.1, math.sqrt(design.cost))

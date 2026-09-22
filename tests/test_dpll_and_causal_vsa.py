@@ -172,3 +172,28 @@ def test_boed_expected_information_gain_ranking():
     assert ranked[0]["expected_information_gain"] > 0.40
     assert ranked[1]["design_id"] == "exp_dc"
     assert ranked[1]["expected_information_gain"] < 0.05
+
+
+def test_boed_empty_outcome_design_has_zero_eig():
+    """An experiment with no observable outcomes must rank as ZERO information,
+    never as maximally informative. Regression: evaluate_design_eig left
+    expected_posterior_entropy = 0 for an empty outcome set, so EIG = prior
+    entropy (the theoretical MAX), letting a no-op experiment out-rank genuinely
+    informative ones in rank_optimal_experiments."""
+    designer = BOEDDesigner()
+    priors = {"H1": 0.5, "H2": 0.5}
+
+    d_empty = CandidateExperimentDesign("empty", "no outcomes", "", {}, cost=1.0)
+    d_info = CandidateExperimentDesign("info", "informative", "", {}, cost=1.0)
+    d_weak = CandidateExperimentDesign("weak", "weak", "", {}, cost=1.0)
+
+    lk_info = {"y1": {"H1": 0.9, "H2": 0.1}, "y2": {"H1": 0.1, "H2": 0.9}}
+    lk_weak = {"y1": {"H1": 0.55, "H2": 0.45}, "y2": {"H1": 0.45, "H2": 0.55}}
+    likelihood = {"empty": {}, "info": lk_info, "weak": lk_weak}
+
+    ranked = designer.rank_optimal_experiments(priors, [d_empty, d_info, d_weak], likelihood)
+    assert ranked[0]["design_id"] == "info"
+    assert ranked[1]["design_id"] == "weak"
+    assert ranked[2]["design_id"] == "empty"
+    assert ranked[2]["expected_information_gain"] == 0.0
+    assert ranked[0]["expected_information_gain"] > ranked[2]["expected_information_gain"]
