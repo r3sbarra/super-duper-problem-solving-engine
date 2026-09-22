@@ -21,13 +21,14 @@ def main():
 @main.command()
 @click.argument("problem_title")
 @click.option("--spec", required=True, help="Problem specification / anomaly observation")
-def solve(problem_title: str, spec: str):
+@click.option("--full", "-f", is_flag=True, help="Execute full autonomous discovery path deduction (MCTS + Platt + Lakatos)")
+def solve(problem_title: str, spec: str, full: bool):
     """Solve or deduce the path for a given problem."""
     console.print(
         Panel(f"[bold cyan]{problem_title}[/bold cyan]\n{spec}", title="Problem Formulation")
     )
     engine = SuperDuperProblemSolvingEngine()
-    engine.formulate_problem(title=problem_title, specification=spec)
+    prob = engine.formulate_problem(title=problem_title, specification=spec)
 
     triz_matches = engine.triz.suggest_principles(spec, top_k=3)
     t = Table(title="Suggested TRIZ Inventive Operators")
@@ -38,6 +39,27 @@ def solve(problem_title: str, spec: str):
     for p in triz_matches:
         t.add_row(str(p["principle_id"]), p["name"], f"{p['similarity_score']:.3f}")
     console.print(t)
+
+    if full:
+        console.print("[bold yellow]Deducing Autonomous Discovery Path...[/bold yellow]")
+        path = engine.deduce_discovery_path(prob)
+        console.print(
+            Panel(
+                f"[bold green]Breakthrough:[/bold green] {path.final_breakthrough}\n"
+                f"[bold]Confidence:[/bold] {path.confidence:.2f}  |  "
+                f"[bold]Steps:[/bold] {len(path.steps)}  |  "
+                f"[bold]Falsified Paths:[/bold] {len(path.falsified_paths)}",
+                title="Discovery Trajectory Result",
+            )
+        )
+        st = Table(title="Deduced Reasoning Steps")
+        st.add_column("Step", style="cyan")
+        st.add_column("Operator", style="green")
+        st.add_column("Summary", style="white")
+        st.add_column("Conf", style="magenta")
+        for s in path.steps:
+            st.add_row(str(s.step_index), s.operator_name, s.symbolic_summary or s.description[:60], f"{s.confidence:.2f}")
+        console.print(st)
 
 
 @main.command(name="self-improve")
@@ -129,6 +151,140 @@ def tournament_cmd(hypotheses: List[str], context: Optional[str]):
     console.print(t)
 
 
+@main.command(name="kt-boundary")
+@click.option("--is-fact", "-i", "is_facts", multiple=True, required=True, help="Observed fact that IS true (repeatable)")
+@click.option("--is-not-fact", "-n", "is_not_facts", multiple=True, required=True, help="Plausible fact that IS NOT true (repeatable)")
+@click.option("--cause", "-c", "candidate_causes", multiple=True, help="Candidate cause to evaluate against the boundary (repeatable)")
+def kt_boundary_cmd(is_facts: List[str], is_not_facts: List[str], candidate_causes: List[str]):
+    """Evaluate candidate causes against a Kepner-Tregoe 4D IS / IS NOT boundary hyperplane."""
+    engine = SuperDuperProblemSolvingEngine()
+    result = engine.kt.analyze_boundary(list(is_facts), list(is_not_facts), candidate_causes=list(candidate_causes) or None)
+
+    console.print(
+        Panel(
+            f"[bold cyan]IS Facts ({len(is_facts)}):[/bold cyan]\n"
+            + "\n".join(f"  • {f}" for f in is_facts)
+            + f"\n\n[bold yellow]IS NOT Facts ({len(is_not_facts)}):[/bold yellow]\n"
+            + "\n".join(f"  • {f}" for f in is_not_facts),
+            title="Kepner-Tregoe Boundary Hyperplane",
+        )
+    )
+    console.print(f"[bold]Hyperplane Margin Norm:[/bold] {result['hyperplane_norm']:.4f}")
+
+    evals = result.get("candidate_evaluations", [])
+    if evals:
+        t = Table(title="Candidate Cause Evaluation Against Boundary")
+        t.add_column("Cause", style="white")
+        t.add_column("Sim to IS", style="green")
+        t.add_column("Sim to IS NOT", style="yellow")
+        t.add_column("Projection", style="cyan")
+        t.add_column("Consistent?", style="magenta")
+        for e in evals:
+            status = "[bold green]YES[/bold green]" if e["is_consistent"] else "[bold red]NO[/bold red]"
+            t.add_row(
+                e["cause"],
+                f"{e['sim_to_is']:.3f}",
+                f"{e['sim_to_is_not']:.3f}",
+                f"{e['hyperplane_projection']:.3f}",
+                status,
+            )
+        console.print(t)
+
+
+@main.command(name="decompose")
+@click.argument("problem_text")
+@click.option("--sub", "subproblems", multiple=True, help="Known subproblems (repeatable)")
+def decompose_cmd(problem_text: str, subproblems: List[str]):
+    """Decompose a complex problem into auxiliary subproblems using Polya heuristics & TRIZ."""
+    from super_solver.lab_ass_bridge.hooks import LabAssSuperSolverBridge
+
+    bridge = LabAssSuperSolverBridge()
+    result = bridge.decompose_topic_with_polya_and_triz(problem_text, list(subproblems) or None)
+
+    console.print(Panel(f"[bold cyan]Problem:[/bold cyan] {problem_text}", title="Polya Auxiliary Problem Decomposition"))
+    aux = result.get("auxiliary_angles", [])
+    if aux:
+        t = Table(title="Generated & Re-ranked Auxiliary Angles")
+        t.add_column("#", style="cyan")
+        t.add_column("Subproblem / Angle", style="white")
+        t.add_column("Relevance", style="green")
+        t.add_column("Essential", style="magenta")
+        t.add_column("Source", style="yellow")
+        for i, a in enumerate(aux, 1):
+            src = "Genuinely Generated" if a.get("is_new") else "Supplied"
+            essential = "[bold green]YES[/bold green]" if a.get("is_essential") else "NO"
+            t.add_row(str(i), a.get("subproblem", ""), f"{a.get('relevance_score', 0.0):.3f}", essential, src)
+        console.print(t)
+
+    triz = result.get("suggested_triz_operators") or result.get("triz_suggestions", [])
+    if triz:
+        t2 = Table(title="Applicable TRIZ Inventive Principles")
+        t2.add_column("Principle", style="cyan")
+        t2.add_column("Recommendation", style="green")
+        for p in triz:
+            t2.add_row(p.get("name", ""), p.get("description", ""))
+        console.print(t2)
+
+
+@main.command(name="boed")
+@click.option("--hyp", "hypotheses", multiple=True, required=True, help="Candidate hypothesis (repeatable)")
+@click.option("--prior", "priors", multiple=True, type=float, help="Prior probability for each hypothesis (repeatable)")
+@click.option("--design", "designs", multiple=True, help="Candidate experiment design name:cost e.g. 'InVitro:1.0' (repeatable)")
+def boed_cmd(hypotheses: List[str], priors: List[float], designs: List[str]):
+    """Rank candidate experiments by Bayesian Optimal Experimental Design (BOED) EIG."""
+    from super_solver.frameworks.boed_designer import BOEDDesigner, CandidateExperimentDesign
+
+    designer = BOEDDesigner()
+
+    hyp_dict = {}
+    if priors and len(priors) == len(hypotheses):
+        total = sum(priors)
+        for h, p in zip(hypotheses, priors):
+            hyp_dict[h] = p / total if total > 0 else 1.0 / len(hypotheses)
+    else:
+        u = 1.0 / len(hypotheses)
+        for h in hypotheses:
+            hyp_dict[h] = u
+
+    cand_designs = []
+    likelihood_matrix = {}
+    design_names = list(designs) if designs else ["StandardAssay:1.0", "HighResMassSpec:2.5"]
+    for i, d in enumerate(design_names):
+        parts = d.split(":")
+        name = parts[0]
+        cost = float(parts[1]) if len(parts) > 1 else 1.0
+        did = f"d{i+1}"
+        cand_designs.append(
+            CandidateExperimentDesign(
+                design_id=did, name=name, description=name, parameters={}, cost=cost
+            )
+        )
+        likelihood_matrix[did] = {
+            "positive": {h: 0.9 if j == i % len(hypotheses) else 0.1 for j, h in enumerate(hypotheses)},
+            "negative": {h: 0.1 if j == i % len(hypotheses) else 0.9 for j, h in enumerate(hypotheses)},
+        }
+
+    ranked = designer.rank_optimal_experiments(hyp_dict, cand_designs, likelihood_matrix)
+
+    t = Table(title="BOED Experiment Ranking (Expected Information Gain)")
+    t.add_column("Rank", style="cyan")
+    t.add_column("Experiment", style="white")
+    t.add_column("EIG (nats)", style="green")
+    t.add_column("Cost-Utility", style="magenta")
+    t.add_column("Prior H", style="yellow")
+    t.add_column("Post H", style="blue")
+    for r, res in enumerate(ranked, 1):
+        t.add_row(
+            str(r),
+            res["name"],
+            f"{res['expected_information_gain']:.4f}",
+            f"{res['cost_penalized_utility']:.4f}",
+            f"{res['prior_entropy']:.3f}",
+            f"{res['expected_posterior_entropy']:.3f}",
+        )
+    console.print(t)
+
+
 # ---------------------------------------------------------------------------
 # Problem / Solution / Path vectorizing CLI
 # ---------------------------------------------------------------------------
@@ -144,7 +300,7 @@ def vectorize():
 @click.argument("specification")
 @click.option("--title", default="", help="Problem title")
 @click.option("--goal", multiple=True, help="Goal criterion (repeatable)")
-@click.option("--embedder", default=None, help="polarity|ollama|hybrid (default: env SUPER_SOLVER_EMBEDDER or polarity)")
+@click.option("--embedder", default=None, help="neural|rich|polarity|ollama|hybrid (default: env SUPER_SOLVER_EMBEDDER or neural)")
 @click.option("--no-store", is_flag=True, help="Do not persist to the vector index")
 def vectorize_problem_cmd(specification: str, title: str, goal: List[str], embedder: Optional[str], no_store: bool):
     """Encode a problem specification into a vector."""
@@ -167,7 +323,7 @@ def vectorize_problem_cmd(specification: str, title: str, goal: List[str], embed
 @click.option("--domain", default="", help="Domain")
 @click.option("--operator", multiple=True, help="Operator (repeatable)")
 @click.option("--title", default="")
-@click.option("--embedder", default=None)
+@click.option("--embedder", default=None, help="neural|rich|polarity|ollama|hybrid (default: env SUPER_SOLVER_EMBEDDER or neural)")
 @click.option("--no-store", is_flag=True)
 def vectorize_solution_cmd(solution_text: str, method: str, domain: str, operator: List[str], title: str, embedder: Optional[str], no_store: bool):
     """Encode a solution into a vector."""
@@ -188,7 +344,7 @@ def vectorize_solution_cmd(solution_text: str, method: str, domain: str, operato
 @click.option("--operator", multiple=True, help="Operator type per step (repeatable)")
 @click.option("--breakthrough", default="", help="Final breakthrough")
 @click.option("--title", default="")
-@click.option("--embedder", default=None)
+@click.option("--embedder", default=None, help="neural|rich|polarity|ollama|hybrid (default: env SUPER_SOLVER_EMBEDDER or neural)")
 @click.option("--no-store", is_flag=True)
 def vectorize_path_cmd(steps: List[str], operator: List[str], breakthrough: str, title: str, embedder: Optional[str], no_store: bool):
     """Encode a discovery path (sequence of reasoning steps) into a vector."""
@@ -209,7 +365,7 @@ def vectorize_path_cmd(steps: List[str], operator: List[str], breakthrough: str,
 @click.option("--kind", default=None, type=click.Choice(["problem", "solution", "path"]), help="Kind filter")
 @click.option("--top-k", default=5, type=int)
 @click.option("--min-sim", default=0.0, type=float)
-@click.option("--embedder", default=None)
+@click.option("--embedder", default=None, help="neural|rich|polarity|ollama|hybrid (default: env SUPER_SOLVER_EMBEDDER or neural)")
 def vectorize_search_cmd(query: str, kind: Optional[str], top_k: int, min_sim: float, embedder: Optional[str]):
     """Search the vector index for entries similar to a query text."""
     from super_solver.core.embedder import get_backend
@@ -233,7 +389,7 @@ def vectorize_search_cmd(query: str, kind: Optional[str], top_k: int, min_sim: f
 @click.option("--title", default="")
 @click.option("--top-k", default=3, type=int)
 @click.option("--min-sim", default=0.0, type=float)
-@click.option("--embedder", default=None)
+@click.option("--embedder", default=None, help="neural|rich|polarity|ollama|hybrid (default: env SUPER_SOLVER_EMBEDDER or neural)")
 def vectorize_analogize_cmd(specification: str, title: str, top_k: int, min_sim: float, embedder: Optional[str]):
     """Find similar past problems and return their linked solutions + paths."""
     from super_solver.core.embedder import get_backend

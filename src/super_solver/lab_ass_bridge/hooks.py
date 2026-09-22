@@ -34,13 +34,14 @@ class LabAssSuperSolverBridge:
         the genuinely new generated ones, so downstream consumers get both the
         requested framing AND fresh angles.
         """
+        subs = initial_subproblems or []
         ranked = self.engine.polya.decompose_auxiliary_problems(
             problem_specification=topic,
-            known_subproblems=initial_subproblems,
+            known_subproblems=subs,
         )
         generated = self.engine.polya.generate_auxiliary_problems(
             problem_specification=topic,
-            known_subproblems=initial_subproblems or None,
+            known_subproblems=subs or None,
             max_new=8,
         )
         known_titles = {s.get("subproblem", "") for s in ranked}
@@ -363,18 +364,37 @@ class LabAssSuperSolverBridge:
         specification: str,
         title: str = "",
         top_k: int = 3,
-        min_similarity: float = 0.0,
+        min_similarity: float = 0.30,
     ) -> Dict[str, Any]:
         """Find similar past problems and return their linked solutions + paths.
 
-        This is the analogical-transfer primitive: given a new problem, retrieve
-        the most similar previously-solved problem and its proven solution and
-        discovery path so the solver can reuse a successful trajectory.
+        Uses structural primitive analogizing first for robust cross-domain transfer,
+        falling back to vector analogize with a similarity floor to prevent low-similarity noise.
         """
         svc = self._vector_service()
+        # 1. Try structural primitive matching
+        prim_analogs = svc.primitive_analogize(specification, top_k=top_k, min_overlap=0.15)
+        if prim_analogs:
+            formatted_analogs = [
+                {
+                    "problem": {
+                        "title": a.get("title", ""),
+                        "content": a.get("content", ""),
+                        "similarity": a.get("primitive_overlap", 1.0),
+                    },
+                    "solution": {"content": a.get("content", "")},
+                    "path": None,
+                    "transfer_mechanism": "structural_primitives",
+                    "overlap": a.get("primitive_overlap", 0.0),
+                }
+                for a in prim_analogs
+            ]
+            return {"problem": specification, "analogs": formatted_analogs, "method": "primitive"}
+
+        # 2. Vector fallback with similarity floor
         vec = svc.encode_problem(specification, title=title)
         analogs = svc.analogize(vec, top_k=top_k, min_similarity=min_similarity)
-        return {"problem": specification, "analogs": analogs}
+        return {"problem": specification, "analogs": analogs, "method": "vector"}
 
     # ------------------------------------------------------------------
     # Inspiration bridge methods: novelty scoring + conceptual recombination.

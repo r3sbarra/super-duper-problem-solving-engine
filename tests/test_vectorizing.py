@@ -64,9 +64,9 @@ def test_problem_solution_path_encoders():
     pv = svc.encode_problem("reduce latency", title="DB", goal_criteria=["low latency"])
     sv = svc.encode_solution("use hybrid logical clock", method="TRIZ", domain="distributed")
     pathv = svc.encode_path(["abduct", "filter", "rollout"], operator_types=["PEIRCE", "KT", "MCTS"])
-    assert pv.shape[0] == 384
-    assert sv.shape[0] == 384
-    assert pathv.shape[0] == 384
+    assert pv.shape[0] == svc.backend.dim
+    assert sv.shape[0] == svc.backend.dim
+    assert pathv.shape[0] == svc.backend.dim
 
 
 def test_vector_index_store_and_search(tmp_path):

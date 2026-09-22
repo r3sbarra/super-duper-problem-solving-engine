@@ -88,3 +88,42 @@ class KepnerTregoeEngine:
             "dimensional_breakdown": dim_scores,
             "violated_dimensions": violated_dims,
         }
+
+    def analyze_boundary(
+        self,
+        is_facts: List[str],
+        is_not_facts: List[str],
+        candidate_causes: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Analyzes an IS / IS-NOT fact list, builds hyperplane, and optionally evaluates candidate causes."""
+        is_text = " IS: " + "; ".join(is_facts)
+        is_not_text = " IS NOT: " + "; ".join(is_not_facts)
+        v_is = embedding_service.encode(is_text)
+        v_not = embedding_service.encode(is_not_text)
+
+        w = v_is - v_not
+        norm_w = float(np.linalg.norm(w))
+        if norm_w > 0:
+            w = w / norm_w
+
+        cause_evals = []
+        if candidate_causes:
+            for cause in candidate_causes:
+                vc = embedding_service.encode(cause)
+                sim_is = float(embedding_service.cosine_similarity(vc, v_is))
+                sim_not = float(embedding_service.cosine_similarity(vc, v_not))
+                proj = float(np.dot(vc, w))
+                cause_evals.append({
+                    "cause": cause,
+                    "sim_to_is": sim_is,
+                    "sim_to_is_not": sim_not,
+                    "hyperplane_projection": proj,
+                    "is_consistent": bool(sim_is > sim_not and proj > 0),
+                })
+
+        return {
+            "is_facts_count": len(is_facts),
+            "is_not_facts_count": len(is_not_facts),
+            "hyperplane_norm": norm_w,
+            "candidate_evaluations": cause_evals,
+        }

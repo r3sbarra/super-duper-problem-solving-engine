@@ -64,6 +64,7 @@ super-solver = "super_solver.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 

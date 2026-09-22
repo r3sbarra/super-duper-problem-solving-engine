@@ -139,6 +139,19 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["hypothesis_priors", "candidate_designs"],
             },
         ),
+        types.Tool(
+            name="super_solver_primitive_analogize",
+            description="Performs cross-domain analogical transfer by extracting structural primitives (action + object atoms) and computing overlap with stored solutions. Overcomes surface cosine similarity limits.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "specification": {"type": "string", "description": "Description of the target system to analogize"},
+                    "top_k": {"type": "integer", "default": 3, "description": "Number of cross-domain analogs to retrieve"},
+                    "min_overlap": {"type": "number", "default": 0.0, "description": "Minimum structural primitive overlap ratio"},
+                },
+                "required": ["specification"],
+            },
+        ),
     ]
 
 
@@ -159,7 +172,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         result = bridge.check_dead_end_deflection(content, dead_ends)
         return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
 
-    elif name == "super_solver_analogize":
+    elif name in ("super_solver_analogize", "super_solver_primitive_analogize"):
         spec = arguments["specification"]
         top_k = arguments.get("top_k", 3)
         min_overlap = arguments.get("min_overlap", 0.0)
@@ -190,7 +203,8 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
     elif name == "super_solver_kt_boundary":
         is_facts = arguments["is_facts"]
         is_not = arguments["is_not_facts"]
-        boundary = engine.kt.analyze_boundary(is_facts=is_facts, is_not_facts=is_not)
+        causes = arguments.get("candidate_causes")
+        boundary = engine.kt.analyze_boundary(is_facts=is_facts, is_not_facts=is_not, candidate_causes=causes)
         return [types.TextContent(type="text", text=json.dumps({"boundary": boundary}, indent=2, default=str))]
 
     elif name == "super_solver_next_experiment":

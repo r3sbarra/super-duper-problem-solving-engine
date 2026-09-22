@@ -127,3 +127,30 @@ class BOEDDesigner:
 
         ranked.sort(key=lambda x: x["cost_penalized_utility"], reverse=True)
         return ranked
+
+    def rank_experiments(
+        self,
+        hypothesis_priors: Dict[str, float],
+        candidate_designs: List[Any],
+        likelihood_matrix: Optional[Dict[str, Dict[str, Dict[str, float]]]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Alias accepting dicts or CandidateExperimentDesign instances for flexible consumption."""
+        designs = []
+        for i, d in enumerate(candidate_designs):
+            if isinstance(d, CandidateExperimentDesign):
+                designs.append(d)
+            elif isinstance(d, dict):
+                designs.append(
+                    CandidateExperimentDesign(
+                        design_id=d.get("design_id", f"d{i}"),
+                        name=d.get("name", f"Design {i}"),
+                        description=d.get("description", ""),
+                        parameters=d.get("parameters", {}),
+                        cost=float(d.get("cost", 1.0)),
+                    )
+                )
+        return self.rank_optimal_experiments(
+            hypothesis_priors=hypothesis_priors,
+            candidate_designs=designs,
+            likelihood_matrix=likelihood_matrix or {},
+        )

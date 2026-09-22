@@ -28,6 +28,8 @@ htmlcov/
 *.db-wal
 *.log
 .super_solver_data/
+data/
+runs/
 
 
 # IDE & OS

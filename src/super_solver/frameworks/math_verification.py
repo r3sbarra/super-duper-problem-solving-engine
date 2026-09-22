@@ -244,6 +244,26 @@ class LakatosProofVerificationEngine:
             "is_fatal": True,
         }
 
+    def verify_symbolic_identity(self, formula_or_claim: str) -> Optional[Dict[str, Any]]:
+        """Invokes Suuri-chan formal CAS / symbolic discovery engine to verify identities or compute solutions."""
+        try:
+            import sys
+            from pathlib import Path
+            suuri_path = Path("/home/richard/.openclaw/workspace/projects/suuri-chan/src")
+            if suuri_path.exists() and str(suuri_path) not in sys.path:
+                sys.path.insert(0, str(suuri_path))
+            from suuri.ingenuity.solver import suuri_solve
+            sol = suuri_solve(formula_or_claim)
+            return {
+                "solved": bool(sol.status in ("solved", "proved", "discovered")),
+                "domain": str(sol.domain),
+                "value": str(sol.answer),
+                "method": str(sol.domain),
+                "proof_steps": sol.proof_trace,
+            }
+        except Exception:
+            return None
+
     def verify_mathematical_paper(
         self,
         paper_id: str,
@@ -256,6 +276,13 @@ class LakatosProofVerificationEngine:
         reasoning_trace = []
         reasoning_trace.append(f"1. Ingesting mathematical paper '{paper_title}' [{paper_id}]")
         reasoning_trace.append(f"   Target Conjecture: {target_conjecture}")
+
+        # Check if target conjecture or paper contains explicit symbolic formulas solvable via Suuri-chan CAS
+        symbolic_check = self.verify_symbolic_identity(target_conjecture)
+        if symbolic_check and symbolic_check.get("solved"):
+            reasoning_trace.append(
+                f"   [+] SYMBOLIC VERIFICATION (Suuri-chan CAS): Conjecture verified symbolically via {symbolic_check['method']} -> {symbolic_check['value']}."
+            )
 
         lemmas = self.extract_or_synthesize_lemmas(paper_title, abstract_text, explicit_lemmas)
         reasoning_trace.append(
