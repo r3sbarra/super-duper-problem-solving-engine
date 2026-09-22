@@ -25,6 +25,30 @@ def test_bridge_dpll_entail_countermodel():
     assert result["countermodel"] is not None
 
 
+def test_bridge_decompose_merges_generated_subproblems():
+    """decompose_topic_with_polya_and_triz must merge genuinely NEW generated
+    subproblems (is_new=True) with the caller-supplied re-ranking, instead of only
+    re-ranking the caller's own list. Regression for the finding that the Polya
+    generator was never wired into the decompose path."""
+    bridge = LabAssSuperSolverBridge()
+    known = ["Background & Context", "Current State & Recent Developments"]
+    result = bridge.decompose_topic_with_polya_and_triz(
+        "Find a new proof that there are infinitely many primes",
+        known,
+    )
+    aux = result["auxiliary_angles"]
+    # The caller's subproblems must be present (re-ranked), AND new ones appended.
+    titles = {a.get("subproblem", "") for a in aux}
+    for k in known:
+        assert k in titles
+    assert any(a.get("is_new", False) for a in aux)
+    # All entries carry the keys the lab-ass plugin consumes.
+    for a in aux:
+        assert "subproblem" in a and "is_essential" in a and "relevance_score" in a
+    # The output is richer than the caller's two inputs.
+    assert len(aux) > len(known)
+
+
 def test_bridge_next_experiment_ranks():
     bridge = LabAssSuperSolverBridge()
     priors = {"H1": 0.5, "H2": 0.5}

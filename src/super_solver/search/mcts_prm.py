@@ -67,8 +67,14 @@ class ProcessRewardModel:
         is_near, dead_end_sim, _ = self.repulsor.check_proximity(next_state)
         dead_end_penalty = dead_end_sim if is_near else 0.0
 
-        step_reward = (0.5 * progress) + (0.3 * exclusory_gain) - (0.6 * dead_end_penalty)
-        return float(max(0.01, min(1.0, step_reward)))
+        step_reward = (0.5 * progress) + (0.3 * exclusory_gain) - (0.5 * dead_end_penalty)
+        # Clamp to [-1, 1] (not [0.01, 1]) so that states near a dead end can carry a
+        # NEGATIVE reward and are correctly avoided. The old [0.01, 1.0] floor clamped
+        # every dead-end-adjacent state to 0.01, erasing the dead-end signal the
+        # negative-manifold is meant to supply (everything near a dead end scored
+        # identically). UCB1 exploitation is total_value/visits and works fine with
+        # negative values, so discouraging dead-end branches is safe.
+        return float(max(-1.0, min(1.0, step_reward)))
 
 
 class LatentMCTSEngine:

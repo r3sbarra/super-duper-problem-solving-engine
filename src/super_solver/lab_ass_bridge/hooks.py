@@ -18,15 +18,39 @@ class LabAssSuperSolverBridge:
         topic: str,
         initial_subproblems: List[str],
     ) -> Dict[str, Any]:
-        """Decomposes a difficult research topic into auxiliary angles using Polya & TRIZ."""
-        aux_angles = self.engine.polya.decompose_auxiliary_problems(
+        """Decomposes a difficult research topic into auxiliary angles using Polya & TRIZ.
+
+        Merges two signals so the decomposition is genuinely generative rather than a
+        pure re-ranking of the caller's own subproblems:
+          1. ``decompose_auxiliary_problems`` -- re-ranks the caller-supplied
+             subproblems by relevance to the topic (the classic Polya decomposition).
+          2. ``generate_auxiliary_problems`` -- synthesizes NEW subproblems from the
+             topic text via Polya templates (divide-and-conquer, working-backwards,
+             special-case, generalization, counterexample-search, invariant, etc.),
+             de-duplicated against the known subproblems (``is_new`` flag).
+
+        The merged set is returned with the caller's ranked items first, followed by
+        the genuinely new generated ones, so downstream consumers get both the
+        requested framing AND fresh angles.
+        """
+        ranked = self.engine.polya.decompose_auxiliary_problems(
             problem_specification=topic,
             known_subproblems=initial_subproblems,
         )
+        generated = self.engine.polya.generate_auxiliary_problems(
+            problem_specification=topic,
+            known_subproblems=initial_subproblems or None,
+            max_new=8,
+        )
+        known_titles = {s.get("subproblem", "") for s in ranked}
+        merged = list(ranked)
+        for g in generated:
+            if g.get("subproblem") and g["subproblem"] not in known_titles:
+                merged.append(g)
         principles = self.engine.triz.suggest_principles(topic, top_k=3)
 
         return {
-            "auxiliary_angles": aux_angles,
+            "auxiliary_angles": merged,
             "suggested_triz_operators": principles,
         }
 

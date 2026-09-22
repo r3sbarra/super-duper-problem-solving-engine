@@ -94,3 +94,30 @@ def test_latent_mcts_with_prm():
     best_path = mcts.search_best_path(s0, candidates, goal_vector=goal, num_simulations=10)
     assert len(best_path) >= 1
     assert best_path[0][0] == "GoodStep"
+
+
+def test_prm_reward_differentiates_dead_end_states():
+    """The PRM step reward must let near-dead-end states score NEGATIVELY so MCTS
+    UCB1 can avoid them. Regression: the old clamp to [0.01, 1.0] floor-clamped
+    every dead-end-adjacent state to 0.01, flattening the dead-end signal, and the
+    dead-end weight was 0.6 in code vs 0.5 in the docstring."""
+    repulsor = NegativeManifoldRepulsor()
+    repulsor.register_dead_end("prove the riemann hypothesis in one step")
+    prm = ProcessRewardModel(repulsor=repulsor)
+
+    goal = embedding_service.encode("solve the hard theorem")
+    far = embedding_service.encode("refactor a database query")
+    near_de = embedding_service.encode("prove the riemann hypothesis")
+    near_op = embedding_service.encode("prove the riemann hypothesis in one step")
+
+    r_far = prm.score_transition(
+        embedding_service.encode("cache a list of results"), far, goal
+    )
+    r_near = prm.score_transition(near_de, near_op, goal)
+
+    # Near-dead-end must score strictly below far-from-dead-end, ideally negative.
+    assert r_near < r_far
+    assert r_near <= 0.0
+    # Reward stays within [-1, 1].
+    for r in (r_far, r_near):
+        assert -1.0 <= r <= 1.0
