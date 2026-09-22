@@ -128,3 +128,24 @@ def test_score_novelty_is_not_gameable_by_random_noise():
     assert min(by_cand[r] for r in real) > max(by_cand[n] for n in noise)
     # The richest recombination reusing both known clusters ranks highest.
     assert by_cand[real[0]] == max(by_cand[r] for r in real)
+
+
+def test_blend_concepts_is_compositional_not_a_midpoint():
+    """blend_concepts must ORIGINATE by VSA binding, not sit halfway between the
+    parents (interpolation). Regression: the old blend was a normalized (A+B)/2
+    average, so cosine to each parent was exactly 0.7071 (the midpoint) and it
+    never formed a new concept. VSA binding of two DISTINCT concepts yields a
+    new composition similar to NEITHER parent, and the A:B::C:D analogy is
+    solved on projected semantic vectors, not random symbols."""
+    bridge = LabAssSuperSolverBridge()
+    r = bridge.blend_concepts("quantum entanglement", "supply chain logistics")
+
+    # Recombination signature: the blend is a NEW vector, not a midpoint.
+    assert r["is_recombination"] is True
+    assert r["blend_mechanism"] == "VSA_binding (circular convolution)"
+    # It must NOT sit equidistant at the 0.7071 midpoint of an average.
+    assert r["blend_sim_to_a"] < 0.6
+    assert r["blend_sim_to_b"] < 0.6
+    # Analogical 4th term is a genuine new direction, and the algebra resolved.
+    assert r["analogy_solved"] is True
+    assert r["analogy_4th_is_new_direction"] is True
