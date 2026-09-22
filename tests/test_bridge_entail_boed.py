@@ -85,3 +85,46 @@ def test_bridge_next_experiment_ranks():
     assert ranked[0]["expected_information_gain"] > 0.40
     assert ranked[1]["design_id"] == "exp_dc"
     assert ranked[1]["expected_information_gain"] < 0.05
+
+
+def test_score_novelty_is_not_gameable_by_random_noise():
+    """score_novelty must rank genuine creative recombinations ABOVE pure random
+    token-noise. Regression: the old metric was frontier novelty = 1 - max_cos to
+    known, which is maximized by random gibberish (far from everything) -- any
+    search maximizing it degenerated to noise. Now it multiplies frontier novelty
+    by a lexical-recombination grounding (fraction of the candidate's content
+    words that occur in the known domain), so pure noise shares no vocabulary and
+    scores 0 while a real novel idea recombines known concepts and scores > 0."""
+    import random
+    import string
+
+    bridge = LabAssSuperSolverBridge()
+    known = [
+        "prime numbers are infinite",
+        "goldbach conjecture on even numbers",
+        "twin primes remain unproven in general",
+        "riemann zeta zeros on critical line",
+    ]
+    random.seed(7)
+    noise = [
+        "".join(random.choice(string.ascii_lowercase) for _ in range(random.randint(8, 20)))
+        for _ in range(8)
+    ]
+    real = [
+        "prove twin primes are infinite by a probabilistic density transfer on the zeta zeros",
+        "a sieve invariant bounding prime gaps between consecutive primes via the zeta function",
+        "generalize the goldbach argument to all integers using an operator on the critical line",
+    ]
+
+    res = bridge.score_novelty(noise + real, known)
+    by_cand = {c["candidate"]: c["novelty"] for c in res["candidates"]}
+
+    # All pure-noise strings must score 0 (no lexical grounding).
+    for n in noise:
+        assert by_cand[n] == 0.0, f"noise {n!r} scored {by_cand[n]}"
+    # Every genuine creative recombination must score above noise.
+    for r in real:
+        assert by_cand[r] > 0.0
+    assert min(by_cand[r] for r in real) > max(by_cand[n] for n in noise)
+    # The richest recombination reusing both known clusters ranks highest.
+    assert by_cand[real[0]] == max(by_cand[r] for r in real)

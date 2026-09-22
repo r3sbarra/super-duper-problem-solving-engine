@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional
 
 from super_solver.engine import SuperDuperProblemSolvingEngine
@@ -387,21 +388,43 @@ class LabAssSuperSolverBridge:
         candidates: List[str],
         known_texts: List[str],
     ) -> Dict[str, Any]:
-        """Score candidate directions by epistemic (frontier) novelty.
+        """Score candidate directions by coherence-guarded (structured) novelty.
 
-        Novelty = distance from a candidate vector to the nearest known-finding
-        vector (CuriosityEngine.compute_frontier_novelty). High novelty means the
-        candidate explores an under-researched latent region relative to what the
-        session already knows. Returns per-candidate novelty scores (0..1).
+        A genuine creative idea is Boden's 'novel x valuable': it diverges from
+        the known frontier (vector novelty) AND is grounded -- a recombination of
+        KNOWN material (Koestler's bisociation). Pure random-noise token strings
+        maximize vector novelty (they are far from everything) but share ZERO
+        lexical structure with the known domain, so they are gated to ~0 here.
+
+        score = frontier_novelty * lexical_recombination_grounding
+          - frontier_novelty           = 1 - cos to nearest known (CuriosityEngine)
+          - lexical_recombination     = fraction of the candidate's content words
+                                        (stopwords removed) that occur in the known
+                                        domain vocabulary, capped at 1.0. A novel
+                                        recombined idea reuses known concepts' words;
+                                        pure random token noise has none => 0.
         """
         from super_solver.core.embeddings import embedding_service
 
         known_vecs = [embedding_service.encode(t) for t in known_texts if t]
+        known_vocab = set()
+        for kt in known_texts:
+            known_vocab.update(t for t in re.findall(r"[a-z]{3,}", kt.lower()))
+
         scored = []
         for cand in candidates:
             v = embedding_service.encode(cand)
-            novelty = self.engine.curiosity.compute_frontier_novelty(v, known_vecs)
-            scored.append({"candidate": cand, "novelty": round(float(novelty), 4)})
+            frontier = self.engine.curiosity.compute_frontier_novelty(v, known_vecs)
+            # Lexical recombination grounding: which content words does the
+            # candidate reuse from the known domain vocabulary?
+            cand_words = [t for t in re.findall(r"[a-z]{3,}", cand.lower())]
+            if not cand_words:
+                grounding = 0.0
+            else:
+                hits = sum(1 for w in cand_words if w in known_vocab)
+                grounding = min(1.0, hits / len(cand_words))
+            novelty = float(frontier) * float(grounding)
+            scored.append({"candidate": cand, "novelty": round(novelty, 4)})
         scored.sort(key=lambda d: d["novelty"], reverse=True)
         return {"candidates": scored}
 
