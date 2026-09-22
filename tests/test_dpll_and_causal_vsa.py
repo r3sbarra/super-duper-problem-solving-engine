@@ -36,6 +36,43 @@ def test_dpll_sat_and_refutation():
     assert non_entailed["countermodel"] is not None
 
 
+def test_dpll_nested_biconditional_and_conjunction():
+    """Nested/biconditional structure must be proven structurally, not via the
+    embedding-similarity fallback. Regression for the prior weakness where an
+    'A iff B' argument silently degraded to SEMANTIC_WEAK (docstring:
+    super-solver deep-dive). A valid conjunction elimination must also prove."""
+    solver = DPLLSolver()
+
+    # 1. Biconditional restatement argument (RH-style): A<->B, B>=0, B<=0.2 |= A<->B
+    res = solver.refute_conjecture(
+        premises=[
+            "RH if and only if lambda equals zero",
+            "lambda is greater_or_equal zero",
+            "lambda is less_or_equal to 0.2",
+        ],
+        target_claim="RH iff lambda equals zero",
+    )
+    assert res["proved"] is True
+    assert res["verdict"] == "LOGICALLY_SOUND_PROOF"
+    assert res["parser"] == "regex_propositional"
+
+    # 2. IFF entails each direction as an implication
+    res2 = solver.refute_conjecture(premises=["A iff B"], target_claim="A -> B")
+    assert res2["proved"] is True
+    assert res2["verdict"] == "LOGICALLY_SOUND_PROOF"
+
+    # 3. Conjunction elimination: A AND B |= A
+    res3 = solver.refute_conjecture(premises=["A AND B"], target_claim="A")
+    assert res3["proved"] is True
+    assert res3["verdict"] == "LOGICALLY_SOUND_PROOF"
+    assert res3["parser"] == "regex_propositional"
+
+    # 4. Soundness: affirming the consequent stays a countermodel, not a proof
+    res4 = solver.refute_conjecture(premises=["A -> B", "B"], target_claim="A")
+    assert res4["proved"] is False
+    assert res4["verdict"] == "COUNTERMODEL_EXISTS"
+
+
 def test_causal_vsa_graph_surgery_and_confounding_resolution():
     """Validates Pearl's Level 2 do-calculus intervention in VSA hypervector space."""
     causal = VectorizedCausalModel(vsa_dim=2048)
