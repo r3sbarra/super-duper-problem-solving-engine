@@ -387,19 +387,31 @@ class SuperDuperProblemSolvingEngine:
                 num_simulations=10,
             )
             if mcts_path:
-                best_op_name, best_state, best_score = mcts_path[0]
-                current_latent = np.asarray(best_state)
-                reasoning_steps.append(
-                    ReasoningStep(
-                        step_index=len(reasoning_steps) + 1,
-                        operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
-                        operator_name="Latent MCTS Search (PRM)",
-                        description=f"MCTS selected operator '{best_op_name}' (PRM score {best_score:.2f}) across {len(candidate_ops)} candidates.",
-                        latent_vector=current_latent.tolist(),
-                        confidence=0.85,
-                        symbolic_summary="Tree-searched the latent space instead of a single linear step.",
+                # Use the FULL MCTS trajectory, not just the first step: emit one
+                # reasoning step per operator on the best path and advance the
+                # latent state to the path TERMINAL state. Previously only
+                # mcts_path[0] was taken, discarding the rest of the search result.
+                for op_i, (op_name, op_state, op_score) in enumerate(mcts_path):
+                    reasoning_steps.append(
+                        ReasoningStep(
+                            step_index=len(reasoning_steps) + 1,
+                            operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                            operator_name="Latent MCTS Search (PRM)",
+                            description=(
+                                f"MCTS path step {op_i + 1}/{len(mcts_path)}: operator "
+                                f"'{op_name}' (PRM score {op_score:.2f}) across "
+                                f"{len(candidate_ops)} candidates."
+                            ),
+                            latent_vector=np.asarray(op_state).tolist(),
+                            confidence=0.85,
+                            symbolic_summary=(
+                                "Tree-searched latent space; following full PRM-best path."
+                            ),
+                        )
                     )
-                )
+                # Advance latent to the terminal state of the best path.
+                final_op_name, final_state, final_score = mcts_path[-1]
+                current_latent = np.asarray(final_state)
 
         # 3c. SYMBOLIC PROJECTION — decode the latent state back to a testable claim
         # The SymbolicProjector was instantiated but never used; without it the
