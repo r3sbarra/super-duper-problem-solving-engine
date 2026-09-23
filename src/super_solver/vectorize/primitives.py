@@ -30,6 +30,8 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"float", "make_float"),
     (r"dense|density|heavy|lightweight|air-entraining|light enough|reduce.*weight", "reduce_density"),
     (r"strong but light|light.*strong|strength.*weight", "reduce_density"),
+    # elasticity / viscoelastic deformation (distinct from density)
+    (r"elastic|viscoelastic|mold|deform|shape-holding|stretch|moldable", "elasticity"),
     # mimic / natural structure
     (r"mimic|hook-and-loop|burr|setae|gecko|natural structure|imitate|biomimic", "mimic_structure"),
     # state change
@@ -40,7 +42,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"clean|pollut|smog|contaminant|break down.*dirt", "clean_surface"),
     # time / ordering
     (r"hybrid logical clock|logical clock|time-synchron|time sync|ordering|consisten", "time_ordering"),
-    (r"latency|distributed|replicated|nodes|sensor network", "distributed_system"),
+    (r"latency|distributed system|distributed systems|replicated across|across nodes|sensor network", "distributed_system"),
     # camouflage / hide
     (r"camouflage|hide|conceal|resemble its surroundings|invisible|deceive|reconnaissance|surveillance", "hide_structure"),
     # adhesion
@@ -74,8 +76,10 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"note.*stick|paper note|remove.*residue", "temporary_adhesive"),
     # mathematics
     (r"sum.*number|add.*number|add up|arithmetic series|consecutive numbers|total.*1 to|sum.*series|sum them|pair.*terms|sum of the", "arithmetic_sum"),
-    (r"greatest common divisor|gcd|factor.*number|largest.*factor|prime factor", "gcd"),
-    (r"prime|primality|sieve|composite|prime factor", "primality"),
+    (r"greatest common divisor|gcd|largest.*factor|prime factor", "gcd"),
+    (r"is .* prime\b|prime or not|primality test|probabilistic test|witness.*prime|determine whether.*prime", "primality_test"),
+    (r"count.*prime|prime numbers up to|sieve|primes up to", "prime_sieve"),
+    (r"prime|primality|composite", "primality"),
     (r"area under.*curve|integral|antiderivative|numerical integration|area.*curve", "integration"),
     (r"linear equations|system of equations|gaussian elimination|row operations|solve.*equation", "linear_solve"),
     (r"shortest.*path|shortest.*route|weighted graph|dijkstra|relax.*edge|driving route", "shortest_path"),
@@ -84,11 +88,16 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"fibonacci|nth.*sequence|exponential recursion|recurrence", "dynamic_programming"),
     # coding / algorithms
     (r"search.*\bsorted\b|binary search|halve.*range|middle element|find.*in.*\bsorted\b|search.*phone book", "binary_search"),
-    (r"sort.*list|sort.*record|merge sort|split.*half|sorted halves|order.*items", "sorting"),
-    (r"look up.*key|hash table|hash function|constant time.*lookup|find.*by.*id|find.*by.*key|instant.*lookup|look up.*by.*id", "hashing"),
+    (r"sort.*list|sort.*record|merge sort|split.*half|sorted halves|order.*items|sorted halves", "sorting"),
+    (r"split.*half.*(sort|merge)|merge.*sorted|sorted halves", "merge"),
+    (r"look up.*key|hash table|hash function|constant time.*lookup|instant.*lookup|\bhash\b", "hashing"),
     (r"longest common subsequence|prefix lengths|table.*cells|common subsequence", "dynamic_programming"),
-    (r"traverse.*tree|depth-first|breadth-first|visited nodes|graph.*search|visit.*node", "graph_traversal"),
-    (r"minimum spanning tree|kruskal|cheapest edge|no cycle|connect.*all.*node", "spanning_tree"),
+    (r"traverse.*tree|depth-first|breadth-first|visited nodes|graph.*search|visit.*node|"
+     r"reachable from|reachable from (a|the)|start.*(node|vertex|city|airport).*(reach|visit)|"
+     r"connected component|stopping anywhere|can.*reach|determine reachability|reachability", "graph_traversal"),
+    (r"minimum spanning tree|kruskal|cheapest edge|no cycle|connect.*all.*(node|computer|city|airport|vertex|machine)|"
+     r"connect (all|every).*(computer|city|airport|node|office)|minimum.*(cost|weight).*(connect|tree)|"
+     r"cheapest.*(connect|link) (all|every)|least total (cable|wire|cost)|connect all computers", "spanning_tree"),
     (r"linked list.*cycle|tortoise|hare|two pointers.*speed|detect.*cycle", "cycle_detection"),
     (r"compress.*text|huffman|shorter codes|frequent characters|compress.*file", "compression"),
     (r"maximum subarray|kadane|best sum ending|largest.*subarray", "max_subarray"),
@@ -111,11 +120,13 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"palindrome|compare.*both ends|skip.*non-alphanumeric", "palindrome"),
     (r"number of islands|flood-fill|grid.*land.*water|count.*island", "flood_fill"),
     # --- networking / distributed systems ---
-    (r"fail over|replica|replicate.*node|leader.*die|primary.*down|keep.*running.*server|high availability|failover", "failover"),
+    (r"fail over|replica|replicate.*node|leader.*die|primary.*down|keep.*running.*server|high availability|failover|node fails|server fails|when one .* fails|one (server|node) fails", "failover"),
     (r"agree.*same|consensus|raft|paxos|majority.*agree|same.*order|settle.*order", "consensus"),
     (r"exactly once|deduplicat|duplicate.*message|processed once|unique id.*message", "exactly_once"),
     (r"load balanc|distribute.*traffic|balance.*request|too many.*server|spread.*load", "load_balance"),
-    (r"circuit breaker|fail fast|slow.*backend|timeout.*drag|timing out|dragging down|protect.*from.*slow|one.*service.*down", "circuit_breaker"),
+    (r"circuit breaker|fail fast|slow.*backend|backend.*slow|db.*slow|service.*(down|slow)|"
+     r"timeout.*drag|timing out|dragging down|protect.*from.*slow|one.*service.*down|"
+     r"continue working when|keep (the )?service|fail gracefully", "circuit_breaker"),
     (r"retry.*backoff|exponential backoff|jitter|retry.*flaky|back off", "backoff_retry"),
     (r"scale.*spike|auto-scale|horizontal.*scale|more instances|handle.*surge|sudden.*traffic", "horizontal_scale"),
     (r"queue.*survive|durable queue|lease.*crash|work.*not lost|persist.*queue", "durable_queue"),
@@ -145,7 +156,7 @@ OBJECT_PRIMITIVES: List[tuple] = [
     (r"database|data store|distributed|sensor|network|nodes|clock", "object_distributed"),
     (r"fastener|zipper|label|note|adhesive|tag", "object_fastener"),
     (r"climbing|grip|gripping", "object_grip"),
-    (r"material|concrete|foam|polymer|silicone|cement|coating", "object_material"),
+    (r"material|concrete|foam|polymer|silicone|cement|coating|elastomer|viscoelastic", "object_material"),
     (r"food|meat|cell|tissue", "object_biological"),
     (r"energy|battery|solar|fusion|power", "object_energy"),
     (r"series|sequence|number|integer|prime|gcd|equation|function|integral|derivative", "object_math"),
@@ -213,6 +224,19 @@ def match_by_primitives(
       specific action beats one sharing only generic primitives.
     """
     t_prims = strip_to_primitives(target_text)
+    # Empty-primitive guard: if the target strips to nothing (no action and no
+    # object primitive fired), every source ties at 0.0 and the first entry wins
+    # arbitrarily — a silent wrong match. Surface that explicitly so callers can
+    # treat it as 'no structural signal' rather than trusting a coin-flip top-1.
+    if not t_prims:
+        return [{
+            "content": "<no structural primitives extracted>",
+            "title": "",
+            "primitive_overlap": 0.0,
+            "target_primitives": [],
+            "source_primitives": [],
+            "empty_match": True,
+        }]
     t_actions = {p for p in t_prims if not p.startswith("object_")}
     t_objs = t_prims - t_actions
 
@@ -261,6 +285,19 @@ def match_by_primitives(
             }
         )
     scored.sort(key=lambda x: x["primitive_overlap"], reverse=True)
+    # Tie-break: identical primitive overlap (e.g. sort vs binary_search both
+    # {sorting, object_code}) is broken arbitrarily. Secondary sort by a
+    # dependency-free full-text similarity (difflib SequenceMatcher over the raw
+    # target vs source text) prefers the source whose wording is closest, which
+    # resolves most near-identical-primitive ties.
+    import difflib
+    for s in scored:
+        s["_text_sim"] = difflib.SequenceMatcher(
+            None, target_text.lower(), s.get("content", "").lower()
+        ).ratio()
+    scored.sort(key=lambda x: (x["primitive_overlap"], x["_text_sim"]), reverse=True)
+    for s in scored:
+        s.pop("_text_sim", None)
     return scored[:top_k]
 
 
