@@ -1,6 +1,6 @@
 """Command-line interface for Super-Duper-Problem-Solving-Engine."""
 
-from typing import List, Optional
+from typing import List, Optional, Sequence, Tuple
 
 import click
 from rich.console import Console
@@ -440,6 +440,47 @@ def vectorize_primitive_analogize_cmd(specification: str, top_k: int, min_overla
             f"[bold]Target primitives:[/bold] {', '.join(h['target_primitives'])}\n"
             f"[bold]Source primitives:[/bold] {', '.join(h['source_primitives'])}",
             title=f"Primitive match #{i} ({h['title']})",
+        ))
+
+
+@main.command(name="ingenuity-audit")
+@click.argument("candidate")
+@click.option("--spec", "-s", required=True, help="Target problem specification")
+@click.option("--domain", "-d", default="General Multi-Disciplinary", help="Problem domain context")
+def ingenuity_audit_cmd(candidate: str, spec: str, domain: str):
+    """Universal Adversarial Boundary Audit (Lakatos Anti-Action across any domain)."""
+    engine = SuperDuperProblemSolvingEngine()
+    report = engine.audit_adversarial_boundaries(candidate, spec, domain_context=domain)
+
+    status_color = "green" if report["is_sound"] else "red"
+    console.print(Panel(
+        f"[bold]Candidate:[/bold] {report['candidate']}\n"
+        f"[bold]Domain:[/bold] {report['domain']}\n"
+        f"[bold]Overall Resilience:[/bold] [{status_color}]{report['overall_resilience'] * 100:.1f}%[/{status_color}]\n"
+        f"[bold]Soundness Verdict:[/bold] [{status_color}]{'SOUND' if report['is_sound'] else 'VULNERABLE'}[/{status_color}]",
+        title="Universal Adversarial Boundary Audit",
+    ))
+    for p in report["probes"]:
+        p_color = "red" if p["hazard_detected"] else "green"
+        console.print(f"[{p_color}]●[/{p_color}] [bold]{p['name']}:[/bold] vuln={p['vulnerability_score']:.2f}")
+        if p["counterexample"]:
+            console.print(f"   [yellow]Warning:[/yellow] {p['counterexample']}")
+
+
+@main.command(name="coalesce")
+@click.argument("hypotheses", nargs=-1, required=True)
+@click.option("--domain", "-d", default="General", help="Domain context")
+def coalesce_cmd(hypotheses: Sequence[str], domain: str):
+    """Coalesces hypotheses into coarse invariant equivalence classes."""
+    engine = SuperDuperProblemSolvingEngine()
+    classes = engine.coalesce_hypotheses(list(hypotheses), domain_context=domain)
+    console.print(f"[bold]Compressed {len(hypotheses)} hypotheses into {len(classes)} invariant classes:[/bold]")
+    for c in classes:
+        console.print(Panel(
+            f"[bold]Signature:[/bold] {c['invariant_signature']}\n"
+            f"[bold]Representative:[/bold] {c['representative']}\n"
+            f"[bold]Members ({len(c['members'])}):[/bold] {', '.join(c['members'])}",
+            title=f"Coalescence Class: {c['class_id']}",
         ))
 
 

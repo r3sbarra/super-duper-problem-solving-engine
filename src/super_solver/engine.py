@@ -34,6 +34,7 @@ from super_solver.frameworks.sandbox import code_sandbox
 from super_solver.frameworks.toc_cloud import TOCEngine
 from super_solver.frameworks.tournament import DialecticalTournamentEngine, TournamentMatchResult
 from super_solver.frameworks.triz_engine import TRIZEngine
+from super_solver.frameworks.universal_ingenuity import UniversalIngenuityEngine
 from super_solver.frameworks.universal_vector_solver import (
     CascadingDiscoveryResult,
     UniversalVectorizedSolver,
@@ -99,6 +100,7 @@ class SuperDuperProblemSolvingEngine:
         self.tools: ToolRegistry = default_tool_registry
         self.synthesizer = CodeSynthesizer(client=llm_client, sandbox=self.sandbox)
         self.diagnostician = AutomatedDiagnostician(client=llm_client, kt_engine=self.kt)
+        self.ingenuity = UniversalIngenuityEngine()
 
     def program(
         self,
@@ -256,6 +258,45 @@ class SuperDuperProblemSolvingEngine:
             )
         )
 
+        # 1b. UNIVERSAL ADVERSARIAL BOUNDARY AUDITING & COALESCENCE
+        coalesced_classes = self.ingenuity.compress_via_coalescence(
+            [h.description for h in hypotheses],
+            domain_context=problem.title,
+        )
+        for h in hypotheses:
+            audit = self.ingenuity.auditor.audit_candidate(
+                candidate_description=h.description,
+                problem_specification=problem.specification,
+                domain_context=problem.title,
+            )
+            # Apply graduated penalty based on boundary resilience
+            resilience = max(0.5, audit.overall_resilience)
+            h.current_confidence *= resilience
+            # Only mark fatally falsified on multiple catastrophic flaws
+            if audit.overall_resilience < 0.25 and len(audit.fatal_flaws) >= 3:
+                h.status = HypothesisStatus.FALSIFIED
+                if h.id not in falsified_list:
+                    falsified_list.append(h.id)
+                for flaw in audit.fatal_flaws[:1]:
+                    self.repulsor.register_dead_end(flaw)
+
+        reasoning_steps.append(
+            ReasoningStep(
+                step_index=len(reasoning_steps) + 1,
+                operator_type=OperatorType.CONTINUOUS_LATENT_STEP,
+                operator_name="Universal Adversarial Boundary Audit & Coalescence",
+                description=(
+                    f"Audited {len(hypotheses)} hypotheses across universal boundary regimes (null, saturation, "
+                    f"phase-transition, inversion, conservation); coalesced into {len(coalesced_classes)} invariant classes."
+                ),
+                latent_vector=step_1_vec.tolist(),
+                confidence=0.90,
+                symbolic_summary=(
+                    f"Coalesced into {len(coalesced_classes)} equivalence classes; pruned boundary-failing candidates."
+                ),
+            )
+        )
+
         # 2. KEPNER-TREGOE BOUNDARY FILTERING (if boundary provided)
         if problem.boundary:
             v_boundary_is, _, _ = self.kt.build_boundary_hyperplane(problem.boundary)
@@ -385,6 +426,8 @@ class SuperDuperProblemSolvingEngine:
                 candidate_operator_generators=candidate_ops,
                 goal_vector=v_goal,
                 num_simulations=10,
+                auxiliary_unblocker=self.ingenuity.unblocker,
+                problem_specification=problem.specification,
             )
             if mcts_path:
                 # Use the FULL MCTS trajectory, not just the first step: emit one
@@ -968,6 +1011,58 @@ class SuperDuperProblemSolvingEngine:
         return self.self_improver.consolidate_synaptic_memory(
             similarity_threshold=similarity_threshold
         )
+
+    def audit_adversarial_boundaries(
+        self,
+        candidate_description: str,
+        problem_specification: str,
+        domain_context: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Audits a candidate hypothesis or design against universal boundary regimes."""
+        report = self.ingenuity.auditor.audit_candidate(
+            candidate_description=candidate_description,
+            problem_specification=problem_specification,
+            domain_context=domain_context,
+        )
+        return {
+            "candidate": report.candidate_description,
+            "domain": report.domain_context,
+            "overall_resilience": report.overall_resilience,
+            "is_sound": report.is_sound,
+            "fatal_flaws": report.fatal_flaws,
+            "suggested_strengthening": report.suggested_strengthening,
+            "probes": [
+                {
+                    "probe_type": p.probe_type,
+                    "name": p.probe_name,
+                    "hazard_detected": p.hazard_detected,
+                    "vulnerability_score": p.vulnerability_score,
+                    "counterexample": p.counterexample_narrative,
+                }
+                for p in report.probes
+            ],
+        }
+
+    def coalesce_hypotheses(
+        self,
+        hypotheses: List[str],
+        domain_context: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Coalesces continuous or redundant candidate states into coarse equivalence classes."""
+        classes = self.ingenuity.compress_via_coalescence(
+            hypotheses=hypotheses,
+            domain_context=domain_context,
+        )
+        return [
+            {
+                "class_id": c.class_id,
+                "invariant_signature": c.invariant_signature,
+                "representative": c.representative,
+                "members": c.members,
+                "coalescence_ratio": c.coalescence_ratio,
+            }
+            for c in classes
+        ]
 
     def run_tournament(
         self,

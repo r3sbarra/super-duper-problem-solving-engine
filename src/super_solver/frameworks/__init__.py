@@ -12,6 +12,12 @@ from super_solver.frameworks.universal_vector_solver import (
     UniversalVectorizedSolver,
     VectorizedSolution,
 )
+from super_solver.frameworks.universal_ingenuity import (
+    AuxiliaryPlateauUnblocker,
+    InvariantQuotientEngine,
+    UniversalBoundaryAuditor,
+    UniversalIngenuityEngine,
+)
 
 __all__ = [
     "StrongInferenceEngine",
@@ -27,4 +33,8 @@ __all__ = [
     "LakatosProofVerificationEngine",
     "UniversalVectorizedSolver",
     "VectorizedSolution",
+    "UniversalIngenuityEngine",
+    "UniversalBoundaryAuditor",
+    "InvariantQuotientEngine",
+    "AuxiliaryPlateauUnblocker",
 ]

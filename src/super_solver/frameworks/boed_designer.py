@@ -154,3 +154,35 @@ class BOEDDesigner:
             candidate_designs=designs,
             likelihood_matrix=likelihood_matrix or {},
         )
+
+    def rank_experiments_by_structural_class(
+        self,
+        hypothesis_priors: Dict[str, float],
+        candidate_designs: List[Any],
+        likelihood_matrix: Optional[Dict[str, Dict[str, Dict[str, float]]]] = None,
+        structural_boost_factor: float = 1.35,
+    ) -> List[Dict[str, Any]]:
+        """Ranks candidate experiments prioritizing structural invariant & boundary tests.
+
+        Experiments that test conserved quantities, symmetries, boundary conditions,
+        or equivalence partitions receive an information-gain boost reflecting their
+        ability to eliminate entire structural classes in a single evaluation.
+        """
+        ranked = self.rank_experiments(hypothesis_priors, candidate_designs, likelihood_matrix)
+        structural_keywords = {
+            "invariant", "boundary", "symmetry", "conservation", "coalescence",
+            "quotient", "extremal", "null", "saturation", "idempotent", "partition"
+        }
+
+        for r in ranked:
+            text = f"{r.get('name', '')} {r.get('description', '')}".lower()
+            is_structural = any(k in text for k in structural_keywords)
+            if is_structural:
+                r["is_structural_test"] = True
+                r["cost_penalized_utility"] *= structural_boost_factor
+                r["expected_information_gain"] *= structural_boost_factor
+            else:
+                r["is_structural_test"] = False
+
+        ranked.sort(key=lambda x: x["cost_penalized_utility"], reverse=True)
+        return ranked

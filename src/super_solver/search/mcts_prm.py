@@ -165,24 +165,45 @@ class LatentMCTSEngine:
         candidate_operator_generators: List[Tuple[str, np.ndarray, float]],
         goal_vector: np.ndarray,
         num_simulations: int = 15,
+        auxiliary_unblocker: Optional[Any] = None,
+        problem_specification: Optional[str] = None,
     ) -> List[Tuple[str, np.ndarray, float]]:
         """Conducts MCTS and returns the highest-value trajectory.
 
-        Each simulation expands one new operator child (fix for previously degenerate
-        all-at-once expansion). N simulations now explore up to N distinct operators,
-        with backpropagation updating UCB1 scores between simulations.
+        Each simulation expands one new operator child (UCB1-guided).
+        If search plateaus or all initial candidates exhaust with poor reward,
+        autonomously triggers auxiliary unblocking operators (Polya bridges,
+        teleological inversion, constraint relaxation).
         """
         root = MCTSNode(state_vector=initial_state, step_index=0)
+        candidates = list(candidate_operator_generators)
+        auxiliary_triggered = False
 
-        for _ in range(num_simulations):
+        for sim_idx in range(num_simulations):
             curr = root
 
+            # Plateau check: if halfway through simulations the best score is stalled
+            if (
+                auxiliary_unblocker
+                and not auxiliary_triggered
+                and sim_idx >= max(3, num_simulations // 2)
+            ):
+                current_best_val = max([c.value for c in root.children], default=-1.0)
+                if current_best_val < 0.35 or len(root._expanded_op_indices) >= len(candidates):
+                    aux_ops = auxiliary_unblocker.generate_unblocking_operators(
+                        current_latent=root.state_vector,
+                        goal_vector=goal_vector,
+                        problem_specification=problem_specification or "Target Problem",
+                    )
+                    candidates.extend(aux_ops)
+                    auxiliary_triggered = True
+
             # Selection: walk down already-expanded nodes using UCB1
-            while curr.children and len(curr._expanded_op_indices) >= len(candidate_actions := candidate_operator_generators):
+            while curr.children and len(curr._expanded_op_indices) >= len(candidates):
                 curr = self.select_child(curr)
 
             # Expansion: add exactly one new child to the selected node
-            new_child = self.expand_one_child(curr, candidate_operator_generators, goal_vector)
+            new_child = self.expand_one_child(curr, candidates, goal_vector)
             if new_child is not None:
                 # Simulation & backprop from the new child
                 self.backpropagate(new_child, new_child.prm_step_score)
