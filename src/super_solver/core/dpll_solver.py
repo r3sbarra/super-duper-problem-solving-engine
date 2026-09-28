@@ -326,13 +326,19 @@ class DPLLSolver:
                     else:
                         verdict = "SEMANTIC_WEAK"
                         proved_soft = False
+                    # FAIL-CLOSED (mirrors suuri finding 66fb07d1/d30325f6): the
+                    # semantic fallback fires precisely when NO structural logic
+                    # could be extracted, so its score is a graded guess, not a
+                    # proof. Report it as soft/inconclusive so callers cannot
+                    # mistake a similarity score for a formal entailment.
                     return {
                         "proved": proved_soft,
+                        "inconclusive": True,
                         "verdict": verdict,
                         "summary": (
                             f"No structural logical clauses extracted (regex_propositional). "
                             f"Semantic fallback: embedding cosine similarity = {semantic_score:.3f}. "
-                            f"{'Soft entailment likely.' if proved_soft else 'Weak semantic link; not entailed.'}"
+                            f"{'Soft entailment likely — but this is a graded guess, NOT a formal proof.' if proved_soft else 'Weak semantic link; not entailed.'}"
                         ),
                         "countermodel": None,
                         "clauses_evaluated": 0,
@@ -341,6 +347,25 @@ class DPLLSolver:
                     }
             except Exception:
                 pass  # semantic fallback is best-effort
+
+        # FAIL-CLOSED GATE: if no clauses could be extracted at all (not even
+        # trivial unit-clauses) and the optional LLM parser was unavailable, do
+        # NOT proceed to a vacuous 'proved' via an empty clause set. Return an
+        # explicit INCONCLUSIVE instead.
+        if not clauses:
+            return {
+                "proved": False,
+                "inconclusive": True,
+                "verdict": "INCONCLUSIVE",
+                "summary": (
+                    "No structural logical clauses could be extracted and no semantic "
+                    "fallback was available. This is a lack of evidence, NOT an "
+                    "entailment. Verdict: INCONCLUSIVE."
+                ),
+                "countermodel": None,
+                "clauses_evaluated": 0,
+                "parser": parser_used,
+            }
 
         # Add negation of target claim: ~target_claim.
         # With the optional-LLM path the goal variable is already a single symbol
