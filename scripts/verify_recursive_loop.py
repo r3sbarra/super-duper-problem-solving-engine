@@ -4,7 +4,7 @@ import sys
 
 os.environ['SUPER_SOLVER_VECTOR_DB'] = ':memory:'
 sys.path.insert(0, 'src')
-from super_solver.vectorize import vectorization_service
+from super_solver.vectorize import vectorization_service  # noqa: E402
 from super_solver.vectorize.domain_knowledge import DOMAIN_KNOWLEDGE
 
 for e in DOMAIN_KNOWLEDGE:
