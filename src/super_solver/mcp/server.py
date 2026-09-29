@@ -231,7 +231,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
     elif name == "super_solver_triz_solve":
         imp = arguments["improving_parameter"]
         wors = arguments["worsening_parameter"]
-        principles = engine.triz.resolve_contradiction(imp, wors)
+        principles = engine.triz.resolve_contradiction_matrix(imp, wors)
         return [types.TextContent(type="text", text=json.dumps({"improving": imp, "worsening": wors, "recommended_principles": principles}, indent=2, default=str))]
 
     elif name == "super_solver_kt_boundary":
