@@ -36,8 +36,27 @@ def get_bridge() -> LabAssSuperSolverBridge:
 async def list_tools() -> list[types.Tool]:
     return [
         types.Tool(
+            name="super_solver_identify",
+            description=("Identifies a problem's structure: problem type (optimization/proof/search/"
+                         "estimation/design/diagnosis/explanation), entities, givens, unknowns, "
+                         "constraints, goal and success criteria. Use BEFORE decomposition to see "
+                         "how the engine understands the problem."),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "specification": {"type": "string", "description": "The problem statement to identify"},
+                    "title": {"type": "string", "description": "Optional short title"},
+                },
+                "required": ["specification"],
+            },
+        ),
+        types.Tool(
             name="super_solver_decompose",
-            description="Decomposes a difficult research or engineering problem into auxiliary angles using Polya heuristics and TRIZ inventive principles.",
+            description=("Decomposes a difficult research or engineering problem into auxiliary angles. "
+                         "First IDENTIFIES the problem (type/entities/givens/unknowns/constraints/goal), "
+                         "then generates subproblems anchored on those slots via Polya heuristics and "
+                         "TRIZ inventive principles. Returns problem_structure, ranked auxiliary_angles, "
+                         "suggested_triz_operators and decomposition_metrics (slot coverage, relevance spread)."),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -159,6 +178,12 @@ async def list_tools() -> list[types.Tool]:
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
     engine = get_engine()
     bridge = get_bridge()
+
+    if name == "super_solver_identify":
+        spec = arguments["specification"]
+        title = arguments.get("title", "")
+        result = bridge.identify_problem(spec, title)
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
 
     if name == "super_solver_decompose":
         topic = arguments["topic"]

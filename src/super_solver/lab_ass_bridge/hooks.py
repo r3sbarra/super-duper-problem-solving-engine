@@ -21,40 +21,62 @@ class LabAssSuperSolverBridge:
     ) -> Dict[str, Any]:
         """Decomposes a difficult research topic into auxiliary angles using Polya & TRIZ.
 
-        Merges two signals so the decomposition is genuinely generative rather than a
-        pure re-ranking of the caller's own subproblems:
-          1. ``decompose_auxiliary_problems`` -- re-ranks the caller-supplied
-             subproblems by relevance to the topic (the classic Polya decomposition).
-          2. ``generate_auxiliary_problems`` -- synthesizes NEW subproblems from the
-             topic text via Polya templates (divide-and-conquer, working-backwards,
-             special-case, generalization, counterexample-search, invariant, etc.),
-             de-duplicated against the known subproblems (``is_new`` flag).
+        Primary path is the principled pipeline
+        (``super_solver.frameworks.problem_identification.decompose``): it
+        IDENTIFIES the problem (type, entities, givens, unknowns, constraints,
+        goal) and then generates subproblems anchored on those specific slots,
+        ranked by relevance-by-construction with redundancy suppression. This
+        replaces the old generic-template + high-frequency-token fill that
+        produced semantically vacuous subproblems.
 
-        The merged set is returned with the caller's ranked items first, followed by
-        the genuinely new generated ones, so downstream consumers get both the
-        requested framing AND fresh angles.
+        The legacy Polya template path is still merged in as a secondary
+        source so no previously-available angle is lost, but the principled
+        subproblems are returned first (they rank higher).
         """
+        from super_solver.frameworks.problem_identification import decompose as _pid
+
         subs = initial_subproblems or []
-        ranked = self.engine.polya.decompose_auxiliary_problems(
-            problem_specification=topic,
-            known_subproblems=subs,
-        )
-        generated = self.engine.polya.generate_auxiliary_problems(
-            problem_specification=topic,
-            known_subproblems=subs or None,
-            max_new=8,
-        )
-        known_titles = {s.get("subproblem", "") for s in ranked}
-        merged = list(ranked)
-        for g in generated:
-            if g.get("subproblem") and g["subproblem"] not in known_titles:
-                merged.append(g)
+
+        # --- Primary: principled identification + decomposition ---
+        pid = _pid(topic, known_subproblems=subs, max_new=8)
+        structured = pid["subproblems"]
+        structure = pid["structure"]
+        metrics = pid["metrics"]
+
+        # --- Secondary: legacy Polya template generation (kept for coverage) ---
+        try:
+            legacy = self.engine.polya.generate_auxiliary_problems(
+                problem_specification=topic, known_subproblems=subs or None, max_new=8
+            )
+        except Exception:
+            legacy = []
+        present = {s.get("subproblem", "") for s in structured}
+        for g in legacy:
+            txt = g.get("subproblem", "")
+            if txt and txt not in present:
+                present.add(txt)
+                structured.append(g)
+
         principles = self.engine.triz.suggest_principles(topic, top_k=3)
 
         return {
-            "auxiliary_angles": merged,
+            "problem_structure": structure,
+            "auxiliary_angles": structured,
             "suggested_triz_operators": principles,
+            "decomposition_metrics": metrics,
         }
+
+    def identify_problem(self, specification: str, title: str = "") -> Dict[str, Any]:
+        """Identify a problem's type, entities, givens, unknowns, constraints, goal.
+
+        Exposes the identification stage of the principled pipeline to lab-ass
+        and the MCP surface, so an agent can inspect how the engine understands
+        a problem before decomposing it.
+        """
+        from super_solver.frameworks.problem_identification import identify_problem as _ident
+
+        st = _ident(specification, title)
+        return st.to_dict()
 
     def check_dead_end_deflection(
         self,
