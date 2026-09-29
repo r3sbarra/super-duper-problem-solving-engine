@@ -1,0 +1,144 @@
+{
+  "summary": {
+    "ok": 27,
+    "degenerate": 0,
+    "fail": 0
+  },
+  "results": [
+    {
+      "subsystem": "core.dpll.refute",
+      "status": "OK",
+      "detail": "{'proved': True, 'verdict': 'LOGICALLY_SOUND_PROOF', 'summary': \"Target claim 'C' is strictly entailed by premises under propositional resolution refutation. Ne"
+    },
+    {
+      "subsystem": "core.smt_lra",
+      "status": "OK",
+      "detail": "SMTResult(is_sat=True, verdict='SAT', details={'theory': 'QF_LRA', 'conflict': None, 'constraint_count': 3})"
+    },
+    {
+      "subsystem": "core.smt_euf",
+      "status": "OK",
+      "detail": "SMTResult(is_sat=True, verdict='SAT', details={'theory': 'EUF', 'equivalence_classes': {'a': 'a', 'f(a)': 'b', 'b': 'b', 'c': 'c'}})"
+    },
+    {
+      "subsystem": "platt.crucial_experiments",
+      "status": "OK",
+      "detail": "[CrucialExperiment(id='exp_auto_purity_control', name='High-Resolution Purity & Systematic Filtering Assay', description='Apply ultra-strict kinematic or compos"
+    },
+    {
+      "subsystem": "triz.principles",
+      "status": "OK",
+      "detail": "[{'principle_id': 38, 'name': 'Strong Oxidants', 'description': 'Replace normal environment with enriched or active field/reaction (e.g. oxygen-enriched, ionize"
+    },
+    {
+      "subsystem": "kt.boundary",
+      "status": "OK",
+      "detail": "{'is_facts_count': 2, 'is_not_facts_count': 2, 'hyperplane_norm': 1.2839821577072144, 'candidate_evaluations': [{'cause': \"an interaction between 'bedroom' and "
+    },
+    {
+      "subsystem": "polya.aux",
+      "status": "OK",
+      "detail": "[{'subproblem': \"Decompose the objective 'Prove there are infinitely many primes' into independent sub-goals whose joint satisfaction implies the objective.\", '"
+    },
+    {
+      "subsystem": "gentner.align",
+      "status": "OK",
+      "detail": "{'structural_alignment_score': 1.0, 'systematic_match_count': 1, 'entity_mappings': {'heat': 'water', 'cold': 'low'}, 'matches': [{'base_relation': 'flows_to(he"
+    },
+    {
+      "subsystem": "peirce.abduct",
+      "status": "OK",
+      "detail": "[Hypothesis(id='hyp_auto_emergent_phase_hypothesis', title='Structural Phase / Emergent Non-Linear Dynamics', description='The plant grew toward window is drive"
+    },
+    {
+      "subsystem": "toc.evaporate",
+      "status": "OK",
+      "detail": "{'resolved': False, 'winning_injection': 'automate testing', 'evaporation_score': 0.0274253211915493, 'rankings': [{'injection': 'automate testing', 'score': 0."
+    },
+    {
+      "subsystem": "problem_id.decompose",
+      "status": "OK",
+      "detail": "{'structure': {'raw': 'Shortest-path routing under time-window constraints.', 'problem_type': 'optimization', 'entities': ['time-window constraints', 'shortest-"
+    },
+    {
+      "subsystem": "vectorize.primitive_analogize",
+      "status": "OK",
+      "detail": "[{'content': 'Use a low-tack adhesive that was originally a failed super-strong glue (Post-it)', 'title': 'make a paper note that sticks temporarily and can be "
+    },
+    {
+      "subsystem": "search.negative_manifold",
+      "status": "OK",
+      "detail": "(True, 1.0000001192092896, 'Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): add a cache in "
+    },
+    {
+      "subsystem": "search.mcts.best_path",
+      "status": "OK",
+      "detail": "[('add_cache', array([0.        , 0.        , 0.16449937, 0.        , 0.        ,\n       0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.16"
+    },
+    {
+      "subsystem": "latent.coconut.bfs",
+      "status": "OK",
+      "detail": "[[('add_cache', array([ 4.26314507e-03, -1.24767820e-02,  1.31199091e-01,  2.66330644e-02,\n        7.27937851e-03, -8.68328693e-03, -2.06823755e-02, -1.90123669"
+    },
+    {
+      "subsystem": "latent.dot.denoise",
+      "status": "OK",
+      "detail": "[array([0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.31153112, 0.    "
+    },
+    {
+      "subsystem": "tournament.match",
+      "status": "OK",
+      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.WEAKENED_INCONSISTENT: 'WEAKENED_INCONSISTENT'>, robustness_score="
+    },
+    {
+      "subsystem": "math.verify_flawed",
+      "status": "OK",
+      "detail": "ProofVerificationResult(paper_id='x', paper_title='P vs NP', target_conjecture='P versus NP', verdict=<VerificationStatus.REFUTED_FLAWED: 'REFUTED_FLAWED'>, con"
+    },
+    {
+      "subsystem": "boed.rank",
+      "status": "OK",
+      "detail": "[{'design_id': 'd1', 'name': 'a', 'prior_entropy': 0.6931471805579453, 'expected_posterior_entropy': 0.32508297338944825, 'expected_information_gain': 0.3680642"
+    },
+    {
+      "subsystem": "pareto.resolve",
+      "status": "OK",
+      "detail": "{'pareto_front': ['a', 'b'], 'dominated': [], 'knee': 'a', 'scalarized_ranking': [{'candidate': 'a', 'score': 0.5}, {'candidate': 'b', 'score': 0.5}], 'conflict"
+    },
+    {
+      "subsystem": "ingenuity.audit",
+      "status": "OK",
+      "detail": "[AdversarialAuditReport(candidate_description='add a bounded cache with fallback', domain_context='systems', overall_resilience=0.9377876660823822, is_sound=Tru"
+    },
+    {
+      "subsystem": "meta.self_audit",
+      "status": "OK",
+      "detail": "{'self_evaluation_status': 'AUDIT_PASSED_HEALTHY', 'dpll_invariant_verification': {'proved': True, 'verdict': 'LOGICALLY_SOUND_PROOF'}, 'causal_intervention_aud"
+    },
+    {
+      "subsystem": "meta.self_diagnostic",
+      "status": "OK",
+      "detail": "{'total_registered_dead_ends': 36, 'total_episodic_cases': 6, 'active_parameters': {'proximity_threshold': 0.38, 'guidance_scale': 1.0977652210111704, 'repulsio"
+    },
+    {
+      "subsystem": "memory.consolidate",
+      "status": "OK",
+      "detail": "1"
+    },
+    {
+      "subsystem": "code.synthesize",
+      "status": "OK",
+      "detail": "SynthesisResult(success=True, code='# Deterministic placeholder for: return the sum of a list\\ndef solution(*args, **kwargs):\\n    return True\\n', test_code='as"
+    },
+    {
+      "subsystem": "diagnose",
+      "status": "OK",
+      "detail": "DiagnosticReport(problem_summary='server returns 500 under load intermittently', boundary=KTBoundary(identity_is='server returns 500 under load intermittently',"
+    },
+    {
+      "subsystem": "suggest_paths",
+      "status": "OK",
+      "detail": "[SuggestedPath(path_id='path_platt_crucial_assay', strategy_type='PLATT_STRONG_INFERENCE_ASSAY', title='High-Resolution Differential Crucial Experiment', descri"
+    }
+  ]
+}

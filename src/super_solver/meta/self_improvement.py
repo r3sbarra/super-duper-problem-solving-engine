@@ -107,7 +107,7 @@ class SelfImprovementController:
             trajectory=[v_test_init],
             constraint_attractors=[v_test_goal],
             negative_repulsors=[v_test_dead],
-            diffusion_steps=self.params["diffusion_steps"],
+            diffusion_steps=int(self.params["diffusion_steps"]),
             guidance_scale=self.params["guidance_scale"],
             repulsion_scale=self.params["repulsion_scale"],
         )
