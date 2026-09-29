@@ -68,7 +68,7 @@
     {
       "subsystem": "search.negative_manifold",
       "status": "OK",
-      "detail": "(True, 1.0000001192092896, 'add a cache in front of the database')"
+      "detail": "(True, 1.0000001192092896, 'Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): Conso"
     },
     {
       "subsystem": "search.mcts.best_path",
@@ -78,7 +78,7 @@
     {
       "subsystem": "latent.coconut.bfs",
       "status": "OK",
-      "detail": "[[('add_cache', array([-1.29706736e-02,  1.82500796e-02,  1.40145304e-01, -8.75251883e-03,\n        3.23076183e-03,  3.02766134e-02, -5.08286863e-03, -"
+      "detail": "[[('add_cache', array([-2.15671017e-03,  6.55627071e-03,  1.30197869e-01, -9.04130234e-03,\n       -1.57185599e-02,  1.44473319e-04, -6.83185215e-03, -"
     },
     {
       "subsystem": "latent.dot.denoise",
@@ -88,7 +88,7 @@
     {
       "subsystem": "tournament.match",
       "status": "OK",
-      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.SURVIVED_ROBUST: 'SURVIVED_ROBUST'>, robustness_score=1."
+      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.WEAKENED_INCONSISTENT: 'WEAKENED_INCONSISTENT'>, robustn"
     },
     {
       "subsystem": "math.verify_flawed",
@@ -118,12 +118,12 @@
     {
       "subsystem": "meta.self_diagnostic",
       "status": "OK",
-      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 1.5385017575197182, "
+      "detail": "{'total_registered_dead_ends': 36, 'total_episodic_cases': 10, 'active_parameters': {'proximity_threshold': 0.38, 'guidance_scale': 1.2821035357121688"
     },
     {
       "subsystem": "memory.consolidate",
       "status": "OK",
-      "detail": "0"
+      "detail": "1"
     },
     {
       "subsystem": "code.synthesize",
@@ -138,7 +138,7 @@
     {
       "subsystem": "suggest_paths",
       "status": "OK",
-      "detail": "[SuggestedPath(path_id='path_gentner_analogy', strategy_type='ANALOGICAL_STRUCTURAL_TRANSFER', title='Cross-Domain Relational Structure Mapping', desc"
+      "detail": "[SuggestedPath(path_id='path_platt_crucial_assay', strategy_type='PLATT_STRONG_INFERENCE_ASSAY', title='High-Resolution Differential Crucial Experimen"
     }
   ]
 }

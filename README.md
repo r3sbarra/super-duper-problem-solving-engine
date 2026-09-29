@@ -3,7 +3,7 @@
 > **A Neurosymbolic Reasoning & Scientific Inquiry Engine**  
 > Unifying 8 historically proven scientific and cognitive problem-solving paradigms with continuous vector representations (latent guidance, VSA/HDC, potential-field manifolds, DPLL SAT, and SMT theories).
 
-[![Tests](https://img.shields.io/badge/tests-171%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-219%20passed-brightgreen.svg)]()
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg)](LICENSE)
@@ -457,7 +457,7 @@ The engine provides direct plug-and-play integration with the `lab-ass` research
 .venv/bin/pytest -v tests/
 ```
 
-All **171 unit, integration, regression and property tests** pass in ~10 seconds
+All **219 unit, integration, regression and property tests** pass in ~10 seconds
 across mathematical, scientific, engineering, dialectical-debate, and
 meta-optimization domains. Test coverage is *not* claimed to be 100% — see
 `ROADMAP.md` T3.3 for the coverage-map workstream. The CI pipeline runs the full
