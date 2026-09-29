@@ -109,6 +109,25 @@ def collect() -> dict:
         "vacuous_subproblems": vacuous,
     }
 
+    # tournament discrimination: does it separate flawed from sound claims?
+    try:
+        from super_solver.frameworks.tournament import DialecticalTournamentEngine
+
+        t = DialecticalTournamentEngine()
+        flawed = t.run_match(
+            "A proof that P != NP via monotone circuit approximations"
+        )
+        sound = t.run_match(
+            "Add a cache in front of the database to reduce read latency"
+        )
+        metrics["tournament"] = {
+            "flawed_survived": bool(flawed.survived),
+            "sound_survived": bool(sound.survived),
+            "discriminates": bool(not flawed.survived and sound.survived),
+        }
+    except Exception:
+        pass
+
     # artifact hash for provenance
     if art.available:
         from super_solver.core.distilled_pid import _DEFAULT_WEIGHTS
