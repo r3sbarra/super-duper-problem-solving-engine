@@ -141,17 +141,29 @@ def test_entities_do_not_absorb_subordinate_clauses():
 
 # --- Optional semantic scorer -------------------------------------------------
 
-def test_semantic_scorer_is_off_by_default(monkeypatch):
-    """With the flag unset, no semantic term is used (zero-daemon contract)."""
+def test_semantic_scorer_defaults_to_offline_distilled(monkeypatch):
+    """By default the OFFLINE distilled embedder is used (no daemon); the
+    scorer can still be disabled explicitly with SUPER_SOLVER_SEMANTIC_SCORER=0."""
+    import importlib
+
     monkeypatch.delenv("SUPER_SOLVER_SEMANTIC_SCORER", raising=False)
+    monkeypatch.delenv("SUPER_SOLVER_SEMANTIC_EMBEDDER", raising=False)
     import super_solver.frameworks.problem_identification as pid
 
-    # Reset the memoized resolution so the env change is observed.
+    importlib.reload(pid)
+    # Default: distilled_pid artifact present -> semantic path active.
+    if pid.semantic_similarity("hello", "hi") is not None:
+        _, breakdown = pid.relevance_score("shortest path routing", "relax edges in a graph")
+        assert "semantic" in breakdown
+
+    # Explicit disable -> pure polarity path, no semantic term.
+    monkeypatch.setenv("SUPER_SOLVER_SEMANTIC_SCORER", "0")
     pid._SEMANTIC_STATE["resolved"] = False
     pid._SEMANTIC_STATE["backend"] = None
     assert pid.semantic_similarity("hello", "hi") is None
     _, breakdown = pid.relevance_score("shortest path routing", "relax edges in a graph")
     assert "semantic" not in breakdown
+    importlib.reload(pid)
 
 
 def test_semantic_scorer_flag_without_daemon_falls_back(monkeypatch):

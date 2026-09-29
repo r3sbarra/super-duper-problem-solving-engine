@@ -360,28 +360,42 @@ _SEMANTIC_STATE: Dict[str, object] = {"resolved": False, "backend": None}
 def _semantic_backend():
     """Resolve a genuinely semantic embedder once, or None if unavailable.
 
-    Enabled by ``SUPER_SOLVER_SEMANTIC_SCORER=1`` (or ``true``/``yes``). Uses the
-    backend named by ``SUPER_SOLVER_SEMANTIC_EMBEDDER`` (default ``ollama``,
-    i.e. a local ``nomic-embed-text``). If the daemon is unreachable the result
-    is cached as None and every call silently falls back to polarity, so the
-    engine never hard-fails on a missing daemon.
+    By DEFAULT (no env set) the OFFLINE distilled_pid embedder is used when its
+    artifact is present, because it is deterministic and needs no daemon; if the
+    artifact is missing it silently falls back to polarity. Overrides:
+      - ``SUPER_SOLVER_SEMANTIC_SCORER=0`` disables the semantic scorer entirely
+        (pure polarity path).
+      - ``SUPER_SOLVER_SEMANTIC_EMBEDDER`` selects the backend explicitly
+        (``distilled_pid`` | ``ollama`` | any registered backend name).
+    If the chosen daemon is unreachable the result is cached as None and every
+    call silently falls back to polarity, so the engine never hard-fails.
     """
     if _SEMANTIC_STATE["resolved"]:
         return _SEMANTIC_STATE["backend"]
     _SEMANTIC_STATE["resolved"] = True
+
     flag = os.getenv("SUPER_SOLVER_SEMANTIC_SCORER", "").strip().lower()
-    if flag not in ("1", "true", "yes", "on"):
+    if flag in ("0", "false", "no", "off"):
         _SEMANTIC_STATE["backend"] = None
         return None
-    try:
-        name = os.getenv("SUPER_SOLVER_SEMANTIC_EMBEDDER", "ollama")
-        if name == "distilled_pid":
+
+    # Default backend is the offline distilled student (no daemon).
+    name = os.getenv("SUPER_SOLVER_SEMANTIC_EMBEDDER", "distilled_pid")
+
+    def _try_distilled():
+        try:
             from super_solver.core.distilled_pid import DistilledPIDEmbedder
 
             backend = DistilledPIDEmbedder()
-            if not backend.available:
-                _SEMANTIC_STATE["backend"] = None
-                return None
+            if backend.available:
+                return backend
+        except Exception:
+            pass
+        return None
+
+    try:
+        if name == "distilled_pid":
+            backend = _try_distilled()
             _SEMANTIC_STATE["backend"] = backend
             return backend
         from super_solver.core.embedder import get_backend
@@ -394,9 +408,10 @@ def _semantic_backend():
         if getattr(probe, "shape", (0,))[0] == getattr(backend, "dim", -1):
             _SEMANTIC_STATE["backend"] = backend
         else:
-            _SEMANTIC_STATE["backend"] = None
+            # Requested backend unreachable: fall back to offline distilled.
+            _SEMANTIC_STATE["backend"] = _try_distilled()
     except Exception:
-        _SEMANTIC_STATE["backend"] = None
+        _SEMANTIC_STATE["backend"] = _try_distilled()
     return _SEMANTIC_STATE["backend"]
 
 
@@ -755,7 +770,7 @@ def decompose(
     for text, heuristic, slot in candidates:
         anchor_rel = anchored_relevance(structure, slot)
         sem, breakdown = relevance_score(parent, text)
-        rel = 0.75 * anchor_rel + 0.25 * sem
+        rel = min(1.0, 0.75 * anchor_rel + 0.25 * sem)
         breakdown = {"anchor": float(anchor_rel), **breakdown}
         scored.append(Subproblem(
             text=text, heuristic=heuristic, target_slot=slot,

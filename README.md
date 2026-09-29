@@ -374,22 +374,30 @@ Two optional backends recover paraphrase-level relevance:
 
 The `distilled_pid` student is a deterministic hashed-n-gram + bilinear model
 distilled from `nomic-embed-text` on 58 disjoint training parents
-(`assets/distilled_pid_large.npz`). Enable either backend with:
+(`assets/distilled_pid_large.npz`). **It is enabled by DEFAULT** (it is offline
+and deterministic, so there is no daemon risk). Configure with:
 
 ```bash
-# Offline distilled student (no daemon, deterministic) — recommended
-export SUPER_SOLVER_SEMANTIC_SCORER=1
-export SUPER_SOLVER_SEMANTIC_EMBEDDER=distilled_pid
+# Default (no env): offline distilled student — deterministic, no daemon
+#
+# Disable the semantic scorer entirely (pure polarity path):
+export SUPER_SOLVER_SEMANTIC_SCORER=0
 
-# OR the nomic-embed-text teacher
-# export SUPER_SOLVER_SEMANTIC_EMBEDDER=ollama
+# Or select a backend explicitly:
+export SUPER_SOLVER_SEMANTIC_EMBEDDER=distilled_pid   # offline (default)
+# export SUPER_SOLVER_SEMANTIC_EMBEDDER=ollama         # nomic-embed-text daemon
 ```
 
-When the scorer is off (default) the engine keeps the zero-daemon polarity path.
-With a semantic backend available, the polarity cosine and lexical overlap are
-demoted to a tiny tie-break, because they are proven anti-signals for
-zero-overlap paraphrases. Verify/regenerate the artifact with
+When a requested daemon backend is unreachable, the scorer falls back to the
+offline distilled student (and to polarity if its artifact is absent), so the
+engine never hard-fails. A **negation-consistency guard** (embedder-independent)
+demotes negated/antonym distractors, which embedding cosine ranks highly.
+Verify/regenerate the artifact with
 `python scripts/build_distilled_pid_embedder.py --verify|--train`.
+
+Measured correct-above-irrelevant rate across committed probe suites: in-
+distribution 32 (1.000), OOD domain/length/negation 13 (1.000), fresh holdout
+48 (0.979); polarity baseline ~0.4.
 
 ---
 
