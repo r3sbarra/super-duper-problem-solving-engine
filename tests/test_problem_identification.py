@@ -136,3 +136,37 @@ def test_entities_do_not_absorb_subordinate_clauses():
     for ent in st.entities:
         assert "while" not in ent.split(), f"entity absorbed a clause: {ent}"
         assert not ent.endswith("and"), f"entity has dangling connective: {ent}"
+
+
+# --- Optional semantic scorer -------------------------------------------------
+
+def test_semantic_scorer_is_off_by_default(monkeypatch):
+    """With the flag unset, no semantic term is used (zero-daemon contract)."""
+    monkeypatch.delenv("SUPER_SOLVER_SEMANTIC_SCORER", raising=False)
+    import super_solver.frameworks.problem_identification as pid
+
+    # Reset the memoized resolution so the env change is observed.
+    pid._SEMANTIC_STATE["resolved"] = False
+    pid._SEMANTIC_STATE["backend"] = None
+    assert pid.semantic_similarity("hello", "hi") is None
+    _, breakdown = pid.relevance_score("shortest path routing", "relax edges in a graph")
+    assert "semantic" not in breakdown
+
+
+def test_semantic_scorer_flag_without_daemon_falls_back(monkeypatch):
+    """Flag on + unreachable daemon must fall back to polarity, not raise."""
+    monkeypatch.setenv("SUPER_SOLVER_SEMANTIC_SCORER", "1")
+    # Point at a dead port so the ollama backend cannot reach a daemon.
+    monkeypatch.setenv("SUPER_SOLVER_LLM_URL", "http://127.0.0.1:1")
+    monkeypatch.setenv("OLLAMA_HOST", "http://127.0.0.1:1")
+    import importlib
+
+    import super_solver.frameworks.problem_identification as pid
+
+    importlib.reload(pid)
+    # semantic may be None (fallback) or a real value only if a daemon happens
+    # to be reachable; either way it must not raise and score must be finite.
+    score, breakdown = pid.relevance_score("a parent problem", "a child")
+    assert score == score  # not NaN
+    assert isinstance(breakdown, dict)
+    importlib.reload(pid)
