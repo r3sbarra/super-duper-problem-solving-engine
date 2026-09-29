@@ -1,0 +1,218 @@
+[
+  {
+    "parent": "Find a cycle in a linked list without extra memory.",
+    "relevant": "Utilize two pointers traversing at unequal speeds; if they meet, a loop exists.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.5689111367672447,
+      "neg_d": 0.42765978425238343
+    }
+  },
+  {
+    "parent": "Decide whether a huge number is prime quickly.",
+    "relevant": "Determine rapidly if a large integer has no divisors other than 1 and itself.",
+    "irrelevant": "That reminds me to repaint the decide and order more paper.",
+    "sims": {
+      "pos": 0.6540257470162553,
+      "neg_d": 0.5061101768008733
+    }
+  },
+  {
+    "parent": "Keep two replicas in sync after the network heals.",
+    "relevant": "Once connectivity returns, reconcile divergent states so both copies converge to an identical result.",
+    "irrelevant": "That reminds me to repaint the keep and order more paper.",
+    "sims": {
+      "pos": 0.6111766277668288,
+      "neg_d": 0.5629934188177108
+    }
+  },
+  {
+    "parent": "Stop one slow service from taking down the whole site.",
+    "relevant": "Isolate a lagging component so it cannot bring down the entire platform.",
+    "irrelevant": "That reminds me to repaint the stop and order more paper.",
+    "sims": {
+      "pos": 0.5826396467138961,
+      "neg_d": 0.49827607268849694
+    }
+  },
+  {
+    "parent": "Roll out a new version with zero downtime.",
+    "relevant": "Deploy the updated release while maintaining continuous availability.",
+    "irrelevant": "That reminds me to repaint the roll and order more paper.",
+    "sims": {
+      "pos": 0.6468406631712125,
+      "neg_d": 0.4887023302234713
+    }
+  },
+  {
+    "parent": "Make sure a retried message is only handled once.",
+    "relevant": "Guarantee a re-attempted signal triggers a single processing pass.",
+    "irrelevant": "That reminds me to repaint the make and order more paper.",
+    "sims": {
+      "pos": 0.6350007815606732,
+      "neg_d": 0.48293320228506925
+    }
+  },
+  {
+    "parent": "Speed up a query that scans an enormous table.",
+    "relevant": "Accelerate data retrieval by partitioning the dataset and applying an index.",
+    "irrelevant": "That reminds me to repaint the speed and order more paper.",
+    "sims": {
+      "pos": 0.6627313388561722,
+      "neg_d": 0.544019042617179
+    }
+  },
+  {
+    "parent": "Split a dataset that will not fit in memory.",
+    "relevant": "Partition the collection into smaller chunks by streaming through it sequentially, writing each piece to separate files.",
+    "irrelevant": "That reminds me to repaint the split and order more paper.",
+    "sims": {
+      "pos": 0.5764950748774107,
+      "neg_d": 0.47088599806058645
+    }
+  },
+  {
+    "parent": "Trim the mass of a vehicle while keeping its strength.",
+    "relevant": "Reduce weight yet preserve structural integrity.",
+    "irrelevant": "That reminds me to repaint the trim and order more paper.",
+    "sims": {
+      "pos": 0.7016067459722902,
+      "neg_d": 0.5350686371260196
+    }
+  },
+  {
+    "parent": "Charge a battery fast without overheating it.",
+    "relevant": "Refill the cell swiftly while keeping thermal levels in check.",
+    "irrelevant": "That reminds me to repaint the charge and order more paper.",
+    "sims": {
+      "pos": 0.6918907280651314,
+      "neg_d": 0.5413087563094734
+    }
+  },
+  {
+    "parent": "Remove plastic from the sea at scale.",
+    "relevant": "Extract synthetic debris from marine environments on a massive level.",
+    "irrelevant": "That reminds me to repaint the remove and order more paper.",
+    "sims": {
+      "pos": 0.7747577061721849,
+      "neg_d": 0.484260317605216
+    }
+  },
+  {
+    "parent": "Pull carbon dioxide out of the air cheaply.",
+    "relevant": "Extract atmospheric CO\u2082 at low cost.",
+    "irrelevant": "That reminds me to repaint the pull and order more paper.",
+    "sims": {
+      "pos": 0.802508164843745,
+      "neg_d": 0.489406028652368
+    }
+  },
+  {
+    "parent": "Show that the square root of two cannot be a fraction.",
+    "relevant": "Demonstrate that no pair of integers exists whose ratio, when squared, equals 2.",
+    "irrelevant": "That reminds me to repaint the show and order more paper.",
+    "sims": {
+      "pos": 0.7270410097416707,
+      "neg_d": 0.39334854281249293
+    }
+  },
+  {
+    "parent": "Prove there is no largest prime.",
+    "relevant": "Assume finitely many primes \\(p_1,\\dots,p_n\\) exist. Form \\(N=p_1p_2\\cdots p_n+1\\). Any divisor of \\(N\\) exceeding 1 must be a fresh prime outside the list, contradicting completeness.",
+    "irrelevant": "That reminds me to repaint the prove and order more paper.",
+    "sims": {
+      "pos": 0.6737452276734766,
+      "neg_d": 0.43642805360239695
+    }
+  },
+  {
+    "parent": "Show that a graph with no odd cycle can be colored with two colors.",
+    "relevant": "Demonstrate that every bipartite network admits a 2-coloring.",
+    "irrelevant": "That reminds me to repaint the show and order more paper.",
+    "sims": {
+      "pos": 0.7612408436403565,
+      "neg_d": 0.4539915004249551
+    }
+  },
+  {
+    "parent": "Work out why logins fail only now and then.",
+    "relevant": "Investigate the intermittent authentication outages by identifying the underlying trigger.",
+    "irrelevant": "That reminds me to repaint the work and order more paper.",
+    "sims": {
+      "pos": 0.7141421056498082,
+      "neg_d": 0.3882221189377875
+    }
+  },
+  {
+    "parent": "Explain why a deployed model gets worse over time.",
+    "relevant": "Track the divergence between the input distribution encountered in production and the one used during training, noting how this drift degrades predictive accuracy as conditions evolve.",
+    "irrelevant": "That reminds me to repaint the explain and order more paper.",
+    "sims": {
+      "pos": 0.6355136726683567,
+      "neg_d": 0.4535194168275881
+    }
+  },
+  {
+    "parent": "Spread a budget over projects to get the most value.",
+    "relevant": "Allocate funds among initiatives to maximize return.",
+    "irrelevant": "That reminds me to repaint the spread and order more paper.",
+    "sims": {
+      "pos": 0.6895785547167164,
+      "neg_d": 0.5193803611397132
+    }
+  },
+  {
+    "parent": "Pack items into a bag to maximize worth under a weight cap.",
+    "relevant": "Select a subset of objects whose combined mass stays within the limit, yielding the greatest total value.",
+    "irrelevant": "That reminds me to repaint the pack and order more paper.",
+    "sims": {
+      "pos": 0.6590417771865984,
+      "neg_d": 0.51791896415968
+    }
+  },
+  {
+    "parent": "Plan vehicle routes to cut total travel distance.",
+    "relevant": "Devise delivery paths that minimize overall mileage.",
+    "irrelevant": "That reminds me to repaint the plan and order more paper.",
+    "sims": {
+      "pos": 0.78358347970806,
+      "neg_d": 0.4493235199819141
+    }
+  },
+  {
+    "parent": "Design a login scheme that resists replay.",
+    "relevant": "Devise an authentication mechanism incorporating a nonce or timestamp challenge to prevent reused credentials.",
+    "irrelevant": "That reminds me to repaint the design and order more paper.",
+    "sims": {
+      "pos": 0.7166778911386185,
+      "neg_d": 0.46292105250326193
+    }
+  },
+  {
+    "parent": "Build a limiter that stays fair when traffic bursts.",
+    "relevant": "Create a throttling mechanism that maintains equity during sudden load spikes.",
+    "irrelevant": "That reminds me to repaint the build and order more paper.",
+    "sims": {
+      "pos": 0.6785247378393481,
+      "neg_d": 0.4297130124750414
+    }
+  },
+  {
+    "parent": "Encrypt traffic so a snooper learns nothing.",
+    "relevant": "Apply cryptographic transformation to all communications, rendering intercepted data incomprehensible to any observer.",
+    "irrelevant": "That reminds me to repaint the encrypt and order more paper.",
+    "sims": {
+      "pos": 0.678810650027087,
+      "neg_d": 0.577618916044946
+    }
+  },
+  {
+    "parent": "Make a system bend instead of breaking under overload.",
+    "relevant": "Introduce yielding behavior into the architecture so excessive demand results in flexure rather than failure.",
+    "irrelevant": "That reminds me to repaint the make and order more paper.",
+    "sims": {
+      "pos": 0.7142287462890609,
+      "neg_d": 0.418009296088683
+    }
+  }
+]

@@ -224,3 +224,37 @@ def test_distilled_pid_is_deterministic():
     b = DistilledPIDEmbedder(weights_path=_artifact_path())
     s = "routing a fleet under time windows"
     assert list(a.encode(s)) == list(b.encode(s))
+
+
+def test_distilled_pid_robust_on_32_diverse_probes():
+    """On the committed 32-probe stress set, the distilled embedder must score
+    CAR >= 0.9 while the polarity baseline stays well below it."""
+    import json
+
+    import pytest
+
+    artifact = _artifact_path()
+    probe_file = os.path.join(
+        os.path.dirname(__file__), "..", "assets", "pid_stress_probes.json"
+    )
+    if not (os.path.exists(artifact) and os.path.exists(probe_file)):
+        pytest.skip("distilled artifact or stress probes absent")
+    from super_solver.core.distilled_pid import DistilledPIDEmbedder
+    from super_solver.core.embedder import get_backend
+
+    probes = json.load(open(probe_file))
+    distilled = DistilledPIDEmbedder(weights_path=artifact)
+    polarity = get_backend("polarity")
+
+    def car(embed):
+        wins = 0
+        for r in probes:
+            a = embed.cosine_similarity(embed.encode(r["parent"]), embed.encode(r["relevant"]))
+            b = embed.cosine_similarity(embed.encode(r["parent"]), embed.encode(r["irrelevant"]))
+            wins += int(a > b)
+        return wins / len(probes)
+
+    dc = car(distilled)
+    pc = car(polarity)
+    assert dc >= 0.9, f"distilled CAR {dc:.3f} below floor"
+    assert dc > pc + 0.3, f"distilled {dc:.3f} not clearly above polarity {pc:.3f}"
