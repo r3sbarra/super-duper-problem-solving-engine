@@ -1,0 +1,352 @@
+[
+  {
+    "parent": "A clinic must keep seeing patients while its records system is upgraded over a weekend. Staff are not technical, the old system must stay readable, and no appointment may be lost.",
+    "paraphrase": "Maintain uninterrupted care during the two-day transition by preserving access to legacy data, safeguarding every scheduled visit, and providing non-technical personnel with a simple, dependable workf",
+    "distractor": "That reminds me to repaint the clinic and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7367206549333958,
+      "neg": 0.6223087724415869
+    }
+  },
+  {
+    "parent": "A warehouse wants to ship more parcels per hour without hiring more staff or expanding the floor. Pickers currently walk long routes and frequently backtrack to find items.",
+    "paraphrase": "Boost throughput by reorganizing item placement and routing so workers traverse shorter, non-repeating paths.",
+    "distractor": "That reminds me to repaint the warehouse and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7039542313071766,
+      "neg": 0.6644799674741638
+    }
+  },
+  {
+    "parent": "A farm must irrigate crops through a drought while cutting water use by a third, without reducing yield, on land with uneven soil.",
+    "paraphrase": "Deliver equivalent moisture to every patch despite varied ground, achieving a 33% reduction in applied liquid while preserving harvest output during dry spells.",
+    "distractor": "That reminds me to repaint the farm and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7013912802748091,
+      "neg": 0.5401564863924216
+    }
+  },
+  {
+    "parent": "Make the recommendation engine more accurate, more diverse, and faster at the same time.",
+    "paraphrase": "Elevate precision, broaden variety, and accelerate throughput simultaneously.",
+    "distractor": "That reminds me to repaint the make and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6430575541714332,
+      "neg": 0.4452184842112197
+    }
+  },
+  {
+    "parent": "Cut the factory's energy use, keep output steady, and stay within emissions limits.",
+    "paraphrase": "Reduce power demand while preserving production volume and complying with pollution caps.",
+    "distractor": "That reminds me to repaint the factory and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7478498618762538,
+      "neg": 0.5635093432340025
+    }
+  },
+  {
+    "parent": "Design a drone that flies longer, carries more, and stays quiet.",
+    "paraphrase": "Devise an airborne vehicle balancing extended endurance, elevated payload capacity, and minimized acoustic signature.",
+    "distractor": "That reminds me to repaint the design and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7479294883644259,
+      "neg": 0.4974053594957172
+    }
+  },
+  {
+    "parent": "Speed up the build without increasing memory or breaking reproducibility.",
+    "paraphrase": "Cut compilation time while holding resource usage steady and keeping outputs identical.",
+    "distractor": "That reminds me to repaint the speed and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.591372135748868,
+      "neg": 0.6083542544739197
+    }
+  },
+  {
+    "parent": "Reduce the model size without losing accuracy or latency headroom.",
+    "paraphrase": "Shrink the network's footprint while preserving precision and spare compute capacity.",
+    "distractor": "That reminds me to repaint the reduce and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6662580108167805,
+      "neg": 0.4731863871666831
+    }
+  },
+  {
+    "parent": "Lower the cost without degrading reliability or security.",
+    "paraphrase": "Cut expenses while preserving trustworthiness and protection.",
+    "distractor": "That reminds me to repaint the lower and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6729424557758694,
+      "neg": 0.4547179760457433
+    }
+  },
+  {
+    "parent": "Fix the flaky test.",
+    "paraphrase": "Stabilize the intermittently failing verification.",
+    "distractor": "That reminds me to repaint the flaky and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.5613110948745741,
+      "neg": 0.6252653916807124
+    }
+  },
+  {
+    "parent": "Shrink the image.",
+    "paraphrase": "Reduce the picture\u2019s dimensions.",
+    "distractor": "That reminds me to repaint the shrink and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.8191679070857681,
+      "neg": 0.5598726694014082
+    }
+  },
+  {
+    "parent": "Speed up login.",
+    "paraphrase": "Accelerate authentication.",
+    "distractor": "That reminds me to repaint the speed and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7427289641928502,
+      "neg": 0.5354174930795101
+    }
+  },
+  {
+    "parent": "Explain the outage.",
+    "paraphrase": "Clarify why the service failed.",
+    "distractor": "That reminds me to repaint the explain and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6428418418817664,
+      "neg": 0.4873301678843521
+    }
+  },
+  {
+    "parent": "Keep a food bank stocked through a sudden surge in demand.",
+    "paraphrase": "Sustain inventory levels at a charitable pantry during an unexpected spike in need.",
+    "distractor": "That reminds me to repaint the keep and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7449373931668591,
+      "neg": 0.5240317881076696
+    }
+  },
+  {
+    "parent": "Prevent a rumor from spreading on a social platform without censoring users.",
+    "paraphrase": "Halt information propagation across a network while preserving unrestricted participation.",
+    "distractor": "That reminds me to repaint the prevent and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6671691523081501,
+      "neg": 0.5180785229210866
+    }
+  },
+  {
+    "parent": "Make a prosthetic hand grip delicate objects without crushing them.",
+    "paraphrase": "Equip the artificial limb with tactile feedback that modulates applied force according to an item's fragility.",
+    "distractor": "That reminds me to repaint the make and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7041261668804843,
+      "neg": 0.48144135679589845
+    }
+  },
+  {
+    "parent": "Reduce noise from a wind turbine without lowering its output.",
+    "paraphrase": "Attenuate acoustic emissions from an aerogenerator while preserving its energy generation.",
+    "distractor": "That reminds me to repaint the reduce and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7524413079273983,
+      "neg": 0.48834164382049267
+    }
+  },
+  {
+    "parent": "Keep a small team productive as it grows without adding management layers.",
+    "paraphrase": "Scale output by distributing decision rights, automating coordination, and rotating facilitation duties among members.",
+    "distractor": "That reminds me to repaint the keep and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.571108075713941,
+      "neg": 0.4579435246364017
+    }
+  },
+  {
+    "parent": "Detect sepsis earlier in a hospital without flooding staff with false alarms.",
+    "paraphrase": "Flag deteriorating inpatients sooner while keeping alert volume manageable for clinicians.",
+    "distractor": "That reminds me to repaint the detect and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6853057260954143,
+      "neg": 0.5410266637747723
+    }
+  },
+  {
+    "parent": "Cool a laptop that overheats in summer without making it louder.",
+    "paraphrase": "Lower the thermal load of a portable computer during hot weather while keeping acoustic output unchanged.",
+    "distractor": "That reminds me to repaint the cool and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7583453959009765,
+      "neg": 0.5270982795717873
+    }
+  },
+  {
+    "parent": "Store renewable energy overnight without expensive batteries.",
+    "paraphrase": "Capture surplus solar or wind generation in thermal, chemical, or gravitational reservoirs for later discharge.",
+    "distractor": "That reminds me to repaint the store and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6015174937035276,
+      "neg": 0.4230021650426246
+    }
+  },
+  {
+    "parent": "Make an online course engaging without increasing the workload.",
+    "paraphrase": "Boost learner involvement in a digital class while keeping effort levels steady.",
+    "distractor": "That reminds me to repaint the make and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7216542504838187,
+      "neg": 0.4223398546541375
+    }
+  },
+  {
+    "parent": "Keep a bridge safe after an earthquake without rebuilding it.",
+    "paraphrase": "Preserve structural integrity post-seismic event through targeted reinforcement or repair, avoiding full reconstruction.",
+    "distractor": "That reminds me to repaint the keep and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7930265228271655,
+      "neg": 0.45339936992771845
+    }
+  },
+  {
+    "parent": "Find the k smallest elements of a stream in bounded memory.",
+    "paraphrase": "Retrieve the lowest k values from an incoming sequence while capping space usage.",
+    "distractor": "That reminds me to repaint the find and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6304263843910349,
+      "neg": 0.36915862116579573
+    }
+  },
+  {
+    "parent": "Detect duplicate invoices across two billing systems.",
+    "paraphrase": "Cross-reference records from both payment platforms to flag matching entries.",
+    "distractor": "That reminds me to repaint the detect and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6502066506370247,
+      "neg": 0.5399502464920602
+    }
+  },
+  {
+    "parent": "Schedule operating-room use to minimize idle time.",
+    "paraphrase": "Allocate surgical suites so that gaps between procedures are kept as small as possible.",
+    "distractor": "That reminds me to repaint the schedule and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.643633450449872,
+      "neg": 0.5502765601494508
+    }
+  },
+  {
+    "parent": "Route ambulances to minimize worst-case response time.",
+    "paraphrase": "Position emergency vehicles so the longest delay to any demand point is as small as possible.",
+    "distractor": "That reminds me to repaint the route and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7383112950370343,
+      "neg": 0.4920092847092679
+    }
+  },
+  {
+    "parent": "Choose which sensors to keep when the budget is cut.",
+    "paraphrase": "Determine, under reduced funding, the subset of measurement devices to retain.",
+    "distractor": "That reminds me to repaint the choose and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.7347703242924853,
+      "neg": 0.4905788231297953
+    }
+  },
+  {
+    "parent": "Explain why a distributed transaction occasionally deadlocks.",
+    "paraphrase": "Identify scenarios where concurrent multi-node operations hold resources while awaiting others, creating circular waits that stall completion.",
+    "distractor": "That reminds me to repaint the explain and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6027072756743631,
+      "neg": 0.40707084726533355
+    }
+  },
+  {
+    "parent": "Predict churn from sparse engagement data.",
+    "paraphrase": "Anticipate customer defection using limited interaction records.",
+    "distractor": "That reminds me to repaint the predict and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.557988982711652,
+      "neg": 0.46621819450851143
+    }
+  },
+  {
+    "parent": "Prove that the rationals are countable.",
+    "paraphrase": "Demonstrate a bijection between \\(\\mathbb{Q}\\) and \\(\\mathbb{N}\\) by enumerating fractions \\(p/q\\) in a grid and skipping duplicates.",
+    "distractor": "That reminds me to repaint the prove and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6137668656716746,
+      "neg": 0.4724966424768547
+    }
+  },
+  {
+    "parent": "Show that a sum of two squares can miss a prime of a certain form.",
+    "paraphrase": "Demonstrate the existence of a prime congruent to 3 mod 4 that cannot be expressed as x\u00b2 + y\u00b2.",
+    "distractor": "That reminds me to repaint the show and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6580543520643068,
+      "neg": 0.45522858733474164
+    }
+  },
+  {
+    "parent": "Find the shortest tour visiting all warehouses once.",
+    "paraphrase": "Determine the minimal-length cycle that reaches every depot exactly a single time.",
+    "distractor": "That reminds me to repaint the find and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.6670121822240216,
+      "neg": 0.4404483326953447
+    }
+  },
+  {
+    "parent": "Compress a video stream without visible artifacts.",
+    "paraphrase": "Minimize perceptible degradation while shrinking sequential image data.",
+    "distractor": "That reminds me to repaint the compress and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.5862018944219558,
+      "neg": 0.472831629394349
+    }
+  },
+  {
+    "parent": "Keep a cache coherent across regions without a central lock.",
+    "paraphrase": "Maintain uniform data copies among distributed zones using peer-to-peer agreement protocols instead of a single arbiter.",
+    "distractor": "That reminds me to repaint the keep and order more paper.",
+    "unrelated": "Choose a name for the office pet hamster.",
+    "sims": {
+      "pos": 0.5323570731252143,
+      "neg": 0.3986373841742516
+    }
+  }
+]

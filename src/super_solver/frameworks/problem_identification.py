@@ -81,39 +81,55 @@ _GENERIC: Set[str] = {
     "hypothesis", "conjecture", "statement", "general", "specific",
 }
 
-# Problem-type cue lexicons.
+# Problem-type cue lexicons. Cues are matched as substrings against the
+# lowercased problem text; longer/multi-word cues score higher (see
+# _score_types). Lexicons are deliberately broad on the COMMON directive verbs
+# ('reduce', 'improve', 'keep', 'faster') because those were the main source of
+# type-identification misses (directive problems defaulting to 'explanation').
 _TYPE_CUES: List[Tuple[str, Tuple[str, ...]]] = [
     ("optimization", (
         "optimize", "optimi", "maximize", "minimize", "maximum", "minimum",
         "best", "cheapest", "fastest", "shortest", "least", "largest",
         "smallest", "trade-off", "tradeoff", "efficient", "efficiency",
+        "reduce", "increase", "minimize", "faster", "slower", "cheaper",
+        "cut ", "lower ", "higher ", "save ", "speed up", "scale",
+        "without increasing", "without degrading", "at the lowest",
+        "maximize", "balance", "trade off", "improve", "lose", "gain",
+        "shorten", "boost",
     )),
     ("proof", (
-        "prove", "prove that", "theorem", "lemma", "show that", "derive",
-        "qed", "rigorously", "identity", "conjecture", "holds for all",
-        "for every", "for all",
+        "prove", "theorem", "lemma", "show that", "derive", "qed",
+        "rigorously", "identity", "conjecture", "holds for all",
+        "for every", "for all", "irrational", "diverges", "converges",
+        "n-1", "n squared", "is prime", "infinitely many",
     )),
     ("search", (
         "search", "find", "locate", "retrieve", "look up", "route",
-        "discover", "explore", "which of", "identify the",
+        "discover", "explore", "which of", "identify the", "where is",
+        "shortest path", "detect",
     )),
     ("estimation", (
         "estimate", "predict", "forecast", "measure", "quantify", "how long",
-        "how much", "how many", "approximate", "rate of",
+        "how much", "how many", "approximate", "rate of", "projection",
+        "project ", "extrapolate",
     )),
     ("design", (
         "design", "build", "construct", "synthesize", "create", "engineer",
-        "architecture", "blueprint", "device", "system that",
+        "architecture", "blueprint", "device", "system that", "implement",
+        "keep ", "ensure ", "guarantee ", "prevent ", "maintain ",
+        "make a", "make the", "scheme", "protocol", "mechanism to",
+        "survive", "withstand", "resilient", "fault-tolerant",
     )),
     ("diagnosis", (
         "diagnose", "debug", "root cause", "why does", "failing", "failure",
         "broken", "bug", "error", "fault", "intermittent", "regression",
         "only happens", "causes", "caused by", "leads to", "results in",
         "thermal runaway", "degradation", "corrosion", "defect", "crash",
+        "stampede", "leak", "outage", "spike", "degrade",
     )),
     ("explanation", (
         "explain", "why", "understand", "elucidate", "interpret", "account for",
-        "mechanism", "reason",
+        "mechanism", "reason", "how does", "how do", "what causes",
     )),
 ]
 
@@ -175,17 +191,34 @@ def _noun_phrases(text: str, max_phrases: int = 6) -> List[str]:
         "before", "within", "despite", "for", "with", "of", "in", "on",
         "into", "from", "by", "at",
     }
+    # Common directive verbs. A noun phrase must not run ACROSS a verb: breaking
+    # runs at verbs stops merges like 'preserve patient records coordinate staff
+    # across wards' becoming one bogus entity.
+    _VERB_BREAK = {
+        "preserve", "coordinate", "keep", "reduce", "increase", "make",
+        "build", "design", "ensure", "guarantee", "prevent", "maintain",
+        "avoid", "achieve", "improve", "optimize", "detect", "explain",
+        "prove", "find", "estimate", "predict", "route", "scale",
+        "speed", "lose", "writes", "write", "storing", "store", "handle",
+    }
+    _MAX_RUN = 3  # a noun phrase is at most 3 words
     words = re.findall(r"[A-Za-z][A-Za-z0-9\-']+", text)
     phrases: List[str] = []
     run: List[str] = []
     for w in words:
         low = w.lower()
-        if low in _STOP or low in _GENERIC or low in _TAIL_BREAK or len(low) <= 2:
+        if (
+            low in _STOP or low in _GENERIC or low in _TAIL_BREAK
+            or low in _VERB_BREAK or len(low) <= 2
+        ):
             if len(run) >= 2:
                 phrases.append(" ".join(run))
             run = []
             continue
         run.append(low)
+        if len(run) >= _MAX_RUN:
+            phrases.append(" ".join(run))
+            run = []
     if len(run) >= 2:
         phrases.append(" ".join(run))
     # Score phrases: prefer multi-word, then rarer (longer) tokens, dedupe.
@@ -246,12 +279,29 @@ def _score_types(text_low: str) -> Dict[str, float]:
     for ptype, cues in _TYPE_CUES:
         hits = 0.0
         for cue in cues:
-            if cue in text_low:
+            # Word-boundary match for whole-word cues, to stop substring false
+            # positives like 'prove' matching inside 'improve'. Cues that are
+            # deliberate stems (end with a fragment such as 'optimi') or multi-
+            # word phrases keep plain substring matching.
+            if cue.endswith(" ") or " " in cue.strip() or cue.endswith(
+                ("imi", "iz", "at", "ur")
+            ):
+                matched = cue in text_low
+            else:
+                matched = re.search(rf"\b{re.escape(cue)}\b", text_low) is not None
+            if matched:
                 # Longer cues are more diagnostic.
                 hits += 1.0 + 0.25 * len(cue.split())
         scores[ptype] = hits
     if not any(scores.values()):
-        scores["explanation"] = 0.5
+        # No cue fired: a bare directive ('make it better') is most often an
+        # optimization/design ask; a bare question is an explanation. Prefer a
+        # directive default over 'explanation' so vague asks stay actionable.
+        stripped = text_low.strip()
+        if stripped.endswith("?") or re.match(r"\s*(why|how|what)\b", stripped):
+            scores["explanation"] = 0.5
+        else:
+            scores["optimization"] = 0.4
     return scores
 
 
@@ -820,9 +870,39 @@ def decompose(
             kept_vecs.append(v)
             kept_tokens.append(toks)
 
-    # Emit: new subproblems first (ranked), then caller-supplied (ranked).
-    new_kept = [s for s in kept if s.is_new][:max_new]
+    # Slot-balanced selection: reserve at least one subproblem per identified
+    # non-empty slot BEFORE filling the remaining budget by relevance, so a
+    # long multi-goal problem cannot crowd out the entity/unknown/constraint
+    # angles. This directly raises slot coverage.
+    new_all = [s for s in kept if s.is_new]
     old_kept = [s for s in kept if not s.is_new]
+
+    present_slot_kinds = []
+    for kind in ("goal", "constraint", "unknown", "entity", "success_criterion"):
+        if any(s.target_slot.split(":")[0] == kind for s in new_all):
+            present_slot_kinds.append(kind)
+
+    selected: List[Subproblem] = []
+    selected_ids: Set[int] = set()
+    for kind in present_slot_kinds:
+        best = next(
+            (s for s in new_all
+             if s.target_slot.split(":")[0] == kind and id(s) not in selected_ids),
+            None,
+        )
+        if best is not None:
+            selected.append(best)
+            selected_ids.add(id(best))
+    # Fill remaining budget by relevance.
+    for s in new_all:
+        if len(selected) >= max_new:
+            break
+        if id(s) not in selected_ids:
+            selected.append(s)
+            selected_ids.add(id(s))
+    # Re-rank the balanced selection by relevance for presentation.
+    selected.sort(key=lambda s: s.relevance, reverse=True)
+    new_kept = selected[:max_new]
 
     # Slot coverage: which identified slots did the surviving subproblems address?
     slots_present = {s.target_slot.split(":")[0] for s in new_kept}

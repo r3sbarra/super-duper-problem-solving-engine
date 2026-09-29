@@ -1,0 +1,112 @@
+[
+  {
+    "bucket": "standard",
+    "parent": "Shortest-path routing for a delivery fleet under time-window constraints.",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "standard",
+    "parent": "Lithium metal battery: rapid charging causes dendrite growth and thermal runaway.",
+    "gold_type": "diagnosis"
+  },
+  {
+    "bucket": "standard",
+    "parent": "Design a scheme so a message is processed exactly once despite retries.",
+    "gold_type": "design"
+  },
+  {
+    "bucket": "standard",
+    "parent": "Estimate how long a queue takes to drain after a traffic spike.",
+    "gold_type": "estimation"
+  },
+  {
+    "bucket": "long",
+    "parent": "A hospital must keep operating through regional power failures and network outages lasting several days. It must preserve patient records, coordinate staff across wards, and never lose a critical update. The current system writes to a single database in one region and has no offline mode.",
+    "gold_type": "design"
+  },
+  {
+    "bucket": "long",
+    "parent": "A city wants to reduce traffic congestion during peak hours without building new roads. Commuters are price-sensitive, public transit is underused, and the road network has several bottlenecks. Any policy must be fair across income groups.",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "short",
+    "parent": "Cache stampede?",
+    "gold_type": "diagnosis"
+  },
+  {
+    "bucket": "short",
+    "parent": "Lose weight?",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "short",
+    "parent": "Prove a limit exists.",
+    "gold_type": "proof"
+  },
+  {
+    "bucket": "multi-goal",
+    "parent": "Minimize latency AND cost AND carbon footprint for a global API.",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "multi-goal",
+    "parent": "Detect fraud, reduce false positives, and keep the model explainable to auditors.",
+    "gold_type": "design"
+  },
+  {
+    "bucket": "ill-posed",
+    "parent": "Make it better.",
+    "gold_type": "explanation"
+  },
+  {
+    "bucket": "ill-posed",
+    "parent": "Why is everything broken?",
+    "gold_type": "diagnosis"
+  },
+  {
+    "bucket": "ill-posed",
+    "parent": "something about data and stuff maybe improve it",
+    "gold_type": "explanation"
+  },
+  {
+    "bucket": "negation",
+    "parent": "Reduce read latency without adding any cache layer.",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "negation",
+    "parent": "Make the service faster without increasing cost or degrading accuracy.",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "cross-domain",
+    "parent": "Make a climbing pad that grips smooth vertical walls without glue.",
+    "gold_type": "design"
+  },
+  {
+    "bucket": "cross-domain",
+    "parent": "Keep a hospital's oxygen supply from running out during a strike.",
+    "gold_type": "design"
+  },
+  {
+    "bucket": "cross-domain",
+    "parent": "Explain how antibiotic resistance spreads in a hospital.",
+    "gold_type": "explanation"
+  },
+  {
+    "bucket": "mathematical",
+    "parent": "Prove there are infinitely many primes.",
+    "gold_type": "proof"
+  },
+  {
+    "bucket": "mathematical",
+    "parent": "Show that a tree with n nodes has exactly n-1 edges.",
+    "gold_type": "proof"
+  },
+  {
+    "bucket": "mathematical",
+    "parent": "Find the maximum value of x^2 y subject to x + y = 10.",
+    "gold_type": "optimization"
+  }
+]
