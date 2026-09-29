@@ -28,13 +28,22 @@ from super_solver.core.embedder import EmbedderBackend, get_backend
 
 
 def get_vector_db_path() -> str:
-    """Resolve the vector-index DB path (env-overridable, test-isolated)."""
+    """Resolve the vector-index DB path (env-overridable, test-isolated).
+
+    The default lives under the PACKAGE ROOT's ``.super_solver_data``, NOT the
+    current working directory: a CWD-relative path silently produced an empty
+    index whenever the engine was imported and used from another directory
+    (measured: primitive_analogize returned 0 hits from any CWD except the repo
+    root). ``SUPER_SOLVER_VECTOR_DB`` still overrides for tests/CI.
+    """
     env_path = os.environ.get("SUPER_SOLVER_VECTOR_DB")
     if env_path:
         return env_path
     if "PYTEST_CURRENT_TEST" in os.environ:
         return ":memory:"
-    data_dir = Path.cwd() / ".super_solver_data"
+    # Package root = .../src/super_solver/vectorize -> up 3 = repo root
+    repo_root = Path(__file__).resolve().parents[3]
+    data_dir = repo_root / ".super_solver_data"
     data_dir.mkdir(parents=True, exist_ok=True)
     return str(data_dir / "vector_index.db")
 

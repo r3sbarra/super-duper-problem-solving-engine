@@ -16,6 +16,14 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+# Ensure the health probe consults the REAL vector index even when launched from
+# pytest (which otherwise forces an in-memory empty DB via PYTEST_CURRENT_TEST),
+# so the probe measures production behaviour.
+os.environ.setdefault(
+    "SUPER_SOLVER_VECTOR_DB",
+    os.path.join(os.path.dirname(__file__), "..", ".super_solver_data", "vector_index.db"),
+)
+
 RESULTS = []
 
 

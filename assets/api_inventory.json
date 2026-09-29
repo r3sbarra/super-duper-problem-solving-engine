@@ -1,0 +1,913 @@
+{
+  "super_solver.core.causal_vsa": {
+    "CausalNode": {
+      "kind": "class",
+      "methods": {}
+    },
+    "VectorizedCausalModel": {
+      "kind": "class",
+      "methods": {
+        "add_variable": "(self, name: 'str', baseline_value: 'float' = 0.5, domain: 'str' = 'general') -> 'CausalNode'",
+        "add_causal_edge": "(self, cause: 'str', effect: 'str', strength: 'float' = 0.8)",
+        "get_graph_hypervector": "(self) -> 'np.ndarray'",
+        "intervene": "(self, target_variable: 'str', clamped_value: 'float', consequence_target: 'Optional[str]' = None) -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.core.distilled_pid": {
+    "features": {
+      "kind": "function",
+      "sig": "(text: 'str', dim: 'int' = 512) -> 'np.ndarray'"
+    },
+    "DistilledPIDEmbedder": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'",
+        "cosine_similarity": "(self, a: 'Union[np.ndarray, List[float]]', b: 'Union[np.ndarray, List[float]]') -> 'float'"
+      }
+    }
+  },
+  "super_solver.core.dpll_solver": {
+    "DPLLSolver": {
+      "kind": "class",
+      "methods": {
+        "solve_cnf": "(self, clauses: 'List[List[int]]') -> 'Tuple[bool, Optional[Dict[int, bool]]]'",
+        "refute_conjecture": "(self, premises: 'List[str]', target_claim: 'str') -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.core.embedder": {
+    "EmbedderBackend": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'",
+        "cosine_similarity": "(self, a: 'Union[np.ndarray, List[float]]', b: 'Union[np.ndarray, List[float]]') -> 'float'"
+      }
+    },
+    "PolarityBackend": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'"
+      }
+    },
+    "RichBackend": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'"
+      }
+    },
+    "NeuralBackend": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'"
+      }
+    },
+    "OllamaBackend": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'"
+      }
+    },
+    "HybridBackend": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'"
+      }
+    },
+    "get_backend": {
+      "kind": "function",
+      "sig": "(name: 'Optional[str]' = None) -> 'EmbedderBackend'"
+    },
+    "ProblemVectorizer": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, specification: 'str', title: 'str' = '', goal_criteria: 'Optional[List[str]]' = None, boundary_is: 'Optional[List[str]]' = None, boundary_is_not: 'Optional[List[str]]' = None) -> 'np.ndarray'"
+      }
+    },
+    "SolutionVectorizer": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, solution_text: 'str', method: 'str' = '', domain: 'str' = '', operators: 'Optional[List[str]]' = None) -> 'np.ndarray'"
+      }
+    },
+    "PathVectorizer": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, steps: 'List[str]', operator_types: 'Optional[List[str]]' = None, final_breakthrough: 'str' = '') -> 'np.ndarray'"
+      }
+    }
+  },
+  "super_solver.core.embeddings": {
+    "PolarityAwareEmbeddingService": {
+      "kind": "class",
+      "methods": {
+        "encode": "(self, text: 'str') -> 'np.ndarray'",
+        "cosine_similarity": "(self, a: 'Union[np.ndarray, List[float]]', b: 'Union[np.ndarray, List[float]]') -> 'float'"
+      }
+    }
+  },
+  "super_solver.core.llm_parser": {
+    "OptionalLLMClient": {
+      "kind": "class",
+      "methods": {
+        "clean_json_string": "(raw: 'str') -> 'str'",
+        "generate_text": "(self, prompt: 'str', system: 'Optional[str]' = None, json_format: 'bool' = False) -> 'Optional[str]'",
+        "call_with_tools": "(self, query: 'str', tool_schemas: 'List[Dict[str, Any]]', system: 'Optional[str]' = None) -> 'Optional[Dict[str, Any]]'",
+        "extract_propositional_clauses": "(self, premises: 'List[str]', target_claim: 'str') -> 'Optional[Dict[str, Any]]'",
+        "extract_structural_primitives": "(self, text: 'str') -> 'Optional[List[str]]'"
+      }
+    }
+  },
+  "super_solver.core.smt_solver": {
+    "CongruenceClosure": {
+      "kind": "class",
+      "methods": {
+        "find": "(self, term: 'str') -> 'str'",
+        "union": "(self, term1: 'str', term2: 'str')",
+        "add_function_app": "(self, func_name: 'str', args: 'List[str]') -> 'str'",
+        "add_equality": "(self, t1: 'str', t2: 'str')",
+        "add_disequality": "(self, t1: 'str', t2: 'str')",
+        "is_consistent": "(self) -> 'bool'"
+      }
+    },
+    "LinearConstraint": {
+      "kind": "class",
+      "methods": {
+        "normalized": "(self) -> 'LinearConstraint'"
+      }
+    },
+    "FourierMotzkinLRA": {
+      "kind": "class",
+      "methods": {
+        "add_constraint": "(self, coeffs: 'Dict[str, float]', const_val: 'float', strict: 'bool' = False)",
+        "check_feasibility": "(self) -> 'Tuple[bool, Optional[str]]'"
+      }
+    },
+    "SMTResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "SMTSolver": {
+      "kind": "class",
+      "methods": {
+        "check_euf_satisfiability": "(self, equalities: 'List[Tuple[str, str]]', disequalities: 'List[Tuple[str, str]]', function_terms: 'Optional[List[Tuple[str, List[str]]]]' = None) -> 'SMTResult'",
+        "check_lra_satisfiability": "(self, constraints: 'List[str]') -> 'SMTResult'"
+      }
+    }
+  },
+  "super_solver.core.tool_registry": {
+    "ToolDefinition": {
+      "kind": "class",
+      "methods": {
+        "to_schema": "(self) -> 'Dict[str, Any]'"
+      }
+    },
+    "ToolCallResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "ToolLoopCircuitBreaker": {
+      "kind": "class",
+      "methods": {
+        "record_and_check": "(self, tool_name: 'str', arguments: 'Dict[str, Any]') -> 'Tuple[bool, Optional[str]]'",
+        "reset": "(self) -> 'None'"
+      }
+    },
+    "ToolRegistry": {
+      "kind": "class",
+      "methods": {
+        "register": "(self, name: 'str', description: 'str', parameters: 'Dict[str, Any]', handler: 'Callable[..., Any]', primitives: 'Optional[List[str]]' = None, is_safe: 'bool' = True) -> 'None'",
+        "get_tool": "(self, name: 'str') -> 'Optional[ToolDefinition]'",
+        "list_all": "(self) -> 'List[ToolDefinition]'",
+        "prune_tools_for_query": "(self, query: 'str', top_k: 'int' = 3) -> 'List[ToolDefinition]'",
+        "validate_tool_call": "(self, tool_name: 'str', arguments: 'Dict[str, Any]') -> 'Tuple[bool, Optional[str]]'",
+        "execute": "(self, tool_name: 'str', arguments: 'Dict[str, Any]') -> 'ToolCallResult'"
+      }
+    },
+    "create_standard_tool_registry": {
+      "kind": "function",
+      "sig": "() -> 'ToolRegistry'"
+    }
+  },
+  "super_solver.core.types": {
+    "HypothesisStatus": {
+      "kind": "class",
+      "methods": {}
+    },
+    "OperatorType": {
+      "kind": "class",
+      "methods": {}
+    },
+    "KTBoundary": {
+      "kind": "class",
+      "methods": {
+        "to_contrastive_text": "(self) -> 'Tuple[str, str]'"
+      }
+    },
+    "Hypothesis": {
+      "kind": "class",
+      "methods": {}
+    },
+    "CrucialExperiment": {
+      "kind": "class",
+      "methods": {}
+    },
+    "ProblemState": {
+      "kind": "class",
+      "methods": {}
+    },
+    "ReasoningStep": {
+      "kind": "class",
+      "methods": {}
+    },
+    "DiscoveryPath": {
+      "kind": "class",
+      "methods": {}
+    },
+    "VerificationStatus": {
+      "kind": "class",
+      "methods": {}
+    },
+    "MathematicalLemma": {
+      "kind": "class",
+      "methods": {}
+    },
+    "MathematicalBarrier": {
+      "kind": "class",
+      "methods": {}
+    },
+    "ProofVerificationResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "SuggestedPath": {
+      "kind": "class",
+      "methods": {}
+    }
+  },
+  "super_solver.core.vector_operators": {
+    "VectorContradictionTensor": {
+      "kind": "class",
+      "methods": {
+        "tensor_inner_product": "(self, operator_matrix: 'np.ndarray') -> 'float'",
+        "evaluate_principle_alignment": "(self, principle_vector: 'np.ndarray') -> 'float'"
+      }
+    },
+    "NullSpaceAssumptionProjector": {
+      "kind": "class",
+      "methods": {
+        "project_to_null_space": "(self, vector: 'np.ndarray') -> 'np.ndarray'",
+        "assumption_overlap": "(self, vector: 'np.ndarray') -> 'float'"
+      }
+    },
+    "ContinuousBoundaryDiagnosticKernel": {
+      "kind": "class",
+      "methods": {
+        "evaluate_candidate": "(self, candidate_vector: 'np.ndarray', leakage_weight: 'float' = 1.4) -> 'Dict[str, float]'"
+      }
+    }
+  },
+  "super_solver.core.vsa": {
+    "CleanupMemory": {
+      "kind": "class",
+      "methods": {
+        "register": "(self, symbol: 'str', vector: 'np.ndarray')",
+        "clean": "(self, noisy_vector: 'np.ndarray', min_similarity: 'float' = 0.2) -> 'Tuple[Optional[str], float]'"
+      }
+    },
+    "VSAEngine": {
+      "kind": "class",
+      "methods": {
+        "random_hypervector": "(self, symbol: 'Optional[str]' = None) -> 'np.ndarray'",
+        "bind": "(self, a: 'np.ndarray', b: 'np.ndarray') -> 'np.ndarray'",
+        "unbind": "(self, bound: 'np.ndarray', key: 'np.ndarray') -> 'np.ndarray'",
+        "bundle": "(self, vectors: 'List[np.ndarray]', weights: 'Optional[List[float]]' = None) -> 'np.ndarray'",
+        "permute": "(self, v: 'np.ndarray', shifts: 'int' = 1) -> 'np.ndarray'",
+        "similarity": "(self, a: 'np.ndarray', b: 'np.ndarray') -> 'float'",
+        "solve_analogy": "(self, a: 'np.ndarray', b: 'np.ndarray', c: 'np.ndarray') -> 'np.ndarray'"
+      }
+    }
+  },
+  "super_solver.engine": {
+    "SuperDuperProblemSolvingEngine": {
+      "kind": "class",
+      "methods": {
+        "program": "(self, specification: 'str', test_cases: 'Optional[str]' = None, context: 'Optional[str]' = None) -> 'SynthesisResult'",
+        "diagnose": "(self, error_log_or_description: 'str', context: 'Optional[str]' = None, candidate_causes: 'Optional[List[str]]' = None) -> 'DiagnosticReport'",
+        "run_agentic_tool_loop": "(self, goal: 'str', prune_top_k: 'int' = 3, max_steps: 'int' = 6) -> 'Dict[str, Any]'",
+        "formulate_problem": "(self, title: 'str', specification: 'str', boundary: 'Optional[KTBoundary]' = None, goal_criteria: 'Optional[List[str]]' = None) -> 'ProblemState'",
+        "deduce_discovery_path": "(self, problem: 'ProblemState', candidate_hypotheses: 'Optional[List[str]]' = None, crucial_experiments: 'Optional[List[CrucialExperiment]]' = None, known_dead_ends: 'Optional[List[str]]' = None, ground_truth_outcomes: 'Optional[Dict[str, str]]' = None, error_rate: 'float' = 0.0, concrete_claims: 'Optional[List[str]]' = None) -> 'DiscoveryPath'",
+        "solve_unproven_arxiv_paper": "(self, paper_title: 'str', abstract_text: 'str', observed_experimental_result: 'Optional[str]' = 'anomaly_vanishes_in_pure_sample') -> 'DiscoveryPath'",
+        "export_mermaid_diagram": "(self, path: 'DiscoveryPath') -> 'str'",
+        "explain_discovery": "(self, path: 'DiscoveryPath') -> 'str'",
+        "verify_math_paper": "(self, paper_id: 'str', paper_title: 'str', abstract_text: 'str', target_conjecture: 'str', explicit_lemmas: 'Optional[List[MathematicalLemma]]' = None) -> 'ProofVerificationResult'",
+        "export_math_verification_mermaid": "(self, result: 'ProofVerificationResult') -> 'str'",
+        "suggest_paths": "(self, problem_specification: 'str', context: 'Optional[str]' = None, top_k: 'int' = 3) -> 'List[SuggestedPath]'",
+        "improve_self": "(self) -> 'DiscoveryPath'",
+        "run_self_diagnostic": "(self) -> 'Dict[str, Any]'",
+        "solve_engineering_problem": "(self, title: 'str', specification: 'str', goal_criteria: 'Optional[List[str]]' = None, top_principles: 'int' = 4, ground_truth_outcomes: 'Optional[Dict[str, str]]' = None, domain_knowledge: 'Optional[VectorizationService]' = None, concrete_top_k: 'int' = 3) -> 'DiscoveryPath'",
+        "solve_universal_vectorized": "(self, problem_description: 'str', problem_type: 'str' = 'auto', domain: 'Optional[str]' = None, **kwargs: 'Any') -> 'VectorizedSolution'",
+        "execute_cascading_discovery": "(self, **kwargs: 'Any') -> 'CascadingDiscoveryResult'",
+        "run_self_audit_and_optimization": "(self) -> 'Dict[str, Any]'",
+        "consolidate_memory": "(self, similarity_threshold: 'float' = 0.75) -> 'int'",
+        "audit_adversarial_boundaries": "(self, candidate_description: 'str', problem_specification: 'str', domain_context: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "coalesce_hypotheses": "(self, hypotheses: 'List[str]', domain_context: 'Optional[str]' = None) -> 'List[Dict[str, Any]]'",
+        "run_tournament": "(self, candidate_hypotheses: 'List[str]', context: 'Optional[str]' = None, boundary_is_not: 'Optional[str]' = None, top_k: 'int' = 2) -> 'List[TournamentMatchResult]'",
+        "generate_manuscript": "(self, path: 'DiscoveryPath', problem: 'Optional[ProblemState]' = None, output_dir: 'Optional[str]' = None, format_type: 'str' = 'both') -> 'Dict[str, str]'",
+        "check_smt_lra": "(self, constraints: 'List[str]') -> 'SMTResult'",
+        "resolve_pareto": "(self, objectives: 'List[Dict[str, Any]]', candidates: 'List[Dict[str, Any]]', weights: 'Optional[Dict[str, float]]' = None) -> 'Dict[str, Any]'",
+        "check_smt_euf": "(self, equalities: 'List[Tuple[str, str]]', disequalities: 'List[Tuple[str, str]]') -> 'SMTResult'"
+      }
+    }
+  },
+  "super_solver.frameworks.boed_designer": {
+    "CandidateExperimentDesign": {
+      "kind": "class",
+      "methods": {}
+    },
+    "BOEDDesigner": {
+      "kind": "class",
+      "methods": {
+        "compute_shannon_entropy": "(self, probabilities: 'List[float]') -> 'float'",
+        "evaluate_design_eig": "(self, hypothesis_priors: 'Dict[str, float]', design: 'CandidateExperimentDesign', outcome_likelihoods: 'Dict[str, Dict[str, float]]') -> 'Dict[str, Any]'",
+        "rank_optimal_experiments": "(self, hypothesis_priors: 'Dict[str, float]', candidate_designs: 'List[CandidateExperimentDesign]', likelihood_matrix: 'Dict[str, Dict[str, Dict[str, float]]]') -> 'List[Dict[str, Any]]'",
+        "rank_experiments": "(self, hypothesis_priors: 'Dict[str, float]', candidate_designs: 'List[Any]', likelihood_matrix: 'Optional[Dict[str, Dict[str, Dict[str, float]]]]' = None) -> 'List[Dict[str, Any]]'",
+        "rank_experiments_by_structural_class": "(self, hypothesis_priors: 'Dict[str, float]', candidate_designs: 'List[Any]', likelihood_matrix: 'Optional[Dict[str, Dict[str, Dict[str, float]]]]' = None, structural_boost_factor: 'float' = 1.35) -> 'List[Dict[str, Any]]'"
+      }
+    }
+  },
+  "super_solver.frameworks.code_synthesizer": {
+    "SynthesisResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "CodeSynthesizer": {
+      "kind": "class",
+      "methods": {
+        "extract_python_code": "(raw: 'str') -> 'str'",
+        "synthesize_and_verify": "(self, specification: 'str', test_cases: 'Optional[str]' = None, context: 'Optional[str]' = None) -> 'SynthesisResult'"
+      }
+    }
+  },
+  "super_solver.frameworks.diagnostician": {
+    "DiagnosticCandidate": {
+      "kind": "class",
+      "methods": {}
+    },
+    "DiagnosticReport": {
+      "kind": "class",
+      "methods": {}
+    },
+    "AutomatedDiagnostician": {
+      "kind": "class",
+      "methods": {
+        "diagnose_failure": "(self, error_log_or_description: 'str', context: 'Optional[str]' = None, candidate_causes: 'Optional[List[str]]' = None) -> 'DiagnosticReport'"
+      }
+    }
+  },
+  "super_solver.frameworks.gentner_sme": {
+    "RelationalStatement": {
+      "kind": "class",
+      "methods": {}
+    },
+    "StructureMappingEngine": {
+      "kind": "class",
+      "methods": {
+        "align_systems": "(self, base_domain_relations: 'List[RelationalStatement]', target_domain_relations: 'List[RelationalStatement]') -> 'Dict[str, Any]'",
+        "retrieve_analogs": "(self, specification: 'str', candidate_systems: 'Optional[List[Dict[str, Any]]]' = None, top_k: 'int' = 3, min_score: 'float' = 0.0) -> 'List[Dict[str, Any]]'"
+      }
+    }
+  },
+  "super_solver.frameworks.kepner_tregoe": {
+    "KepnerTregoeEngine": {
+      "kind": "class",
+      "methods": {
+        "build_boundary_hyperplane": "(self, boundary: 'KTBoundary') -> 'Tuple[np.ndarray, np.ndarray, np.ndarray]'",
+        "evaluate_candidate_cause": "(self, candidate_cause: 'str', boundary: 'KTBoundary', leakage_penalty: 'float' = 1.5) -> 'Dict[str, Any]'",
+        "generate_candidate_causes": "(self, is_facts: 'List[str]', is_not_facts: 'List[str]', max_candidates: 'int' = 6) -> 'List[str]'",
+        "analyze_boundary": "(self, is_facts: 'List[str]', is_not_facts: 'List[str]', candidate_causes: 'Optional[List[str]]' = None) -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.frameworks.math_verification": {
+    "LakatosProofVerificationEngine": {
+      "kind": "class",
+      "methods": {
+        "extract_or_synthesize_lemmas": "(self, paper_title: 'str', abstract_text: 'str', explicit_lemmas: 'Optional[List[MathematicalLemma]]' = None) -> 'List[MathematicalLemma]'",
+        "audit_lemma_against_barriers": "(self, lemma: 'MathematicalLemma', target_conjecture: 'str', full_context: 'Optional[str]' = None) -> 'List[MathematicalBarrier]'",
+        "test_adversarial_counterexamples": "(self, lemma: 'MathematicalLemma', target_conjecture: 'str') -> 'Optional[Dict[str, Any]]'",
+        "verify_symbolic_identity": "(self, formula_or_claim: 'str') -> 'Optional[Dict[str, Any]]'",
+        "verify_mathematical_paper": "(self, paper_id: 'str', paper_title: 'str', abstract_text: 'str', target_conjecture: 'str', explicit_lemmas: 'Optional[List[MathematicalLemma]]' = None) -> 'ProofVerificationResult'",
+        "export_proof_mermaid": "(self, result: 'ProofVerificationResult') -> 'str'",
+        "suggest_repair_paths": "(self, result: 'ProofVerificationResult') -> 'List[SuggestedPath]'"
+      }
+    }
+  },
+  "super_solver.frameworks.pareto": {
+    "Objective": {
+      "kind": "class",
+      "methods": {
+        "normalized": "(self, value: 'float', lo: 'float', hi: 'float') -> 'float'"
+      }
+    },
+    "Candidate": {
+      "kind": "class",
+      "methods": {}
+    },
+    "ParetoResult": {
+      "kind": "class",
+      "methods": {
+        "to_dict": "(self) -> 'dict'"
+      }
+    },
+    "resolve": {
+      "kind": "function",
+      "sig": "(objectives: 'Sequence[Objective]', candidates: 'Sequence[Candidate]', weights: 'Optional[Dict[str, float]]' = None) -> 'ParetoResult'"
+    }
+  },
+  "super_solver.frameworks.peirce_inquiry": {
+    "PeirceanInquiryEngine": {
+      "kind": "class",
+      "methods": {
+        "autonomous_abduct": "(self, anomaly_observation: 'str', domain_context: 'str') -> 'List[Hypothesis]'",
+        "abduct": "(self, anomaly_observation: 'str', domain_context: 'str', candidate_explanations: 'Optional[List[str]]' = None) -> 'List[Hypothesis]'",
+        "deduce_predictions": "(self, hypothesis: 'Hypothesis', candidate_predictions: 'List[str]') -> 'List[str]'",
+        "induct_calibrate": "(self, hypothesis: 'Hypothesis', observed_evidence: 'List[str]') -> 'float'"
+      }
+    }
+  },
+  "super_solver.frameworks.platt_inference": {
+    "StrongInferenceEngine": {
+      "kind": "class",
+      "methods": {
+        "compute_entropy": "(self, hypotheses: 'List[Hypothesis]') -> 'float'",
+        "autonomous_design_crucial_experiments": "(self, hypotheses: 'List[Hypothesis]') -> 'List[CrucialExperiment]'",
+        "evaluate_crucial_experiment": "(self, experiment: 'CrucialExperiment', hypotheses: 'List[Hypothesis]') -> 'float'",
+        "execute_and_prune": "(self, experiment: 'CrucialExperiment', hypotheses: 'List[Hypothesis]', observed_outcome: 'str', error_rate: 'float' = 0.0) -> 'Tuple[List[Hypothesis], List[str]]'"
+      }
+    }
+  },
+  "super_solver.frameworks.polya_heuristics": {
+    "PolyaHeuristicsEngine": {
+      "kind": "class",
+      "methods": {
+        "decompose_auxiliary_problems": "(self, problem_specification: 'str', known_subproblems: 'List[str]') -> 'List[Dict[str, Any]]'",
+        "generate_auxiliary_problems": "(self, problem_specification: 'str', known_subproblems: 'Optional[List[str]]' = None, max_new: 'int' = 8) -> 'List[Dict[str, Any]]'",
+        "plan_working_backwards": "(self, current_state_spec: 'str', desired_goal_spec: 'str', intermediate_milestones: 'List[str]') -> 'List[str]'"
+      }
+    }
+  },
+  "super_solver.frameworks.problem_identification": {
+    "ProblemStructure": {
+      "kind": "class",
+      "methods": {
+        "to_dict": "(self) -> 'Dict[str, object]'"
+      }
+    },
+    "identify_problem": {
+      "kind": "function",
+      "sig": "(specification: 'str', title: 'str' = '') -> 'ProblemStructure'"
+    },
+    "semantic_similarity": {
+      "kind": "function",
+      "sig": "(a: 'str', b: 'str') -> 'Optional[float]'"
+    },
+    "negation_flip": {
+      "kind": "function",
+      "sig": "(parent: 'str', child: 'str') -> 'Tuple[bool, Dict[str, float]]'"
+    },
+    "relevance_score": {
+      "kind": "function",
+      "sig": "(parent: 'str', child: 'str') -> 'Tuple[float, Dict[str, float]]'"
+    },
+    "anchored_relevance": {
+      "kind": "function",
+      "sig": "(structure: \"'ProblemStructure'\", slot: 'str') -> 'float'"
+    },
+    "Subproblem": {
+      "kind": "class",
+      "methods": {
+        "to_dict": "(self) -> 'Dict[str, object]'"
+      }
+    },
+    "decompose": {
+      "kind": "function",
+      "sig": "(specification: 'str', title: 'str' = '', known_subproblems: 'Optional[Sequence[str]]' = None, max_new: 'int' = 8, redundancy_threshold: 'float' = 0.82) -> 'Dict[str, object]'"
+    }
+  },
+  "super_solver.frameworks.sandbox": {
+    "SimulationResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "CodeExperimentSandbox": {
+      "kind": "class",
+      "methods": {
+        "execute_python_code": "(self, code_string: 'str', timeout: 'Optional[float]' = None) -> 'SimulationResult'",
+        "run_thermal_phase_simulation": "(self, material_name: 'str', target_temp_k: 'float', has_secondary_phase: 'bool' = True) -> 'SimulationResult'",
+        "run_algorithmic_complexity_simulation": "(self, conjecture_type: 'str', n_values: 'List[int]') -> 'SimulationResult'"
+      }
+    }
+  },
+  "super_solver.frameworks.toc_cloud": {
+    "EvaporatingCloud": {
+      "kind": "class",
+      "methods": {}
+    },
+    "TOCEngine": {
+      "kind": "class",
+      "methods": {
+        "formulate_cloud": "(self, objective: 'str', requirement_a: 'str', requirement_b: 'str', prerequisite_d: 'str', prerequisite_d_prime: 'str', assumptions: 'Optional[List[str]]' = None) -> 'EvaporatingCloud'",
+        "evaporate": "(self, cloud: 'EvaporatingCloud', candidate_injections: 'List[str]') -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.frameworks.tournament": {
+    "TournamentVerdict": {
+      "kind": "class",
+      "methods": {}
+    },
+    "TournamentRound": {
+      "kind": "class",
+      "methods": {}
+    },
+    "TournamentMatchResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "DialecticalTournamentEngine": {
+      "kind": "class",
+      "methods": {
+        "run_match": "(self, hypothesis: 'str', context: 'Optional[str]' = None, max_rounds: 'int' = 3, boundary_is_not: 'Optional[str]' = None) -> 'TournamentMatchResult'",
+        "run_tournament": "(self, candidate_hypotheses: 'List[str]', context: 'Optional[str]' = None, boundary_is_not: 'Optional[str]' = None, top_k: 'int' = 2) -> 'List[TournamentMatchResult]'"
+      }
+    }
+  },
+  "super_solver.frameworks.triz_engine": {
+    "TRIZEngine": {
+      "kind": "class",
+      "methods": {
+        "resolve_contradiction_matrix": "(self, improving_parameter: 'str', worsening_parameter: 'str') -> 'List[Dict[str, Any]]'",
+        "suggest_principles": "(self, contradiction_description: 'str', top_k: 'int' = 4) -> 'List[Dict[str, Any]]'",
+        "apply_principle_transformation": "(self, state_vector: 'np.ndarray', principle_id: 'int', blend_factor: 'float' = 0.35) -> 'np.ndarray'"
+      }
+    }
+  },
+  "super_solver.frameworks.universal_ingenuity": {
+    "BoundaryProbeType": {
+      "kind": "class",
+      "methods": {}
+    },
+    "BoundaryProbeResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "AdversarialAuditReport": {
+      "kind": "class",
+      "methods": {}
+    },
+    "CoalescenceClass": {
+      "kind": "class",
+      "methods": {}
+    },
+    "UniversalBoundaryAuditor": {
+      "kind": "class",
+      "methods": {
+        "audit_candidate": "(self, candidate_description: 'str', problem_specification: 'str', domain_context: 'Optional[str]' = None, resilience_threshold: 'float' = 0.55) -> 'AdversarialAuditReport'"
+      }
+    },
+    "InvariantQuotientEngine": {
+      "kind": "class",
+      "methods": {
+        "coalesce_hypotheses": "(self, hypotheses: 'Sequence[str]', domain_context: 'Optional[str]' = None) -> 'List[CoalescenceClass]'"
+      }
+    },
+    "AuxiliaryPlateauUnblocker": {
+      "kind": "class",
+      "methods": {
+        "generate_unblocking_operators": "(self, current_latent: 'np.ndarray', goal_vector: 'np.ndarray', problem_specification: 'str', plateau_delta: 'float' = 0.02) -> 'List[Tuple[str, np.ndarray, float]]'"
+      }
+    },
+    "UniversalIngenuityEngine": {
+      "kind": "class",
+      "methods": {
+        "audit_hypotheses": "(self, hypotheses: 'Sequence[str]', problem_specification: 'str', domain_context: 'Optional[str]' = None) -> 'List[AdversarialAuditReport]'",
+        "compress_via_coalescence": "(self, hypotheses: 'Sequence[str]', domain_context: 'Optional[str]' = None) -> 'List[CoalescenceClass]'",
+        "generate_unblocking_operators": "(self, current_latent: 'np.ndarray', goal_vector: 'np.ndarray', problem_specification: 'str') -> 'List[Tuple[str, np.ndarray, float]]'"
+      }
+    }
+  },
+  "super_solver.frameworks.universal_vector_solver": {
+    "VectorizedSolution": {
+      "kind": "class",
+      "methods": {}
+    },
+    "CascadingDiscoveryResult": {
+      "kind": "class",
+      "methods": {}
+    },
+    "UniversalVectorizedSolver": {
+      "kind": "class",
+      "methods": {
+        "resolve_vector_contradiction": "(self, improving_objective: 'str', worsening_penalty: 'str', domain_context: 'Optional[str]' = None, candidate_principles: 'Optional[List[int]]' = None) -> 'VectorizedSolution'",
+        "evaporate_assumptions_nullspace": "(self, objective: 'str', requirement_a: 'str', requirement_b: 'str', underlying_assumptions: 'List[str]', candidate_injections: 'List[str]', domain_context: 'Optional[str]' = None) -> 'VectorizedSolution'",
+        "diagnose_boundary_kernel": "(self, is_manifestations: 'List[str]', is_not_manifestations: 'List[str]', candidate_causes: 'List[str]', domain_context: 'Optional[str]' = None) -> 'VectorizedSolution'",
+        "transfer_structural_analogy": "(self, source_domain: 'str', target_domain: 'str', source_relations: 'List[Dict[str, str]]', target_entity_substitutions: 'Dict[str, str]') -> 'VectorizedSolution'",
+        "solve_multidisciplinary_problem": "(self, problem_description: 'str', problem_type: 'str' = 'auto', domain: 'Optional[str]' = None, **kwargs: 'Any') -> 'VectorizedSolution'",
+        "execute_cascading_discovery_pipeline": "(self, problem_title: 'str', domain: 'str', is_manifestations: 'List[str]', is_not_manifestations: 'List[str]', candidate_causes: 'List[str]', causal_variables: 'List[Tuple[str, float]]', causal_edges: 'List[Tuple[str, str, float]]', intervention_target: 'str', intervention_value: 'float', improving_objective: 'str', worsening_penalty: 'str', requirement_a: 'str', requirement_b: 'str', assumptions: 'List[str]', candidate_injections: 'List[str]', source_domain: 'str', source_relations: 'List[Dict[str, str]]', target_entity_substitutions: 'Dict[str, str]', logical_premises: 'List[str]', target_logical_claim: 'str') -> 'CascadingDiscoveryResult'"
+      }
+    }
+  },
+  "super_solver.lab_ass_bridge.client": {
+    "LabAssClient": {
+      "kind": "class",
+      "methods": {
+        "get_session_state": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "add_finding": "(self, session_id: 'str', content: 'str', confidence: 'float' = 0.9, agent_id: 'Optional[str]' = None, angle_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "add_findings_batch": "(self, session_id: 'str', findings: 'list[Dict[str, Any]]') -> 'Dict[str, Any]'",
+        "vote_finding": "(self, session_id: 'str', finding_id: 'str', vote: 'str', agent_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "deduplicate_findings": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "search_similar_findings": "(self, session_id: 'str', content: 'str', threshold: 'float' = 0.8) -> 'Dict[str, Any]'",
+        "register_dead_end": "(self, session_id: 'str', reason: 'str', angle_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "get_shared_blackboard": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "send_message": "(self, session_id: 'str', content: 'str', agent_id: 'Optional[str]' = None, kind: 'str' = 'update', recipient_agent_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "create_claim_card": "(self, session_id: 'str', statement: 'str', h0: 'Optional[str]' = None, h1: 'Optional[str]' = None, falsification_criteria: 'Optional[str]' = None, finding_ids: 'Optional[list[str]]' = None) -> 'Dict[str, Any]'",
+        "record_claim_verdict": "(self, session_id: 'str', claim_id: 'str', verdict: 'str', verdict_ref: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "preregister_hypothesis": "(self, session_id: 'str', hypothesis_id: 'str', null_hypothesis: 'str', testable_prediction: 'str', falsification_criteria: 'str', agent_id: 'Optional[str]' = None, variables: 'Optional[Dict[str, Any]]' = None) -> 'Dict[str, Any]'",
+        "design_experiment": "(self, session_id: 'str', title: 'str', methodology: 'str', agent_id: 'Optional[str]' = None, angle_id: 'Optional[str]' = None, hypothesis_id: 'Optional[str]' = None, control_group: 'Optional[str]' = None, experimental_group: 'Optional[str]' = None, target_metric: 'Optional[str]' = None, execution_command: 'Optional[str]' = None, parameters: 'Optional[Dict[str, Any]]' = None) -> 'Dict[str, Any]'",
+        "record_experiment_run": "(self, session_id: 'str', experiment_id: 'str', outcome: 'str', metrics: 'Optional[Dict[str, Any]]' = None, agent_id: 'Optional[str]' = None, status: 'str' = 'completed', notes: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "get_session_digest": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "get_workload": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "synthesize_report": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "export_session": "(self, session_id: 'str') -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.lab_ass_bridge.hooks": {
+    "LabAssSuperSolverBridge": {
+      "kind": "class",
+      "methods": {
+        "decompose_topic_with_polya_and_triz": "(self, topic: 'str', initial_subproblems: 'List[str]') -> 'Dict[str, Any]'",
+        "identify_problem": "(self, specification: 'str', title: 'str' = '') -> 'Dict[str, Any]'",
+        "check_dead_end_deflection": "(self, proposed_content: 'str', known_dead_ends: 'List[str]') -> 'Dict[str, Any]'",
+        "suggest_paths": "(self, problem_specification: 'str', context: 'Optional[str]' = None, top_k: 'int' = 3) -> 'List[Dict[str, Any]]'",
+        "run_tournament": "(self, candidate_hypotheses: 'List[str]', context: 'Optional[str]' = None, top_k: 'int' = 2) -> 'List[Dict[str, Any]]'",
+        "verify_math_paper": "(self, paper_title: 'str', abstract_text: 'str', target_conjecture: 'str') -> 'Dict[str, Any]'",
+        "deduce_discovery_path": "(self, problem_specification: 'str', candidate_hypotheses: 'List[str]', ground_truth_outcomes: 'Optional[Dict[str, str]]' = None) -> 'Dict[str, Any]'",
+        "dpll_entail": "(self, premises: 'List[str]', target_claim: 'str') -> 'Dict[str, Any]'",
+        "next_experiment": "(self, hypothesis_priors: 'Dict[str, float]', candidate_designs: 'List[Dict[str, Any]]', likelihood_matrix: 'Dict[str, Dict[str, Dict[str, float]]]') -> 'List[Dict[str, Any]]'",
+        "vectorize_problem": "(self, specification: 'str', title: 'str' = '', goal_criteria: 'Optional[List[str]]' = None, boundary_is: 'Optional[List[str]]' = None, boundary_is_not: 'Optional[List[str]]' = None, store: 'bool' = True) -> 'Dict[str, Any]'",
+        "vectorize_solution": "(self, solution_text: 'str', method: 'str' = '', domain: 'str' = '', operators: 'Optional[List[str]]' = None, title: 'str' = '', store: 'bool' = True) -> 'Dict[str, Any]'",
+        "vectorize_path": "(self, steps: 'List[str]', operator_types: 'Optional[List[str]]' = None, final_breakthrough: 'str' = '', title: 'str' = '', store: 'bool' = True) -> 'Dict[str, Any]'",
+        "search_vectors": "(self, query_text: 'str', kind: 'Optional[str]' = None, top_k: 'int' = 5, min_similarity: 'float' = 0.0) -> 'Dict[str, Any]'",
+        "analogize_problem": "(self, specification: 'str', title: 'str' = '', top_k: 'int' = 3, min_similarity: 'float' = 0.3) -> 'Dict[str, Any]'",
+        "score_novelty": "(self, candidates: 'List[str]', known_texts: 'List[str]') -> 'Dict[str, Any]'",
+        "blend_concepts": "(self, concept_a: 'str', concept_b: 'str', dim: 'int' = 2048) -> 'Dict[str, Any]'",
+        "preregister_hypotheses_from_path": "(self, path: 'Any', session_id: 'str', agent_id: 'str') -> 'List[Dict[str, Any]]'",
+        "design_experiment_from_boed": "(self, session_id: 'str', agent_id: 'str', hypothesis_priors: 'Dict[str, float]', candidate_designs: 'List[Dict[str, Any]]', likelihood_matrix: 'Dict[str, Any]', angle_id: 'Optional[str]' = None, hypothesis_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "record_path_experiments": "(self, path: 'Any', session_id: 'str', agent_id: 'str', experiment_id_map: 'Optional[Dict[str, str]]' = None) -> 'List[Dict[str, Any]]'",
+        "synthesize_report": "(self, session_id: 'str') -> 'Dict[str, Any]'",
+        "run_self_audit_and_write_findings": "(self, session_id: 'str', agent_id: 'str', angle_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "diagnose_failure_and_record": "(self, session_id: 'str', error_log_or_description: 'str', angle_id: 'Optional[str]' = None, agent_id: 'Optional[str]' = None) -> 'Dict[str, Any]'",
+        "synthesize_verified_code": "(self, specification: 'str', test_cases: 'Optional[str]' = None, context: 'Optional[str]' = None) -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.latent.continuous_thought": {
+    "ContinuousThoughtController": {
+      "kind": "class",
+      "methods": {
+        "initialize_latent_thought": "(self, problem_spec: 'str') -> 'np.ndarray'",
+        "step_continuous_thought": "(self, current_latent: 'np.ndarray', operator_vector: 'np.ndarray', temperature: 'float' = 0.2, seed: 'Optional[int]' = None) -> 'np.ndarray'",
+        "rollout_latent_bfs": "(self, initial_latent: 'np.ndarray', candidate_operators: 'List[Tuple[str, np.ndarray]]', depth: 'int' = 3, beam_width: 'int' = 3, goal_vector: 'Optional[np.ndarray]' = None) -> 'List[List[Tuple[str, np.ndarray]]]'"
+      }
+    }
+  },
+  "super_solver.latent.projection": {
+    "SymbolicProjector": {
+      "kind": "class",
+      "methods": {
+        "project_to_nearest_claim": "(self, latent_vector: 'np.ndarray', candidate_claims: 'List[str]') -> 'Tuple[str, float]'",
+        "generate_checkpoint_summary": "(self, step_index: 'int', operator_name: 'str', latent_vector: 'np.ndarray', reference_concepts: 'Dict[str, str]') -> 'str'"
+      }
+    }
+  },
+  "super_solver.latent.thought_diffusion": {
+    "ThoughtDiffusionRefiner": {
+      "kind": "class",
+      "methods": {
+        "denoise_trajectory": "(self, trajectory: 'List[np.ndarray]', constraint_attractors: 'List[np.ndarray]', negative_repulsors: 'Optional[List[np.ndarray]]' = None, diffusion_steps: 'int' = 4, step_size: 'float' = 0.25, guidance_scale: 'float' = 1.4, repulsion_scale: 'float' = 1.0) -> 'List[np.ndarray]'",
+        "reverse_denoise": "(self, solution: 'np.ndarray', constraint_attractors: 'Optional[List[np.ndarray]]' = None, negative_repulsors: 'Optional[List[np.ndarray]]' = None, diffusion_steps: 'int' = 4, step_size: 'float' = 0.25) -> 'np.ndarray'",
+        "self_consistency": "(self, solution: 'np.ndarray', problem_premise: 'np.ndarray', constraint_attractors: 'Optional[List[np.ndarray]]' = None, negative_repulsors: 'Optional[List[np.ndarray]]' = None) -> 'Dict[str, Any]'"
+      }
+    }
+  },
+  "super_solver.mcp.server": {
+    "get_engine": {
+      "kind": "function",
+      "sig": "() -> 'SuperDuperProblemSolvingEngine'"
+    },
+    "get_bridge": {
+      "kind": "function",
+      "sig": "() -> 'LabAssSuperSolverBridge'"
+    },
+    "list_tools": {
+      "kind": "function",
+      "sig": "() -> 'list[types.Tool]'"
+    },
+    "call_tool": {
+      "kind": "function",
+      "sig": "(name: 'str', arguments: 'dict[str, Any]') -> 'list[types.TextContent]'"
+    },
+    "main": {
+      "kind": "function",
+      "sig": "()"
+    }
+  },
+  "super_solver.memory.case_harvester": {
+    "CaseHarvester": {
+      "kind": "class",
+      "methods": {
+        "harvest_discovery_path": "(self, path: 'DiscoveryPath')",
+        "retrieve_analogous_cases": "(self, current_problem: 'str', top_k: 'int' = 3) -> 'List[Dict[str, Any]]'"
+      }
+    }
+  },
+  "super_solver.memory.episodic_store": {
+    "get_default_db_path": {
+      "kind": "function",
+      "sig": "() -> 'str'"
+    },
+    "EpisodicVectorStore": {
+      "kind": "class",
+      "methods": {
+        "insert": "(self, item_id: 'str', category: 'str', title: 'str', content: 'str', vector: 'Optional[np.ndarray]' = None, metadata: 'Optional[Dict[str, Any]]' = None)",
+        "search_similar": "(self, query_vector: 'np.ndarray', category: 'Optional[str]' = None, top_k: 'int' = 5, min_similarity: 'float' = 0.35) -> 'List[Dict[str, Any]]'",
+        "count": "(self) -> 'int'",
+        "insert_dead_end": "(self, description: 'str', vector: 'np.ndarray', item_id: 'Optional[str]' = None) -> 'str'",
+        "load_dead_ends": "(self) -> 'List[Tuple[str, np.ndarray]]'",
+        "sync_dead_ends": "(self, dead_ends: 'List[Tuple[str, np.ndarray]]')",
+        "save_parameters": "(self, params: 'Dict[str, Any]')",
+        "load_parameters": "(self) -> 'Dict[str, float]'",
+        "save_improvement_record": "(self, record: 'Dict[str, Any]')",
+        "load_improvement_history": "(self) -> 'List[Dict[str, Any]]'",
+        "close": "(self)"
+      }
+    }
+  },
+  "super_solver.meta.manuscript": {
+    "ScientificManuscriptGenerator": {
+      "kind": "class",
+      "methods": {
+        "generate_markdown": "(self, path: 'DiscoveryPath', problem: 'Optional[ProblemState]' = None, author: 'str' = 'Autonomous Discovery Engine (Super-Duper-Engine v2)', institution: 'str' = 'Institute for Advanced Neurosymbolic Reasoning') -> 'str'",
+        "generate_latex": "(self, path: 'DiscoveryPath', problem: 'Optional[ProblemState]' = None, author: 'str' = 'Autonomous Discovery Engine') -> 'str'",
+        "save_manuscript": "(self, path: 'DiscoveryPath', output_dir: 'str', filename_base: 'str' = 'scientific_paper', problem: 'Optional[ProblemState]' = None) -> 'Dict[str, str]'"
+      }
+    }
+  },
+  "super_solver.meta.self_improvement": {
+    "SelfImprovementController": {
+      "kind": "class",
+      "methods": {
+        "harvest_discovery_experience": "(self, path: 'DiscoveryPath') -> 'int'",
+        "run_self_diagnostic": "(self) -> 'Dict[str, Any]'",
+        "auto_tune_parameters": "(self, target_hazard_recall: 'float' = 0.9, target_goal_alignment: 'float' = 0.85) -> 'Dict[str, Any]'",
+        "solve_self_optimization_task": "(self) -> 'DiscoveryPath'",
+        "self_audit_and_optimize_with_uvps": "(self) -> 'Dict[str, Any]'",
+        "consolidate_synaptic_memory": "(self, similarity_threshold: 'float' = 0.75) -> 'int'"
+      }
+    }
+  },
+  "super_solver.search.curiosity": {
+    "CuriosityEngine": {
+      "kind": "class",
+      "methods": {
+        "compute_frontier_novelty": "(self, candidate_vector: 'np.ndarray', known_finding_vectors: 'List[np.ndarray]') -> 'float'"
+      }
+    }
+  },
+  "super_solver.search.mcts_prm": {
+    "MCTSNode": {
+      "kind": "class",
+      "methods": {}
+    },
+    "ProcessRewardModel": {
+      "kind": "class",
+      "methods": {
+        "score_transition": "(self, current_state: 'np.ndarray', next_state: 'np.ndarray', goal_vector: 'np.ndarray', exclusory_gain: 'float' = 0.0) -> 'float'"
+      }
+    },
+    "LatentMCTSEngine": {
+      "kind": "class",
+      "methods": {
+        "select_child": "(self, node: 'MCTSNode') -> 'MCTSNode'",
+        "expand_one_child": "(self, node: 'MCTSNode', candidate_actions: 'List[Tuple[str, np.ndarray, float]]', goal_vector: 'np.ndarray') -> 'Optional[MCTSNode]'",
+        "backpropagate": "(self, node: 'MCTSNode', value: 'float')",
+        "search_best_path": "(self, initial_state: 'np.ndarray', candidate_operator_generators: 'List[Tuple[str, np.ndarray, float]]', goal_vector: 'np.ndarray', num_simulations: 'int' = 15, auxiliary_unblocker: 'Optional[Any]' = None, problem_specification: 'Optional[str]' = None) -> 'List[Tuple[str, np.ndarray, float]]'"
+      }
+    }
+  },
+  "super_solver.search.negative_manifold": {
+    "NegativeManifoldRepulsor": {
+      "kind": "class",
+      "methods": {
+        "register_dead_end": "(self, description: 'str', vector: 'Optional[np.ndarray]' = None) -> 'np.ndarray'",
+        "check_proximity": "(self, state_vector: 'np.ndarray', threshold: 'Optional[float]' = None) -> 'Tuple[bool, float, Optional[str]]'",
+        "compute_repulsive_force": "(self, state_vector: 'np.ndarray') -> 'np.ndarray'",
+        "deflect_trajectory": "(self, candidate_vector: 'np.ndarray', goal_vector: 'Optional[np.ndarray]' = None, repulsion_weight: 'float' = 0.45, goal_weight: 'float' = 0.35) -> 'np.ndarray'",
+        "consolidate_memory": "(self, similarity_threshold: 'float' = 0.75) -> 'int'"
+      }
+    }
+  },
+  "super_solver.vectorize": {
+    "VectorizationService": {
+      "kind": "class",
+      "methods": {
+        "encode_problem": "(self, specification: 'str', title: 'str' = '', goal_criteria: 'Optional[List[str]]' = None, boundary_is: 'Optional[List[str]]' = None, boundary_is_not: 'Optional[List[str]]' = None) -> 'np.ndarray'",
+        "encode_solution": "(self, solution_text: 'str', method: 'str' = '', domain: 'str' = '', operators: 'Optional[List[str]]' = None) -> 'np.ndarray'",
+        "encode_path": "(self, steps: 'List[str]', operator_types: 'Optional[List[str]]' = None, final_breakthrough: 'str' = '') -> 'np.ndarray'",
+        "store_problem": "(self, specification: 'str', title: 'str' = '', goal_criteria: 'Optional[List[str]]' = None, boundary_is: 'Optional[List[str]]' = None, boundary_is_not: 'Optional[List[str]]' = None, metadata: 'Optional[Dict[str, Any]]' = None) -> 'str'",
+        "store_solution": "(self, solution_text: 'str', method: 'str' = '', domain: 'str' = '', operators: 'Optional[List[str]]' = None, title: 'str' = '', metadata: 'Optional[Dict[str, Any]]' = None) -> 'str'",
+        "store_path": "(self, steps: 'List[str]', operator_types: 'Optional[List[str]]' = None, final_breakthrough: 'str' = '', title: 'str' = '', metadata: 'Optional[Dict[str, Any]]' = None) -> 'str'",
+        "search": "(self, query_vector: 'np.ndarray', kind: 'Optional[str]' = None, top_k: 'int' = 5, min_similarity: 'float' = 0.0) -> 'List[Dict[str, Any]]'",
+        "analogize": "(self, problem_vector: 'np.ndarray', top_k: 'int' = 3, min_similarity: 'float' = 0.0) -> 'List[Dict[str, Any]]'",
+        "hybrid_analogize": "(self, problem_vector: 'np.ndarray', top_k: 'int' = 3, min_similarity: 'float' = 0.0, solution_weight: 'float' = 0.4) -> 'List[Dict[str, Any]]'",
+        "primitive_analogize": "(self, target_text: 'str', top_k: 'int' = 3, min_overlap: 'float' = 0.0) -> 'List[Dict[str, Any]]'",
+        "close": "(self)"
+      }
+    }
+  },
+  "super_solver.vectorize.domain_knowledge": {
+    "build_domain_knowledge_index": {
+      "kind": "function",
+      "sig": "(service, backend=None) -> 'None'"
+    },
+    "retrieve_concrete_solutions": {
+      "kind": "function",
+      "sig": "(service, problem_text: 'str', top_k: 'int' = 3) -> 'List[Dict]'"
+    }
+  },
+  "super_solver.vectorize.entity_substitution": {
+    "extract_target_entity": {
+      "kind": "function",
+      "sig": "(target_problem: 'str') -> 'Optional[str]'"
+    },
+    "extract_source_entity": {
+      "kind": "function",
+      "sig": "(source_solution: 'str') -> 'Optional[str]'"
+    },
+    "substitute_entity": {
+      "kind": "function",
+      "sig": "(source_solution: 'str', target_problem: 'str', known: 'Optional[Dict[str, str]]' = None) -> 'str'"
+    }
+  },
+  "super_solver.vectorize.index": {
+    "get_vector_db_path": {
+      "kind": "function",
+      "sig": "() -> 'str'"
+    },
+    "VectorIndex": {
+      "kind": "class",
+      "methods": {
+        "add": "(self, kind: 'str', content: 'str', vector: 'np.ndarray', title: 'str' = '', metadata: 'Optional[Dict[str, Any]]' = None, item_id: 'Optional[str]' = None) -> 'str'",
+        "add_problem": "(self, specification: 'str', vector: 'np.ndarray', title: 'str' = '', metadata: 'Optional[Dict[str, Any]]' = None) -> 'str'",
+        "add_solution": "(self, solution_text: 'str', vector: 'np.ndarray', title: 'str' = '', metadata: 'Optional[Dict[str, Any]]' = None) -> 'str'",
+        "add_path": "(self, path_summary: 'str', vector: 'np.ndarray', title: 'str' = '', metadata: 'Optional[Dict[str, Any]]' = None) -> 'str'",
+        "search": "(self, query_vector: 'np.ndarray', kind: 'Optional[str]' = None, top_k: 'int' = 5, min_similarity: 'float' = 0.0) -> 'List[Dict[str, Any]]'",
+        "analogize": "(self, problem_vector: 'np.ndarray', top_k: 'int' = 3, min_similarity: 'float' = 0.0) -> 'List[Dict[str, Any]]'",
+        "hybrid_analogize": "(self, problem_vector: 'np.ndarray', top_k: 'int' = 3, min_similarity: 'float' = 0.0, solution_weight: 'float' = 0.4) -> 'List[Dict[str, Any]]'",
+        "get": "(self, item_id: 'str') -> 'Optional[Dict[str, Any]]'",
+        "count": "(self, kind: 'Optional[str]' = None) -> 'int'",
+        "close": "(self)"
+      }
+    }
+  },
+  "super_solver.vectorize.primitives": {
+    "strip_to_primitives": {
+      "kind": "function",
+      "sig": "(text: 'str') -> 'Set[str]'"
+    },
+    "primitive_overlap": {
+      "kind": "function",
+      "sig": "(a: 'Set[str]', b: 'Set[str]') -> 'float'"
+    },
+    "match_by_primitives": {
+      "kind": "function",
+      "sig": "(target_text: 'str', source_solutions: 'List[Dict[str, str]]', top_k: 'int' = 3) -> 'List[Dict]'"
+    },
+    "validate_solution": {
+      "kind": "function",
+      "sig": "(generated: 'str', target_problem: 'str') -> 'dict'"
+    }
+  },
+  "super_solver.vectorize.structural": {
+    "structural_signature": {
+      "kind": "function",
+      "sig": "(text: 'str') -> 'str'"
+    },
+    "match_structural": {
+      "kind": "function",
+      "sig": "(target_text: 'str', source_solutions: 'List[Dict[str, str]]', top_k: 'int' = 3) -> 'List[Dict]'"
+    }
+  }
+}

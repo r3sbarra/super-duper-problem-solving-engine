@@ -68,7 +68,7 @@
     {
       "subsystem": "search.negative_manifold",
       "status": "OK",
-      "detail": "(True, 1.0000001192092896, 'Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): add a cache in "
+      "detail": "(True, 1.0000001192092896, 'add a cache in front of the database')"
     },
     {
       "subsystem": "search.mcts.best_path",
@@ -78,7 +78,7 @@
     {
       "subsystem": "latent.coconut.bfs",
       "status": "OK",
-      "detail": "[[('add_cache', array([ 4.26314507e-03, -1.24767820e-02,  1.31199091e-01,  2.66330644e-02,\n        7.27937851e-03, -8.68328693e-03, -2.06823755e-02, -1.90123669"
+      "detail": "[[('add_cache', array([ 5.24267559e-03,  5.12997311e-03,  1.12755937e-01,  1.74520103e-02,\n       -4.00699060e-03, -1.17306278e-02,  5.53387559e-03, -1.54863083"
     },
     {
       "subsystem": "latent.dot.denoise",
@@ -88,7 +88,7 @@
     {
       "subsystem": "tournament.match",
       "status": "OK",
-      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.WEAKENED_INCONSISTENT: 'WEAKENED_INCONSISTENT'>, robustness_score="
+      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.SURVIVED_ROBUST: 'SURVIVED_ROBUST'>, robustness_score=1.0, survive"
     },
     {
       "subsystem": "math.verify_flawed",
@@ -118,12 +118,12 @@
     {
       "subsystem": "meta.self_diagnostic",
       "status": "OK",
-      "detail": "{'total_registered_dead_ends': 36, 'total_episodic_cases': 6, 'active_parameters': {'proximity_threshold': 0.38, 'guidance_scale': 1.0977652210111704, 'repulsio"
+      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 0.9567899581468113, 'repulsion"
     },
     {
       "subsystem": "memory.consolidate",
       "status": "OK",
-      "detail": "1"
+      "detail": "0"
     },
     {
       "subsystem": "code.synthesize",
@@ -138,7 +138,7 @@
     {
       "subsystem": "suggest_paths",
       "status": "OK",
-      "detail": "[SuggestedPath(path_id='path_platt_crucial_assay', strategy_type='PLATT_STRONG_INFERENCE_ASSAY', title='High-Resolution Differential Crucial Experiment', descri"
+      "detail": "[SuggestedPath(path_id='path_gentner_analogy', strategy_type='ANALOGICAL_STRUCTURAL_TRANSFER', title='Cross-Domain Relational Structure Mapping', description=\"M"
     }
   ]
 }
