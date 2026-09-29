@@ -24,12 +24,24 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-# Use the REAL vector index even under pytest (which otherwise forces an empty
-# in-memory DB via PYTEST_CURRENT_TEST), so the retrieval bridge is measured.
-os.environ.setdefault(
-    "SUPER_SOLVER_VECTOR_DB",
-    os.path.join(os.path.dirname(__file__), "..", ".super_solver_data", "vector_index.db"),
+# Deterministic, isolated vector index: seed a fresh temp DB from the committed
+# domain knowledge so the solve-loop metric does not depend on whatever state a
+# prior test left in the shared index (measured: order-dependent metric drift).
+import tempfile as _tempfile
+
+os.environ["SUPER_SOLVER_VECTOR_DB"] = os.path.join(
+    _tempfile.mkdtemp(prefix="solve_loop_"), "vi.db"
 )
+
+
+def _seed_domain_knowledge():
+    from super_solver.vectorize import vectorization_service
+    from super_solver.vectorize.domain_knowledge import DOMAIN_KNOWLEDGE
+
+    for e in DOMAIN_KNOWLEDGE:
+        vectorization_service.store_solution(
+            solution_text=e["solution_direction"], method="domain", domain="meta"
+        )
 
 # (problem, reference solution idea)
 CASES = [
@@ -79,6 +91,8 @@ def _lexical_recall(subproblem: str, solution: str) -> float:
 
 def main():
     from super_solver.frameworks.problem_identification import decompose
+
+    _seed_domain_knowledge()
 
     rows = []
     covered_at_1 = 0

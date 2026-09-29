@@ -150,6 +150,7 @@ class VectorizationService:
         target_text: str,
         top_k: int = 3,
         min_overlap: float = 0.0,
+        semantic_weight: float = 0.0,
     ) -> List[Dict[str, Any]]:
         """Cross-domain analogical transfer via structural primitives.
 
@@ -159,6 +160,13 @@ class VectorizationService:
         domains share a structure when they share primitives, even if their
         surface entities differ. This is the cross-domain path that surface
         vector retrieval fails at.
+
+        ``semantic_weight`` in [0,1] composes the containment score with the
+        OFFLINE semantic embedder (distilled_pid): measured, 32% of problem->
+        solution pairs share no specific atom, so containment is 0 for them by
+        construction and NO re-weighting can retrieve them; a semantic bridge is
+        required (see docs/IMPROVEMENT_PLAN.md R1). Default 0.0 = pure
+        containment (unchanged behaviour).
         """
         from super_solver.vectorize.primitives import match_by_primitives
 
@@ -173,7 +181,33 @@ class VectorizationService:
                 continue
             seen.add(sol)
             sources.append({"title": row[2] or "", "solution": sol})
-        hits = match_by_primitives(target_text, sources, top_k=top_k)
+        # Widen the candidate net when a semantic term is used, so disjoint
+        # (zero-containment) pairs the semantic bridge can rescue are not cut
+        # off before scoring.
+        fetch_k = top_k if semantic_weight <= 0 else max(top_k, min(len(sources), 50))
+        hits = match_by_primitives(target_text, sources, top_k=fetch_k)
+
+        if semantic_weight > 0:
+            try:
+                from super_solver.core.distilled_pid import DistilledPIDEmbedder
+
+                emb = DistilledPIDEmbedder()
+                if emb.available:
+                    vt = emb.encode(target_text)
+                    w = max(0.0, min(1.0, semantic_weight))
+                    for h in hits:
+                        sem = emb.cosine_similarity(vt, emb.encode(h["content"]))
+                        # semantic cosine ~0.2-0.6 band; rescale for blending.
+                        sem_scaled = max(0.0, min(1.0, (sem - 0.2) / 0.5))
+                        h["containment_score"] = h["primitive_overlap"]
+                        h["semantic_score"] = sem
+                        h["primitive_overlap"] = (
+                            (1.0 - w) * h["primitive_overlap"] + w * sem_scaled
+                        )
+                    hits.sort(key=lambda x: x["primitive_overlap"], reverse=True)
+            except Exception:
+                pass
+
         return [
             {
                 "content": h["content"],
@@ -182,7 +216,7 @@ class VectorizationService:
                 "target_primitives": h["target_primitives"],
                 "source_primitives": h["source_primitives"],
             }
-            for h in hits
+            for h in hits[:top_k]
             if h["primitive_overlap"] >= min_overlap
         ]
 

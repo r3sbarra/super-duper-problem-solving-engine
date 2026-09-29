@@ -1,0 +1,37 @@
+{
+  "measurements": {
+    "n_pairs": 155,
+    "A_disjoint_pairs": 50,
+    "A_disjoint_rate": 0.323,
+    "A_share_action_atoms": 89,
+    "B_rankable_pairs": 105,
+    "B_top1_correct": 67,
+    "B_top1_rate_within_rankable": 0.638
+  },
+  "requirements": [
+    {
+      "requirement": "SEMANTIC BRIDGE",
+      "why": "32% of problems share NO specific atom with their correct solution, so set-containment retrieval returns 0 by construction. No re-weighting/IDF/fusion can exceed this floor.",
+      "mathematical_core": "containment(T,S) = |T\u2229S|/|T| = 0 when T\u2229S=\u2205. Exceeding it requires COMPOSING with a map f: text\u2192R^d and a metric where related(paraphrase) > unrelated, i.e. a learned semantic embedding, not a bigger atom set.",
+      "evidence": "A_disjoint_rate=0.323"
+    },
+    {
+      "requirement": "RANKER QUALITY",
+      "why": "Among retrievable pairs, top-1 is only 64%; ranking leaves correctness on the table.",
+      "mathematical_core": "Ranking is a monotone function of the score; improving it means learning a score that is monotone in true relevance (a supervised ranking objective), not hand-set weights.",
+      "evidence": "B_top1_rate=0.638"
+    },
+    {
+      "requirement": "CORPUS COVERAGE (orthogonal)",
+      "why": "Retrieval can only return mechanisms present in the corpus; measured 0-overlap retrievals for cache-single-flight and invoice-dedup show coverage limits, independent of matching quality.",
+      "mathematical_core": "recall <= 1 - P(correct mechanism absent from corpus). No matcher fixes an absent target.",
+      "evidence": "see recursive_self_review / solve_loop"
+    },
+    {
+      "requirement": "VERIFICATION BEFORE ADOPTION",
+      "why": "Improvements must be proven, not assumed: the campaign found 10+ real bugs in surfaces that 'looked healthy'.",
+      "mathematical_core": "adopt a change only if it improves a held-out metric beyond its noise floor (paired test), else reject.",
+      "evidence": "health/metrics gates"
+    }
+  ]
+}
