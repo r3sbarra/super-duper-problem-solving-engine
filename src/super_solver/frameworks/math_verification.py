@@ -64,8 +64,14 @@ _BARRIER_KEYWORDS = {
         "log-theta",
     ),
     "conway_collatz_undecidability": (
-        "collatz", "3x+1", "3x + 1", "termination for all integers",
-        "undecidab",
+        # The barrier applies to CLAIMS of proving termination / the full
+        # conjecture, not to any paper that merely mentions Collatz. Requiring
+        # the claim pattern stops sound analytic Collatz papers (e.g. Tao's
+        # 'almost all orbits' result) from being wrongly refuted when their
+        # abstract does not restate the evasion technique.
+        "3x+1", "3x + 1", "collatz conjecture", "prove the collatz",
+        "prove that all collatz", "termination for all integers",
+        "prove collatz", "collatz termination",
     ),
 }
 
@@ -272,7 +278,12 @@ class LakatosProofVerificationEngine:
             # Collatz paper names '2-adic'/'renewal' only after the first
             # sentence, so a lemma-local evasion check wrongly flagged it).
             evade_hay = (low_ctx + " " + (full_context or "").lower())
-            kw_hit = any(k in low_ctx for k in _BARRIER_KEYWORDS.get(bid, ()))
+            # Trigger keywords are matched against the LEMMA + full paper text
+            # but NOT the target_conjecture: naming a conjecture ('Collatz
+            # 3x+1 Conjecture') is not itself a barrier violation, and including
+            # it wrongly flagged sound papers that merely analyse that conjecture.
+            trigger_hay = (l_text + " " + (full_context or "")).lower()
+            kw_hit = any(k in trigger_hay for k in _BARRIER_KEYWORDS.get(bid, ()))
             kw_evade = any(k in evade_hay for k in _BARRIER_EVASION_KEYWORDS.get(bid, ()))
             if kw_hit and not kw_evade:
                 conflicts.append(barrier)

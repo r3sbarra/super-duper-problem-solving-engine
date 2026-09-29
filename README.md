@@ -3,7 +3,7 @@
 > **A Neurosymbolic Reasoning & Scientific Inquiry Engine**  
 > Unifying 8 historically proven scientific and cognitive problem-solving paradigms with continuous vector representations (latent guidance, VSA/HDC, potential-field manifolds, DPLL SAT, and SMT theories).
 
-[![Tests](https://img.shields.io/badge/tests-80%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-171%20passed-brightgreen.svg)]()
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg)](LICENSE)
@@ -66,7 +66,7 @@ Here is how **this engine** solves hard problems like a genius detective:
 Before jumping to wild conclusions, the engine draws a chalk line:
 - *"The light switch only sparks in the bedroom (IS), not in the kitchen (IS-NOT)."*
 - *"It only happens on Tuesdays (IS), not on Saturdays (IS-NOT)."*
-By separating what **IS** happening from what **IS NOT**, it immediately throws away 90% of useless guesses. *(Kepner-Tregoe)*
+By separating what **IS** happening from what **IS NOT**, it immediately narrows the candidate space (KT's method: a cause must explain the IS and be excluded by the IS-NOT). *(Kepner-Tregoe)*
 
 ### 2. 🧲 Step 2: Quicksand Repulsors (Negative Manifold)
 When an experiment fails or an idea is disproven, the engine plants a **glowing red magnetic beacon** right at that failure spot. 
@@ -420,19 +420,26 @@ To maintain scientific rigor and clear engineering expectations:
 
 ## 8. Benchmark Performance
 
-Running `python tests/benchmark_solver.py`:
+Running `python tests/benchmark_solver.py` (numbers re-verified 2026-09-29; every
+figure below is reproduced by that script on this machine):
 
 | Dimension / Metric | Measured Result | Impact |
 | :--- | :--- | :--- |
 | **Search Space Reduction (N=1024)** | **99.02%** reduction (10 Platt assays vs 1,024 brute-force) | Exponential hypothesis tree pruning via Shannon information gain. |
-| **Dead-End Hazard Precision** | **100.0%** precision (0% false positive hazard alerts) | Deflects reasoning vectors cleanly away from known failure modes. |
-| **Vector Step & Proximity Latency**| **0.313 ms** / step on CPU | Local NumPy vector operations with zero external daemon overhead. |
-| **Thought Diffusion Convergence** | **+95.5%** goal proximity gain in 10 steps (**0.45 ms**) | Non-autoregressive CFG potential field denoising toward goal manifold. |
-| **P != NP Barrier Detection (Blum)**| **0.13 ms** (98% confidence) | Instant barrier detection (Tardos Monotone Approximation Barrier). |
-| **Collatz Tao Verification** | **0.05 ms** (90% confidence) | Evaluates 2-adic logarithmic drift and Conway undecidability evasion. |
-| **Gaia MOND Falsification Path** | **7.02 ms** (100% confidence) | Autonomous abduction, assay design, and Bayesian hypothesis elimination. |
-| **Multi-Paradigm Path Suggestion** | **3.40 - 5.15 ms** across domains | Ranks TRIZ, Polya, Gentner, and Lakatos paths with curiosity scoring. |
-| **Full 6-Stage Suite Execution** | **0.10 seconds** total execution time | Instantaneous execution suitable for high-throughput autonomous swarms. |
+| **Dead-End Hazard Precision / Recall** | **100.0%** precision, **80.0%** recall | Deflects reasoning vectors away from known failure modes (not all hazards). |
+| **Vector Step & Proximity Latency**| **~0.23 ms** / step on CPU | Local NumPy vector operations with zero external daemon overhead. |
+| **Thought Diffusion Convergence** | **+95.5%** goal proximity gain in 10 steps (**~0.31 ms**) | Non-autoregressive CFG potential field denoising toward goal manifold. |
+| **P != NP Barrier Detection**| **~558 ms** (98% confidence) | Barrier screening (Tardos Monotone Approximation Barrier). The cost is the embedding-vector audit, not a hardcoded lookup. |
+| **Collatz Tao Verification** | **~1.3 ms** (90% confidence) | Evaluates 2-adic logarithmic drift and Conway undecidability evasion. |
+| **Gaia MOND Falsification Path** | **~84 ms** (100% confidence) | Autonomous abduction, assay design, and Bayesian hypothesis elimination. |
+| **Multi-Paradigm Path Suggestion** | **~3.7 - 8.5 ms** across domains | Ranks TRIZ, Polya, Gentner, and Lakatos paths with curiosity scoring. |
+| **Full 6-Stage Suite Execution** | **~0.8 seconds** total execution time | Instantaneous execution suitable for high-throughput autonomous swarms. |
+
+> **Note on latencies:** timings are wall-clock on the development machine and
+> vary run-to-run; the *reduction/precision/confidence* figures are deterministic.
+> Earlier revisions of this table listed unverified sub-millisecond latencies
+> that did not reproduce — corrected here per the repo's "no unverified claims"
+> rule.
 
 ---
 
@@ -450,7 +457,11 @@ The engine provides direct plug-and-play integration with the `lab-ass` research
 .venv/bin/pytest -v tests/
 ```
 
-All **80+ unit and integration tests** pass in ~13 seconds with 100% test coverage across mathematical, scientific, engineering, dialectical debate, and meta-optimization domains.
+All **171 unit, integration, regression and property tests** pass in ~10 seconds
+across mathematical, scientific, engineering, dialectical-debate, and
+meta-optimization domains. Test coverage is *not* claimed to be 100% — see
+`ROADMAP.md` T3.3 for the coverage-map workstream. The CI pipeline runs the full
+suite plus a subsystem health gate and a metrics-floor gate.
 
 ---
 
