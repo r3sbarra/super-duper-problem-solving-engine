@@ -413,12 +413,120 @@ def semantic_similarity(a: str, b: str) -> Optional[float]:
         return None
 
 
+# ---------------------------------------------------------------------------
+# Negation / polarity consistency guard
+# ---------------------------------------------------------------------------
+# Embedding cosine (including nomic-embed-text) treats a negated sentence as
+# highly similar to its affirmation, because they differ only by 'not' / 'dis-'.
+# Measured: on adversarial-negation probes even the nomic teacher ranks a
+# negated distractor ABOVE the correct answer (e.g. 0.79 vs 0.41). This guard
+# detects a polarity FLIP between parent and child and penalizes relevance,
+# independent of the embedder.
+
+# Negation cues. Deliberately CONSERVATIVE: only explicit logical negators and
+# clear opposite-forming words. Directional words ('reduce', 'increase') are NOT
+# negators here — they are ordinary domain verbs and including them produced
+# false positives (e.g. 'Reduce the latency' looked negated).
+_NEGATION_MARKERS: Tuple[str, ...] = (
+    "not", "no", "never", "cannot", "can't", "won't", "don't", "doesn't",
+    "isn't", "aren't", "without", "avoid", "prevent", "stop", "eliminate",
+    "disprove", "deny", "refuse", "exclude", "negate", "disable", "omit",
+    "forbid", "false", "impossible", "infeasible", "block",
+)
+
+
+# Antonym pairs (opposite predicates). A child naming the OPPOSITE of a parent
+# predicate is a polarity flip too, even without an explicit negator
+# (e.g. 'heavier/weaker' vs 'lighter/stronger').
+_ANTONYMS: Tuple[Tuple[str, str], ...] = (
+    ("lighter", "heavier"), ("light", "heavy"), ("stronger", "weaker"),
+    ("strong", "weak"), ("faster", "slower"), ("fast", "slow"),
+    ("increase", "decrease"), ("more", "less"), ("higher", "lower"),
+    ("maximize", "minimize"), ("improve", "worsen"), ("safe", "unsafe"),
+    ("available", "unavailable"), ("correct", "incorrect"),
+    ("enable", "disable"), ("start", "stop"), ("accept", "reject"),
+)
+
+
+def _antonym_flip(parent: str, child: str) -> bool:
+    """True when the child states the opposite of a parent predicate."""
+    pl = parent.lower()
+    cl = child.lower()
+
+    def has(text, w):
+        return re.search(rf"\b{re.escape(w)}\b", text) is not None
+
+    for a, b in _ANTONYMS:
+        # parent says A, child says B (or vice versa) -> opposite. The antonym
+        # pair itself is the signal; no shared-content gate here (the opposing
+        # predicate may be the only content when the parent is templated).
+        if (has(pl, a) and has(cl, b)) or (has(pl, b) and has(cl, a)):
+            return True
+    return False
+
+
+def _negation_cues(text: str) -> Set[str]:
+    """Return the SET of negation cue words present in text.
+
+    Word-boundary matching avoids prefix false positives such as 'induction'
+    matching a naive 'in-' rule.
+    """
+    words = re.findall(r"[a-z']+", text.lower())
+    cues: Set[str] = {w for w in words if w in _NEGATION_MARKERS}
+    for w in words:
+        for p in ("un", "dis", "anti", "non"):
+            if w.startswith(p) and len(w) > len(p) + 4:
+                cues.add(w)
+                break
+    return cues
+
+
+def _negation_count(text: str) -> int:
+    """Count explicit negation cues in text (whole-word markers only)."""
+    return len(_negation_cues(text))
+
+
+def negation_flip(parent: str, child: str) -> Tuple[bool, Dict[str, float]]:
+    """Detect a polarity flip: child negates what parent asserts (or vice versa).
+
+    A flip is flagged when the child introduces NEW negation the parent does not
+    carry (a negated restatement), while sharing enough content that the
+    negation is the salient difference. Comparing the actual cue words (not just
+    counts) avoids penalising a child that legitimately restates an already-
+    negative parent (e.g. parent 'stop X from happening' -> child 'so it cannot
+    happen' carries the same 'prevent' intent, not a flip).
+
+    Antonym oppositions (lighter/heavier, stronger/weaker) are also flips.
+    Returns ``(flipped, detail)``.
+    """
+    p_cues = _negation_cues(parent)
+    c_cues = _negation_cues(child)
+    shared = _lexical_overlap(parent, child)
+    # Flip only when the parent is AFFIRMATIVE and the child introduces negation.
+    # If the parent already carries any negation, a negated child is usually
+    # restating the same intent (parent 'stop X' / child 'so X cannot happen'),
+    # not flipping it — cue-word set-difference is too literal for this.
+    flip = (len(p_cues) == 0 and len(c_cues) > 0 and shared >= 0.1) or _antonym_flip(
+        parent, child
+    )
+    detail = {
+        "parent_negations": float(len(p_cues)),
+        "child_negations": float(len(c_cues)),
+        "shared_content": float(shared),
+        "flipped": float(1.0 if flip else 0.0),
+    }
+    return flip, detail
+
+
 def relevance_score(parent: str, child: str) -> Tuple[float, Dict[str, float]]:
     """Calibrated relevance of a subproblem to its parent problem.
 
     Blends:
       - semantic cosine (meaning, robust to paraphrase), and
-      - lexical content overlap (distinctive shared content words).
+      - lexical content overlap (distinctive shared content words),
+      then applies a NEGATION-CONSISTENCY penalty: a child that flips the
+    parent's polarity (a negated distractor) is demoted, because embedding
+    cosine alone ranks it highly.
 
     IMPORTANT LIMITATION (measured, not assumed): on the deterministic hashing
     embedder this scorer recovers relevance when the child reuses the parent's
@@ -437,23 +545,29 @@ def relevance_score(parent: str, child: str) -> Tuple[float, Dict[str, float]]:
     cos = embedding_service.cosine_similarity(v_p, v_c)
     lex = _lexical_overlap(parent, child)
 
+    flipped, neg_detail = negation_flip(parent, child)
+
     sem = semantic_similarity(parent, child)
     if sem is not None:
-        # With a genuinely semantic embedder, paraphrase relevance is
-        # recoverable, so rely on it. The polarity cosine and lexical overlap
-        # are PROVEN anti-signals for zero-surface-overlap paraphrases (a
-        # distractor sharing one parent token outscores a correct paraphrase),
-        # so they are used only as a tiny tie-break, never as the main term.
-        # Nomic cosine has a ~0.3-0.6 operating band; rescale to spread range.
         sem_scaled = max(0.0, min(1.0, (sem - 0.25) / 0.45))
         tie = 0.02 * (cos + lex)
         score = 0.98 * sem_scaled + tie
-        return float(score), {
+        breakdown = {
             "semantic": float(sem), "cosine": float(cos), "lexical": float(lex)
         }
+    else:
+        score = 0.55 * cos + 0.45 * lex
+        breakdown = {"cosine": float(cos), "lexical": float(lex)}
 
-    score = 0.55 * cos + 0.45 * lex
-    return float(score), {"cosine": float(cos), "lexical": float(lex)}
+    if flipped:
+        # Demote well below any non-flipped candidate: a polarity flip (explicit
+        # negation or antonym) is strong evidence of a distractor, and embedding
+        # cosine alone ranks it highly. A multiplicative 0.2 penalty ensures the
+        # flipped child loses even when its raw similarity is far higher.
+        score *= 0.2
+        breakdown["negation_flip_penalty"] = 1.0
+    breakdown.update(neg_detail)
+    return float(score), breakdown
 
 
 def anchored_relevance(structure: "ProblemStructure", slot: str) -> float:

@@ -258,3 +258,52 @@ def test_distilled_pid_robust_on_32_diverse_probes():
     pc = car(polarity)
     assert dc >= 0.9, f"distilled CAR {dc:.3f} below floor"
     assert dc > pc + 0.3, f"distilled {dc:.3f} not clearly above polarity {pc:.3f}"
+
+
+# --- Negation-consistency guard ----------------------------------------------
+
+def test_negation_guard_demotes_negated_distractor():
+    """A child that negates an affirmative parent must be flagged as a flip.
+
+    Ordering assertion is made on the semantic path (where the correct answer
+    is scored well): on the polarity-only path the correct answer has zero
+    surface overlap, which is the separate (documented) paraphrase ceiling.
+    """
+    from super_solver.frameworks.problem_identification import (
+        negation_flip,
+        relevance_score,
+        semantic_similarity,
+    )
+
+    parent = "Reduce the latency of the read path."
+    good = "Add a cache in front of the database"
+    bad = "Do not add any cache and instead increase the latency of the read path"
+    assert negation_flip(parent, bad)[0] is True
+    assert negation_flip(parent, good)[0] is False
+    if semantic_similarity(parent, good) is not None:
+        assert relevance_score(parent, good)[0] > relevance_score(parent, bad)[0]
+
+
+def test_negation_guard_does_not_false_positive_on_already_negative_parent():
+    """When the parent already carries negation, a negated child that restates
+    the same intent must NOT be flagged as a flip."""
+    from super_solver.frameworks.problem_identification import negation_flip
+
+    parent = "Stop one slow service from taking down the whole site."
+    child = "Isolate a lagging component so it cannot bring down the entire system."
+    assert negation_flip(parent, child)[0] is False
+
+
+def test_negation_guard_detects_antonym_flip():
+    from super_solver.frameworks.problem_identification import negation_flip
+
+    parent = "Make the structure lighter without weakening it."
+    child = "Make the structure heavier and weaker"
+    assert negation_flip(parent, child)[0] is True
+
+
+def test_relevance_score_reports_negation_detail():
+    from super_solver.frameworks.problem_identification import relevance_score
+
+    _, breakdown = relevance_score("Prove the theorem holds for all n.", "Disprove it.")
+    assert "flipped" in breakdown and "shared_content" in breakdown
