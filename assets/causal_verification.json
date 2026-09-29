@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "chain": {
+      "ace": 0.19999999999999996,
+      "expected_sign": "positive",
+      "got_sign": "positive",
+      "sign_ok": true,
+      "expected_ace": 0.2,
+      "got_ace": 0.2
+    },
+    "confounded": {
+      "ace": 0.19999999999999996,
+      "expected_sign": "positive",
+      "sign_ok": true
+    },
+    "fork": {
+      "ace": 0.0,
+      "expected_sign": "zero",
+      "sign_ok": true
+    },
+    "ordering": {
+      "y_effect": 0.4,
+      "z_effect": 0.19999999999999996,
+      "proximal_gt_distal": true,
+      "expected_sign": "y > z > 0",
+      "sign_ok": true
+    }
+  },
+  "passed": "4/4"
+}
