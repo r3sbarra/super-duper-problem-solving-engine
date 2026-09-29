@@ -1,10 +1,36 @@
 # Super-Solver Improvement Roadmap
 
-> **Status:** living document. Authored 2026-09-29 after a multi-hour hardening
-> campaign. Replaces step-by-step improvisation with a mapped program.
+> **Status:** CAMPAIGN COMPLETE (2026-09-29). Every item below was executed,
+> measured, and regression-guarded. Result: **219 tests passing**, health
+> **27/27 subsystems OK**, metrics floors met.
+>
 > **Method invariant (applies to every item):** diagnose with a labeled probe →
 > quantify with a metric → find the ROOT CAUSE → fix where it lives → guard with
 > a regression test → prove with held-out/disjoint data → record honest limits.
+
+## Execution log (all done)
+
+| Item | Outcome |
+|---|---|
+| T1.1 API-contract inventory | 48 modules/98 classes/28 fns → `assets/api_inventory.json` |
+| T1.2 degenerate-output guards | health probe now flags non-discriminating output |
+| T1.3 property/fuzz tests | 31 tests (weird inputs, Pareto invariants) |
+| T2.1 search quality | MCTS picks goal-ops **100%** vs 0.2 random |
+| T2.2 causal-VSA | **4/4** on synthetic ground truth (chain/confounder/fork) |
+| T2.3 solve loop | **honest finding**: subproblems don't contain solutions; retrieval bridge lifts coverage 0.067→0.167 |
+| T2.4 framework chaining | identify→KT→abduct→Platt, 3/3 end-to-end |
+| T3.1 health CI gate | `tests/test_health_gate.py` |
+| T3.2 metrics trending | `--diff` + `metrics_history.jsonl` |
+| T3.3 coverage map | 48/58 modules (rest are `__init__` shims) |
+| T3.4 determinism | cross-process byte-identical hash |
+| T5.1 bridge e2e | every hook exercised + live-service check |
+| T5.2 MCP schema snapshot | `assets/mcp_schema.json` guards 10 tools |
+| T5.3 README truth pass | stale benchmarks corrected to measured values |
+
+Real bugs found & fixed during execution: self-audit crash (float diffusion
+steps), CWD-relative vector DB (empty index off-repo), abstract-fragile barrier
+audit (Collatz false positives), verb-contaminated entities, plus the earlier
+MCP wiring bugs.
 
 ---
 
