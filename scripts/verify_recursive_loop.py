@@ -11,7 +11,7 @@ for e in DOMAIN_KNOWLEDGE:
     vectorization_service.store_solution(
         solution_text=e['solution_direction'], method='d', domain='d',
         title=e['problem_context'][:50])
-from super_solver.frameworks.problem_identification import decompose
+from super_solver.frameworks.problem_identification import decompose  # noqa: E402
 
 d = decompose(
     "The engine decomposes problems well but its decomposition covers almost none "
