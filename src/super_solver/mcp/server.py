@@ -216,7 +216,16 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         goal = arguments["current_goal"]
         explored = arguments.get("explored_paths", [])
         dead_ends = arguments.get("dead_ends", [])
-        result = bridge.suggest_paths(goal, explored, dead_ends)
+        # Build a context string from explored paths / dead ends and pass top_k
+        # explicitly. (The previous positional call put the dead-end list into
+        # top_k, a crash: 'slice indices must be integers'.)
+        ctx_parts = []
+        if explored:
+            ctx_parts.append("Already explored: " + "; ".join(map(str, explored)))
+        if dead_ends:
+            ctx_parts.append("Dead ends to avoid: " + "; ".join(map(str, dead_ends)))
+        context = " | ".join(ctx_parts) or None
+        result = bridge.suggest_paths(goal, context=context, top_k=3)
         return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
 
     elif name == "super_solver_triz_solve":

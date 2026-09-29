@@ -113,8 +113,19 @@ class LabAssSuperSolverBridge:
         """Synthesize and rank alternative discovery paths (TRIZ/Polya/Gentner/Lakatos/Platt).
 
         Exposes the engine's suggest_paths() to lab-ass so agents can get
-        ranked research directions instead of only a decomposition.
+        ranked research directions instead of only a decomposition. Dead ends
+        supplied in ``context`` under a 'Dead ends to avoid:' clause are
+        registered into the negative-manifold repulsor so the returned
+        dead_end_margin reflects real avoidance.
         """
+        if context and "Dead ends to avoid:" in context:
+            try:
+                tail = context.split("Dead ends to avoid:", 1)[1]
+                tail = tail.split("|", 1)[0]
+                for de in [s.strip() for s in tail.split(";") if s.strip()]:
+                    self.engine.repulsor.register_dead_end(de)
+            except Exception:
+                pass
         paths = self.engine.suggest_paths(
             problem_specification=problem_specification,
             context=context,
