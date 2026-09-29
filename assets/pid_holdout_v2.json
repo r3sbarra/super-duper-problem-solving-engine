@@ -1,0 +1,434 @@
+[
+  {
+    "parent": "Find the median of two sorted arrays without merging them.",
+    "relevant": "Compute the central value of the combined ordered sets by employing a divide-and-conquer partition search that balances left and right halves across both sequences.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.6090655337410911,
+      "neg": 0.38758688963526305
+    }
+  },
+  {
+    "parent": "Detect a cycle in a directed graph and report its nodes.",
+    "relevant": "Identify a closed loop within a one-way network, then output the vertices involved.",
+    "irrelevant": "That reminds me to repaint the detect and order more paper.",
+    "sims": {
+      "pos": 0.6847730243768053,
+      "neg": 0.48868072630241527
+    }
+  },
+  {
+    "parent": "Compute the edit distance between two strings efficiently.",
+    "relevant": "Determine the minimal count of insertions, deletions, or substitutions required to transform one sequence into another using dynamic programming.",
+    "irrelevant": "That reminds me to repaint the compute and order more paper.",
+    "sims": {
+      "pos": 0.5751860999947239,
+      "neg": 0.3853233867159486
+    }
+  },
+  {
+    "parent": "Find the first missing positive integer in an array.",
+    "relevant": "Identify the smallest positive whole number absent from the collection by rearranging elements in place to their corresponding indices, then scanning for the first mismatch.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.7274230630841926,
+      "neg": 0.40939205928512634
+    }
+  },
+  {
+    "parent": "Merge overlapping intervals in a schedule.",
+    "relevant": "Combine intersecting time spans into unified blocks.",
+    "irrelevant": "That reminds me to repaint the merge and order more paper.",
+    "sims": {
+      "pos": 0.6784507476629164,
+      "neg": 0.5268870107849178
+    }
+  },
+  {
+    "parent": "Rotate a matrix ninety degrees in place.",
+    "relevant": "Transform the square array by swapping entries across the main diagonal, then reverse each row.",
+    "irrelevant": "That reminds me to repaint the rotate and order more paper.",
+    "sims": {
+      "pos": 0.5913268154942911,
+      "neg": 0.548955215744151
+    }
+  },
+  {
+    "parent": "Find all anagrams of a word in a list.",
+    "relevant": "Locate every permutation-equivalent string within the given collection.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.5982837038848856,
+      "neg": 0.4108050578976067
+    }
+  },
+  {
+    "parent": "Implement a least-recently-used cache with constant-time ops.",
+    "relevant": "Create a fixed-capacity storage structure combining a hash map with a doubly linked list, where access promotes an entry to the front and overflow discards the tail, achieving O(1) insertion, lookup, ",
+    "irrelevant": "That reminds me to repaint the implement and order more paper.",
+    "sims": {
+      "pos": 0.5476512841583447,
+      "neg": 0.4241914464483703
+    }
+  },
+  {
+    "parent": "Find the longest palindromic substring.",
+    "relevant": "Scan every center (each index and each gap), expand outward while characters match, and track the widest span found.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.5851446243101978,
+      "neg": 0.40891413757666756
+    }
+  },
+  {
+    "parent": "Count the number of connected components in a graph.",
+    "relevant": "Determine how many separate clusters exist within a network of linked nodes.",
+    "irrelevant": "That reminds me to repaint the count and order more paper.",
+    "sims": {
+      "pos": 0.6716473834271767,
+      "neg": 0.5038118998322652
+    }
+  },
+  {
+    "parent": "Handle a spike in writes to a database without losing data.",
+    "relevant": "Absorb sudden surges in persistence traffic while guaranteeing every record survives.",
+    "irrelevant": "That reminds me to repaint the handle and order more paper.",
+    "sims": {
+      "pos": 0.660779377127157,
+      "neg": 0.4469595955127005
+    }
+  },
+  {
+    "parent": "Shard a growing dataset across machines as it outgrows one node.",
+    "relevant": "Partition an expanding corpus among multiple hosts once a single server can no longer contain it.",
+    "irrelevant": "That reminds me to repaint the shard and order more paper.",
+    "sims": {
+      "pos": 0.672560652193271,
+      "neg": 0.6137060834350944
+    }
+  },
+  {
+    "parent": "Make an API idempotent so retries are safe.",
+    "relevant": "Ensure duplicate submissions yield identical outcomes by assigning a unique token per operation and rejecting repeats.",
+    "irrelevant": "That reminds me to repaint the make and order more paper.",
+    "sims": {
+      "pos": 0.5534460539789112,
+      "neg": 0.453150260286028
+    }
+  },
+  {
+    "parent": "Reduce cold-start latency of a serverless function.",
+    "relevant": "Cut initialization delay for an on-demand cloud routine.",
+    "irrelevant": "That reminds me to repaint the reduce and order more paper.",
+    "sims": {
+      "pos": 0.6220380270263791,
+      "neg": 0.3924967251831235
+    }
+  },
+  {
+    "parent": "Prevent duplicate charge when a payment retries.",
+    "relevant": "Introduce idempotency controls so a repeated attempt cannot create a second debit.",
+    "irrelevant": "That reminds me to repaint the prevent and order more paper.",
+    "sims": {
+      "pos": 0.5822087826490715,
+      "neg": 0.5525255296651441
+    }
+  },
+  {
+    "parent": "Detect a memory leak in a long-running service.",
+    "relevant": "Continuously track resource consumption in a persistent daemon to spot unreleased allocations.",
+    "irrelevant": "That reminds me to repaint the detect and order more paper.",
+    "sims": {
+      "pos": 0.5912581576368432,
+      "neg": 0.5453286855491913
+    }
+  },
+  {
+    "parent": "Keep a leaderboard consistent across regions.",
+    "relevant": "Guarantee identical standings everywhere by synchronizing updates through a single authoritative source.",
+    "irrelevant": "That reminds me to repaint the keep and order more paper.",
+    "sims": {
+      "pos": 0.6832753306410762,
+      "neg": 0.4468134452991979
+    }
+  },
+  {
+    "parent": "Design a rate limiter that handles bursts fairly.",
+    "relevant": "Construct a throttling mechanism that distributes short spikes in traffic equitably.",
+    "irrelevant": "That reminds me to repaint the design and order more paper.",
+    "sims": {
+      "pos": 0.6956374256812561,
+      "neg": 0.4265899122297067
+    }
+  },
+  {
+    "parent": "Recover a lost file from a corrupted filesystem.",
+    "relevant": "Extract the missing document from a damaged storage structure.",
+    "irrelevant": "That reminds me to repaint the recover and order more paper.",
+    "sims": {
+      "pos": 0.7150165116840594,
+      "neg": 0.5383724519728775
+    }
+  },
+  {
+    "parent": "Compress logs while keeping them searchable.",
+    "relevant": "Shrink archives yet preserve the ability to query their contents.",
+    "irrelevant": "That reminds me to repaint the compress and order more paper.",
+    "sims": {
+      "pos": 0.6465217482126446,
+      "neg": 0.5058517204506103
+    }
+  },
+  {
+    "parent": "Explain why a recommendation engine becomes less diverse over time.",
+    "relevant": "Detail how iterative feedback loops narrow the range of suggested items.",
+    "irrelevant": "That reminds me to repaint the explain and order more paper.",
+    "sims": {
+      "pos": 0.6606901187503532,
+      "neg": 0.4636843675273548
+    }
+  },
+  {
+    "parent": "Explain how antibiotic resistance spreads in a hospital.",
+    "relevant": "Detail the mechanisms by which bacteria evade drugs and propagate among patients, staff, and equipment within medical facilities.",
+    "irrelevant": "That reminds me to repaint the explain and order more paper.",
+    "sims": {
+      "pos": 0.7878684751199139,
+      "neg": 0.47562139055330804
+    }
+  },
+  {
+    "parent": "Why does a metal feel colder than wood at the same temperature?",
+    "relevant": "Explain the disparity in thermal conductivity: the metal draws heat from your skin rapidly, while the wood does so slowly, causing a more intense sensation of chill.",
+    "irrelevant": "That reminds me to repaint the does and order more paper.",
+    "sims": {
+      "pos": 0.8529842363921045,
+      "neg": 0.41412716595298404
+    }
+  },
+  {
+    "parent": "Explain why economies of scale break down past a point.",
+    "relevant": "Describe the mechanism by which rising output eventually reverses its own cost advantages.",
+    "irrelevant": "That reminds me to repaint the explain and order more paper.",
+    "sims": {
+      "pos": 0.6858108554136786,
+      "neg": 0.47769363539278803
+    }
+  },
+  {
+    "parent": "Prove that the square root of three is irrational.",
+    "relevant": "Assume \\(\\sqrt{3} = a/b\\) with coprime integers \\(a, b\\). Then \\(a^2 = 3b^2\\), so \\(a^2\\) is divisible by 3, hence \\(a\\) is divisible by 3. Write \\(a = 3k\\). Substituting gives \\(9k^2 = 3b^2\\), so \\(b",
+    "irrelevant": "That reminds me to repaint the prove and order more paper.",
+    "sims": {
+      "pos": 0.6589247663317287,
+      "neg": 0.4565055253599869
+    }
+  },
+  {
+    "parent": "Prove that a tree with n nodes has n-1 edges.",
+    "relevant": "Demonstrate that any connected acyclic graph on \\(n\\) vertices contains exactly \\(n-1\\) links.",
+    "irrelevant": "That reminds me to repaint the prove and order more paper.",
+    "sims": {
+      "pos": 0.7094208958280808,
+      "neg": 0.39676200063238676
+    }
+  },
+  {
+    "parent": "Show that the alternating harmonic series converges.",
+    "relevant": "Demonstrate that the sum of terms with alternating signs and magnitudes equal to the reciprocals of the positive integers approaches a finite limit.",
+    "irrelevant": "That reminds me to repaint the show and order more paper.",
+    "sims": {
+      "pos": 0.7239439404450597,
+      "neg": 0.43627469472330604
+    }
+  },
+  {
+    "parent": "Prove that every finite group of prime order is cyclic.",
+    "relevant": "Show that a nontrivial element's generated subgroup must be the whole set, since its size divides the prime and exceeds one.",
+    "irrelevant": "That reminds me to repaint the prove and order more paper.",
+    "sims": {
+      "pos": 0.6287933060863204,
+      "neg": 0.46794962730457873
+    }
+  },
+  {
+    "parent": "Prove that there are infinitely many composite numbers.",
+    "relevant": "Demonstrate that an unending quantity of non-prime integers exists.",
+    "irrelevant": "That reminds me to repaint the prove and order more paper.",
+    "sims": {
+      "pos": 0.6645136118990486,
+      "neg": 0.5175682537720824
+    }
+  },
+  {
+    "parent": "Estimate the number of fish in a lake from two catches.",
+    "relevant": "Derive the total population size by applying a proportional relationship between marked and unmarked individuals found in a second sample.",
+    "irrelevant": "That reminds me to repaint the estimate and order more paper.",
+    "sims": {
+      "pos": 0.5769041999179526,
+      "neg": 0.47858514524355655
+    }
+  },
+  {
+    "parent": "Predict next quarter revenue from two years of history.",
+    "relevant": "Forecast upcoming three-month earnings using 24 months of prior figures.",
+    "irrelevant": "That reminds me to repaint the predict and order more paper.",
+    "sims": {
+      "pos": 0.7016414273234337,
+      "neg": 0.5021686065491703
+    }
+  },
+  {
+    "parent": "Estimate the time to read a dataset larger than memory.",
+    "relevant": "Approximate the duration required to process a file exceeding available RAM.",
+    "irrelevant": "That reminds me to repaint the estimate and order more paper.",
+    "sims": {
+      "pos": 0.693525030348798,
+      "neg": 0.4845277940128977
+    }
+  },
+  {
+    "parent": "Estimate the carbon footprint of a shipment from partial data.",
+    "relevant": "Infer the greenhouse gas impact of transported goods using incomplete information.",
+    "irrelevant": "That reminds me to repaint the estimate and order more paper.",
+    "sims": {
+      "pos": 0.7517282498097869,
+      "neg": 0.5310001146679496
+    }
+  },
+  {
+    "parent": "Design a low-power sensor that runs for years on a coin cell.",
+    "relevant": "Create an energy-frugal detector capable of operating for extended durations powered by a miniature button battery.",
+    "irrelevant": "That reminds me to repaint the design and order more paper.",
+    "sims": {
+      "pos": 0.7925501655194691,
+      "neg": 0.4827113088785302
+    }
+  },
+  {
+    "parent": "Design a heat sink that stays quiet and cool under load.",
+    "relevant": "Devise a thermal management component that maintains low acoustic output and restricted temperature during peak operation.",
+    "irrelevant": "That reminds me to repaint the design and order more paper.",
+    "sims": {
+      "pos": 0.6735436198241226,
+      "neg": 0.5128112689710024
+    }
+  },
+  {
+    "parent": "Design a scheduling policy that is fair under adversarial load.",
+    "relevant": "Devise an allocation rule ensuring equitable treatment despite worst-case demand.",
+    "irrelevant": "That reminds me to repaint the design and order more paper.",
+    "sims": {
+      "pos": 0.6599587843046478,
+      "neg": 0.4340399519293834
+    }
+  },
+  {
+    "parent": "Build a fault-tolerant message bus that survives node loss.",
+    "relevant": "Create a resilient communication pipeline that endures machine failures.",
+    "irrelevant": "That reminds me to repaint the build and order more paper.",
+    "sims": {
+      "pos": 0.6830479660149986,
+      "neg": 0.39585054242903384
+    }
+  },
+  {
+    "parent": "Design a low-touch onboarding flow that keeps users engaged.",
+    "relevant": "Craft a frictionless welcome sequence that sustains interest.",
+    "irrelevant": "That reminds me to repaint the design and order more paper.",
+    "sims": {
+      "pos": 0.6643630797576245,
+      "neg": 0.5242681971190065
+    }
+  },
+  {
+    "parent": "Make a bridge that spans a wide river without support columns.",
+    "relevant": "Construct a self-supporting crossing structure over a broad waterway, eliminating the need for intermediate pillars.",
+    "irrelevant": "That reminds me to repaint the make and order more paper.",
+    "sims": {
+      "pos": 0.7727087009917405,
+      "neg": 0.3754682245138098
+    }
+  },
+  {
+    "parent": "Reduce drag on a vehicle without changing its shape drastically.",
+    "relevant": "Minimize aerodynamic resistance while preserving the existing silhouette.",
+    "irrelevant": "That reminds me to repaint the reduce and order more paper.",
+    "sims": {
+      "pos": 0.6971097537025097,
+      "neg": 0.48353174226435114
+    }
+  },
+  {
+    "parent": "Find the shortest path in a maze that changes as you move.",
+    "relevant": "Determine the minimal traversal through a dynamically shifting labyrinth.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.7476273055018046,
+      "neg": 0.4266180934788593
+    }
+  },
+  {
+    "parent": "Optimize a delivery route for many stops with one vehicle.",
+    "relevant": "Determine the most efficient sequence for a single transport unit to visit numerous locations.",
+    "irrelevant": "That reminds me to repaint the optimize and order more paper.",
+    "sims": {
+      "pos": 0.7200557362776653,
+      "neg": 0.5576780008655179
+    }
+  },
+  {
+    "parent": "Choose which features to build given limited engineering time.",
+    "relevant": "Pick the capabilities with the best return for the available developer hours.",
+    "irrelevant": "That reminds me to repaint the choose and order more paper.",
+    "sims": {
+      "pos": 0.6882192621913914,
+      "neg": 0.5002646609715116
+    }
+  },
+  {
+    "parent": "Route emergency vehicles to minimize response time.",
+    "relevant": "Dispatch first responders along the quickest paths to cut arrival delays.",
+    "irrelevant": "That reminds me to repaint the route and order more paper.",
+    "sims": {
+      "pos": 0.768075135319272,
+      "neg": 0.5140130855519962
+    }
+  },
+  {
+    "parent": "Find the cheapest set of ingredients for a diet meeting targets.",
+    "relevant": "Determine the minimum-cost combination of food items whose aggregate nutritional values satisfy all specified requirements.",
+    "irrelevant": "That reminds me to repaint the find and order more paper.",
+    "sims": {
+      "pos": 0.6976053870104685,
+      "neg": 0.44144417265561264
+    }
+  },
+  {
+    "parent": "Schedule exams to avoid student conflicts.",
+    "relevant": "Allocate test times so no learner has overlapping sittings.",
+    "irrelevant": "That reminds me to repaint the schedule and order more paper.",
+    "sims": {
+      "pos": 0.7300919791951058,
+      "neg": 0.5507678073407429
+    }
+  },
+  {
+    "parent": "Diagnose why a model's accuracy drops on a new data slice.",
+    "relevant": "Identify the cause of performance degradation on an unfamiliar subset.",
+    "irrelevant": "That reminds me to repaint the diagnose and order more paper.",
+    "sims": {
+      "pos": 0.7020968278936842,
+      "neg": 0.4928173185791045
+    }
+  },
+  {
+    "parent": "Explain why a bug only appears under high concurrency.",
+    "relevant": "Identify the race condition or shared-state interference that manifests when multiple execution threads overlap.",
+    "irrelevant": "That reminds me to repaint the explain and order more paper.",
+    "sims": {
+      "pos": 0.6874447471971232,
+      "neg": 0.45536829922478184
+    }
+  }
+]

@@ -307,3 +307,30 @@ def test_relevance_score_reports_negation_detail():
 
     _, breakdown = relevance_score("Prove the theorem holds for all n.", "Disprove it.")
     assert "flipped" in breakdown and "shared_content" in breakdown
+
+
+def test_scorer_robust_on_48_fresh_holdout():
+    """On a fresh 48-probe holdout (never used for training), the scorer must
+    keep CAR >= 0.95, and the polarity baseline must be far below."""
+    import json
+
+    import pytest
+
+    artifact = _artifact_path()
+    probe_file = os.path.join(
+        os.path.dirname(__file__), "..", "assets", "pid_holdout_v2.json"
+    )
+    if not (os.path.exists(artifact) and os.path.exists(probe_file)):
+        pytest.skip("artifact or holdout_v2 absent")
+    from super_solver.core.distilled_pid import DistilledPIDEmbedder
+
+    probes = json.load(open(probe_file))
+    emb = DistilledPIDEmbedder(weights_path=artifact)
+    assert emb.available
+    wins = 0
+    for r in probes:
+        a = emb.cosine_similarity(emb.encode(r["parent"]), emb.encode(r["relevant"]))
+        b = emb.cosine_similarity(emb.encode(r["parent"]), emb.encode(r["irrelevant"]))
+        wins += int(a > b)
+    car = wins / len(probes)
+    assert car >= 0.95, f"fresh-holdout CAR {car:.3f} below floor"

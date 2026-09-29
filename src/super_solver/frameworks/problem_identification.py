@@ -466,19 +466,15 @@ def _antonym_flip(parent: str, child: str) -> bool:
 
 
 def _negation_cues(text: str) -> Set[str]:
-    """Return the SET of negation cue words present in text.
+    """Return the SET of explicit negation cue words present in text.
 
-    Word-boundary matching avoids prefix false positives such as 'induction'
-    matching a naive 'in-' rule.
+    Whole-word markers only. The morphological-prefix heuristic ('un-', 'non-',
+    'dis-') was REMOVED: it false-positived on technical terms like
+    'nontrivial', 'nonlinear', 'distributed' and wrongly penalized correct
+    paraphrases. Explicit negators plus the antonym table cover the real cases.
     """
     words = re.findall(r"[a-z']+", text.lower())
-    cues: Set[str] = {w for w in words if w in _NEGATION_MARKERS}
-    for w in words:
-        for p in ("un", "dis", "anti", "non"):
-            if w.startswith(p) and len(w) > len(p) + 4:
-                cues.add(w)
-                break
-    return cues
+    return {w for w in words if w in _NEGATION_MARKERS}
 
 
 def _negation_count(text: str) -> int:
