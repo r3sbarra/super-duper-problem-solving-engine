@@ -23,7 +23,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from super_solver.frameworks.problem_identification import (
     decompose,
     identify_problem,
-    relevance_score,
 )
 
 # (bucket, parent, gold_type)

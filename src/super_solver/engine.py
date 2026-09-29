@@ -11,7 +11,9 @@ if TYPE_CHECKING:
 import numpy as np
 
 from super_solver.core.embeddings import embedding_service
+from super_solver.core.llm_parser import llm_client
 from super_solver.core.smt_solver import SMTResult, smt_solver
+from super_solver.core.tool_registry import ToolRegistry, default_tool_registry
 from super_solver.core.types import (
     CrucialExperiment,
     DiscoveryPath,
@@ -24,6 +26,8 @@ from super_solver.core.types import (
     ReasoningStep,
     SuggestedPath,
 )
+from super_solver.frameworks.code_synthesizer import CodeSynthesizer, SynthesisResult
+from super_solver.frameworks.diagnostician import AutomatedDiagnostician, DiagnosticReport
 from super_solver.frameworks.gentner_sme import StructureMappingEngine
 from super_solver.frameworks.kepner_tregoe import KepnerTregoeEngine
 from super_solver.frameworks.math_verification import LakatosProofVerificationEngine
@@ -50,10 +54,6 @@ from super_solver.meta.self_improvement import SelfImprovementController
 from super_solver.search.curiosity import CuriosityEngine
 from super_solver.search.mcts_prm import LatentMCTSEngine, ProcessRewardModel
 from super_solver.search.negative_manifold import NegativeManifoldRepulsor
-from super_solver.core.llm_parser import llm_client
-from super_solver.core.tool_registry import ToolRegistry, default_tool_registry
-from super_solver.frameworks.code_synthesizer import CodeSynthesizer, SynthesisResult
-from super_solver.frameworks.diagnostician import AutomatedDiagnostician, DiagnosticReport
 
 
 class SuperDuperProblemSolvingEngine:

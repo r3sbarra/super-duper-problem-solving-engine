@@ -14,7 +14,6 @@ import os
 import statistics
 
 from super_solver.frameworks.problem_identification import (
-    PROBLEM_TYPES,
     decompose,
     identify_problem,
     relevance_score,

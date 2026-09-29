@@ -67,7 +67,7 @@ _STOP: Set[str] = {
 # original anchor extraction ("rapid", "causes", "find", "test").
 _GENERIC: Set[str] = {
     "find", "test", "use", "used", "using", "make", "made", "get", "give",
-    "take", "want", "need", "want", "help", "improve", "increase", "decrease",
+    "take", "want", "need", "help", "improve", "increase", "decrease",
     "reduce", "causes", "cause", "caused", "leads", "lead", "result",
     "results", "rapid", "rapidly", "slow", "slowly", "fast", "quick",
     "quickly", "big", "large", "small", "little", "many", "much", "new",
@@ -185,8 +185,7 @@ def _noun_phrases(text: str, max_phrases: int = 6) -> List[str]:
     """
     # Connectives that end a noun phrase rather than continue it.
     _TAIL_BREAK = {
-        "while", "without", "and", "or", "that", "which", "without",
-        "where", "when", "so", "but", "because", "if", "then", "to",
+        "while", "without", "and", "or", "that", "which", "where", "when", "so", "but", "because", "if", "then", "to",
         "than", "as", "under", "over", "between", "during", "after",
         "before", "within", "despite", "for", "with", "of", "in", "on",
         "into", "from", "by", "at",
@@ -366,7 +365,6 @@ def _is_vague(text: str, entities: List[str]) -> bool:
     Vague problems should be flagged so the pipeline emits CLARIFICATION angles
     instead of pretending to decompose a phantom objective.
     """
-    low = text.lower()
     tokens = _content_tokens(text)
     # Placeholder / non-referential words that carry no problem content.
     _PLACEHOLDER = {
@@ -999,7 +997,7 @@ def decompose(
         v = embedding_service.encode(s.text)
         toks = _distinctive_tokens(s.text)
         redundant = False
-        for kv, kt in zip(kept_vecs, kept_tokens):
+        for kv, kt in zip(kept_vecs, kept_tokens, strict=False):
             cos = embedding_service.cosine_similarity(v, kv)
             tok_jac = (
                 len(toks & kt) / len(toks | kt) if (toks | kt) else 0.0
