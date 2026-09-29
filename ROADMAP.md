@@ -68,6 +68,30 @@ MCP wiring bugs.
 8. KT autonomous candidate-cause generation; 3 MCP wiring bugs fixed.
 9. Self-audit crash fixed.
 
+## Recursive self-application (the engine reviewing itself)
+
+`scripts/recursive_self_review.py` runs the engine's OWN machinery on its own
+measured weakness (introspected from the committed artifacts, not hand-fed).
+It exposed two real limitations and one closed loop:
+
+1. **The crucible is a sanity filter, not an option ranker.** `run_tournament`
+   passes ALL good-faith engineering proposals at 1.00 (including 'leave it
+   as-is'); it only falsifies flawed math / self-contradictions. Option ranking
+   must use the Pareto resolver. Locked in by `tests/test_recursive_self_review.py`.
+2. **Retrieval was corpus-bound** — the primitive matcher returned nothing for
+   the engine's own abstract meta-problem (empty primitives).
+3. **Closed loop:** acting on (2) — adding a meta-engineering domain (5 action
+   primitives + `object_engine` + 6 solutions) — the engine now retrieves its
+   OWN needed fix ('add a solution-synthesis stage') at overlap 0.678, verified
+   by `scripts/verify_recursive_loop.py`. The self-review now yields an
+   actionable answer about itself.
+4. Also fixed a real bug the review surfaced: the vector index accumulated up to
+   8× duplicate rows; `add()` now derives a deterministic id from
+   (kind, content), so retrieval returns distinct analogs.
+
+---
+
+
 ---
 
 ## 1. Roadmap structure
