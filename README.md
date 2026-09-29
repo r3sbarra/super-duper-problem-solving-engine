@@ -348,6 +348,51 @@ If the endpoint is disabled, unreachable, or times out, the engine **instantly f
 
 ---
 
+## 6b. Problem Identification & Decomposition Ranking
+
+The engine includes a principled **problem-identification + structured
+decomposition** pipeline (`super_solver.frameworks.problem_identification`):
+`identify_problem()` types the problem (optimization / proof / search /
+estimation / design / diagnosis / explanation) and extracts entities, givens,
+unknowns, constraints, goal and success criteria; `decompose()` generates
+subproblems **anchored on those slots** (relevance by construction) and
+ranks with redundancy suppression. This replaced the earlier generic-template
+fill that produced semantically vacuous subproblems.
+
+### Optional semantic relevance scorer
+
+The default deterministic hashing embedder cannot rank a **zero-surface-overlap
+paraphrase** above an off-topic lexical distractor (measured correct-above-
+irrelevant rate, CAR, on an 8-item held-out probe set: polarity **0.750**).
+Two optional backends recover paraphrase-level relevance:
+
+| Backend | CAR | Needs daemon? |
+| :--- | :--- | :--- |
+| polarity (default) | 0.750 | no |
+| `distilled_pid` (offline, committed artifact) | **1.000** | **no** |
+| `ollama` (`nomic-embed-text`) | **1.000** | yes |
+
+The `distilled_pid` student is a deterministic hashed-n-gram + bilinear model
+distilled from `nomic-embed-text` on 58 disjoint training parents
+(`assets/distilled_pid_large.npz`). Enable either backend with:
+
+```bash
+# Offline distilled student (no daemon, deterministic) — recommended
+export SUPER_SOLVER_SEMANTIC_SCORER=1
+export SUPER_SOLVER_SEMANTIC_EMBEDDER=distilled_pid
+
+# OR the nomic-embed-text teacher
+# export SUPER_SOLVER_SEMANTIC_EMBEDDER=ollama
+```
+
+When the scorer is off (default) the engine keeps the zero-daemon polarity path.
+With a semantic backend available, the polarity cosine and lexical overlap are
+demoted to a tiny tie-break, because they are proven anti-signals for
+zero-overlap paraphrases. Verify/regenerate the artifact with
+`python scripts/build_distilled_pid_embedder.py --verify|--train`.
+
+---
+
 ## 7. Capabilities, Scope & Limitations Disclaimer
 
 To maintain scientific rigor and clear engineering expectations:

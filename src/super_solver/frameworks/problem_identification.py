@@ -374,9 +374,18 @@ def _semantic_backend():
         _SEMANTIC_STATE["backend"] = None
         return None
     try:
+        name = os.getenv("SUPER_SOLVER_SEMANTIC_EMBEDDER", "ollama")
+        if name == "distilled_pid":
+            from super_solver.core.distilled_pid import DistilledPIDEmbedder
+
+            backend = DistilledPIDEmbedder()
+            if not backend.available:
+                _SEMANTIC_STATE["backend"] = None
+                return None
+            _SEMANTIC_STATE["backend"] = backend
+            return backend
         from super_solver.core.embedder import get_backend
 
-        name = os.getenv("SUPER_SOLVER_SEMANTIC_EMBEDDER", "ollama")
         backend = get_backend(name)
         # Probe reachability with a tiny encode; OllamaBackend falls back to
         # hashing on failure, so verify it actually returned a semantic vector

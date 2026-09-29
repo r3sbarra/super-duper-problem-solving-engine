@@ -10,6 +10,7 @@ Regression guard for the fixes to super_solver.frameworks.problem_identification
 """
 from __future__ import annotations
 
+import os
 import statistics
 
 from super_solver.frameworks.problem_identification import (
@@ -170,3 +171,56 @@ def test_semantic_scorer_flag_without_daemon_falls_back(monkeypatch):
     assert score == score  # not NaN
     assert isinstance(breakdown, dict)
     importlib.reload(pid)
+
+
+# --- Offline distilled embedder (artifact-gated) ------------------------------
+
+def _artifact_path():
+    import os
+
+    return os.path.join(
+        os.path.dirname(__file__), "..", "assets", "distilled_pid_large.npz"
+    )
+
+
+def test_distilled_pid_embedder_breaks_paraphrase_ceiling():
+    """The committed offline artifact must rank correct paraphrases above
+    distractors (CAR >= 0.875). Skips if the artifact is absent."""
+    import pytest
+
+    if not os.path.exists(_artifact_path()):
+        pytest.skip("distilled_pid artifact not present")
+    from super_solver.core.distilled_pid import DistilledPIDEmbedder
+
+    e = DistilledPIDEmbedder(weights_path=_artifact_path())
+    assert e.available
+    probes = [
+        ("Shortest-path routing for a delivery fleet under time-window constraints.",
+         "Model the road network as a weighted graph and relax edges",
+         "Paint the delivery van blue"),
+        ("Prove that the sum of the first n odd numbers equals n squared.",
+         "Use induction, pairing each new odd number with a growing square",
+         "Book a flight to Berlin"),
+        ("Design a scheme so a message is processed exactly once despite retries.",
+         "Attach a unique id and deduplicate on the receiver side",
+         "Water the office plants"),
+    ]
+    wins = 0
+    for parent, rel, irr in probes:
+        r = e.cosine_similarity(e.encode(parent), e.encode(rel))
+        i = e.cosine_similarity(e.encode(parent), e.encode(irr))
+        wins += int(r > i)
+    assert wins == len(probes), f"distilled embedder CAR {wins}/{len(probes)}"
+
+
+def test_distilled_pid_is_deterministic():
+    import pytest
+
+    if not os.path.exists(_artifact_path()):
+        pytest.skip("distilled_pid artifact not present")
+    from super_solver.core.distilled_pid import DistilledPIDEmbedder
+
+    a = DistilledPIDEmbedder(weights_path=_artifact_path())
+    b = DistilledPIDEmbedder(weights_path=_artifact_path())
+    s = "routing a fleet under time windows"
+    assert list(a.encode(s)) == list(b.encode(s))
