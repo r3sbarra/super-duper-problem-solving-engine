@@ -35,8 +35,18 @@ class PolyaHeuristicsEngine:
 
         sub_scores = []
         for sub in known_subproblems:
-            v_sub = embedding_service.encode(sub)
-            relevance = embedding_service.cosine_similarity(v_prob, v_sub)
+            # Use the calibrated relevance scorer from the principled pipeline
+            # (semantic + lexical, with the optional semantic embedder), not a
+            # bare cosine, which was measured at near-chance on paraphrases.
+            try:
+                from super_solver.frameworks.problem_identification import (
+                    relevance_score as _rel,
+                )
+
+                relevance, _ = _rel(problem_specification, sub)
+            except Exception:
+                v_sub = embedding_service.encode(sub)
+                relevance = embedding_service.cosine_similarity(v_prob, v_sub)
             sub_scores.append(
                 {
                     "subproblem": sub,
