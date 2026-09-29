@@ -71,3 +71,34 @@ def test_entities_are_specific_not_clause_merged():
     for e in struct.entities:
         # no entity should be longer than 3 words (clause merge guard)
         assert len(e.split()) <= 3, f"entity too long (clause merge): {e!r}"
+
+
+def test_multi_goal_problem_is_split_into_objectives():
+    """A multi-objective problem yields one decomposition per objective."""
+    spec = "Minimize latency AND cost AND carbon footprint for a global API."
+    struct = identify_problem(spec)
+    assert len(struct.objectives) >= 2, f"objectives not detected: {struct.objectives}"
+    out = decompose(spec)
+    assert any(
+        s.get("target_slot", "").startswith("objective:")
+        for s in out["subproblems"]
+    ), "no per-objective subproblem produced"
+
+
+def test_vague_problem_yields_clarification_angles():
+    """An ill-posed ask is flagged and yields clarification angles."""
+    out = decompose("Make it better.")
+    assert out["structure"]["is_vague"] is True
+    gen = [s for s in out["subproblems"] if s.get("is_new", True)]
+    assert any(s.get("heuristic") == "clarification" for s in gen)
+    # Must NOT emit a type-specific angle that merely echoes the vague goal.
+    assert not any("Formulate the objective function" in s["subproblem"] for s in gen)
+
+
+def test_well_posed_problem_not_flagged_vague():
+    for spec in [
+        "Shortest-path routing for a delivery fleet under time-window constraints.",
+        "Prove there are infinitely many primes.",
+        "Design a scheme so a message is processed exactly once despite retries.",
+    ]:
+        assert identify_problem(spec).is_vague is False, f"false vague flag: {spec}"

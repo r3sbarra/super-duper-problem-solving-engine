@@ -116,7 +116,7 @@ def test_redundancy_suppression_keeps_distinct_angles():
 
 
 def test_decompose_is_robust_to_adversarial_inputs():
-    """Empty / degenerate / clause-heavy inputs must not crash and must degrade."""
+    """Empty / degenerate inputs must not crash; vague inputs must be FLAGGED."""
     for spec, title in [
         ("", ""),
         ("   ", ""),
@@ -125,8 +125,13 @@ def test_decompose_is_robust_to_adversarial_inputs():
     ]:
         out = decompose(spec, title)
         assert "structure" in out and "subproblems" in out
-        # Degenerate input must not claim high slot coverage.
-        assert out["metrics"]["slot_coverage"] <= 0.6
+    # A genuinely vague ask is flagged, and yields clarification angles rather
+    # than pretending to decompose a phantom objective.
+    out = decompose("Make it better.")
+    assert out["structure"]["is_vague"] is True
+    assert any(
+        s.get("heuristic") == "clarification" for s in out["subproblems"]
+    )
 
 
 def test_entities_do_not_absorb_subordinate_clauses():

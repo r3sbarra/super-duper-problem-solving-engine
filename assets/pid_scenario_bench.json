@@ -55,6 +55,16 @@
     "gold_type": "design"
   },
   {
+    "bucket": "multi-goal",
+    "parent": "Build a battery that is lighter, charges faster, and lasts longer.",
+    "gold_type": "optimization"
+  },
+  {
+    "bucket": "multi-goal",
+    "parent": "Design a drone that flies longer, carries more, and stays quiet.",
+    "gold_type": "design"
+  },
+  {
     "bucket": "ill-posed",
     "parent": "Make it better.",
     "gold_type": "explanation"

@@ -259,6 +259,8 @@ class ProblemStructure:
     goal: str
     success_criteria: List[str]
     type_confidences: Dict[str, float] = field(default_factory=dict)
+    objectives: List[str] = field(default_factory=list)
+    is_vague: bool = False
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -271,6 +273,9 @@ class ProblemStructure:
             "goal": self.goal,
             "success_criteria": list(self.success_criteria),
             "type_confidences": dict(self.type_confidences),
+            "objectives": list(self.objectives),
+            "is_vague": bool(self.is_vague),
+            "multi_goal": len(self.objectives) >= 2,
         }
 
 
@@ -303,6 +308,81 @@ def _score_types(text_low: str) -> Dict[str, float]:
         else:
             scores["optimization"] = 0.4
     return scores
+
+
+def _split_objectives(text: str) -> List[str]:
+    """Split a multi-objective goal into its component objectives.
+
+    Detects conjunction-joined directives such as 'Minimize latency AND cost AND
+    carbon footprint' or 'Detect fraud, reduce false positives, and keep the
+    model explainable' and returns each objective as a standalone clause. This
+    is what makes a multi-goal problem yield ONE decomposition per objective
+    instead of a single mushy goal.
+
+    Returns [] when the problem has a single objective (nothing to split).
+    """
+    # Split on coordinating conjunctions that join clauses/objectives.
+    # Protect the common 'X and Y' noun pairs by requiring a directive verb or a
+    # comma to justify a split.
+    _DIRECTIVE = (
+        "minimize", "maximize", "reduce", "increase", "improve", "detect",
+        "keep", "ensure", "lower", "raise", "cut", "speed", "shorten",
+        "boost", "eliminate", "prevent", "avoid", "maintain", "preserve",
+        "optimize", "balance", "raise", "grow", "shrink", "make", "build",
+        "design", "achieve", "guarantee", "support", "handle",
+    )
+    low = text.lower()
+    # 'X and Y' inside an explicit trade-off / comparison frame is ONE objective,
+    # not two: 'optimize the trade-off between energy density and charge speed'.
+    if re.search(r"\b(trade[- ]?off|tradeoff|balance|between|versus|vs|compare)\b", low):
+        return []
+    # Normalize separators: ', and ' / ' and ' / '; ' / ' plus '
+    parts = re.split(r"\s*(?:,\s*and\s+|\s+and\s+|;\s*|\s+plus\s+)\s*", low)
+    parts = [p.strip(" .") for p in parts if p.strip(" .")]
+    if len(parts) < 2:
+        return []
+    # Count parts that contain a directive verb.
+    directive_parts = [p for p in parts if any(v in p for v in _DIRECTIVE)]
+    if len(directive_parts) >= 2:
+        return directive_parts
+    # Single directive + >=2 bare conjuncts (e.g. 'Minimize latency and cost and
+    # carbon footprint'): the bare conjuncts are still objectives of a
+    # multi-objective problem, so return the directive plus the bare measures
+    # that look like quantities (short noun phrases, not clauses).
+    if len(directive_parts) == 1 and len(parts) >= 2:
+        bare = [p for p in parts if p not in directive_parts]
+        # Accept the directive plus the remaining conjuncts as objectives when
+        # at least one bare measure exists. A trailing qualifier ('... for a
+        # global API') is fine; we keep it as part of the last objective.
+        if bare:
+            return directive_parts + bare
+    return []
+
+
+def _is_vague(text: str, entities: List[str]) -> bool:
+    """Heuristic: a problem is ill-posed when it names few/no concrete entities
+    and is very short, or uses only placeholder words.
+
+    Vague problems should be flagged so the pipeline emits CLARIFICATION angles
+    instead of pretending to decompose a phantom objective.
+    """
+    low = text.lower()
+    tokens = _content_tokens(text)
+    # Placeholder / non-referential words that carry no problem content.
+    _PLACEHOLDER = {
+        "stuff", "things", "everything", "something", "anything", "it",
+        "better", "worse", "good", "bad", "nice", "improve", "fix",
+    }
+    substantive = [t for t in tokens if t not in _PLACEHOLDER]
+    concrete_entities = [e for e in entities if len(e.split()) >= 1]
+    if len(substantive) <= 2:
+        return True
+    if not concrete_entities and len(substantive) <= 4:
+        return True
+    # Only-placeholder content (e.g. 'make it better', 'fix everything').
+    if substantive and all(t in _PLACEHOLDER for t in substantive):
+        return True
+    return False
 
 
 def identify_problem(specification: str, title: str = "") -> ProblemStructure:
@@ -379,6 +459,8 @@ def identify_problem(specification: str, title: str = "") -> ProblemStructure:
         goal=goal,
         success_criteria=success_criteria,
         type_confidences=type_conf,
+        objectives=_split_objectives(goal or specification),
+        is_vague=_is_vague(specification or title, entities),
     )
 
 
@@ -654,17 +736,21 @@ def anchored_relevance(structure: "ProblemStructure", slot: str) -> float:
         "constraint": 0.85,
         "unknown": 0.80,
         "given": 0.55,
+        # Clarification angles gate a vague problem: everything downstream is
+        # meaningless until the objective is pinned down, so they rank first.
+        "clarification": 1.0,
     }
     if slot.startswith("entity:"):
         return 0.70
+    if slot.startswith("objective:"):
+        # Each objective of a multi-goal problem is as important as the whole
+        # goal: decomposing them separately is the point.
+        return 1.0
     return base.get(slot, 0.6)
 
 
 def _distinctive_tokens(text: str) -> Set[str]:
-    return set(_content_tokens(text))
-
-
-# ---------------------------------------------------------------------------
+    return set(_content_tokens(text))# ---------------------------------------------------------------------------
 # Structured decomposition
 # ---------------------------------------------------------------------------
 
@@ -702,8 +788,53 @@ def _candidate_subproblems(structure: ProblemStructure) -> List[Tuple[str, str, 
     constraints = structure.constraints
     unknowns = structure.unknowns
 
+    # --- Ill-posed handling: emit CLARIFICATION angles instead of pretending
+    #     to decompose a phantom objective. These come first (they gate
+    #     everything else), and are relevance-anchored to the goal slot.
+    if structure.is_vague:
+        out.append((
+            "Clarify the objective: what observable outcome defines success, "
+            "and against what baseline is 'better' measured?",
+            "clarification", "goal",
+        ))
+        out.append((
+            "Identify the concrete system, artifact, or quantity the problem "
+            "is actually about; name the specific components involved.",
+            "clarification", "entity",
+        ))
+        out.append((
+            "Surface the hidden constraints: budget, deadline, and the "
+            "trade-off that must not be sacrificed.",
+            "clarification", "constraint",
+        ))
+        out.append((
+            "Define a measurable baseline and target so progress can be "
+            "evaluated and falsified.",
+            "clarification", "success_criterion",
+        ))
+
+    # --- Multi-goal handling: one objective-level decomposition per objective,
+    #     so a multi-objective problem yields one angle per objective instead
+    #     of a single mushy goal. Skipped for vague problems, where the
+    #     'objectives' are just placeholder noise.
+    if not structure.is_vague:
+        for obj in structure.objectives:
+            out.append((
+                f"Optimize objective '{obj}' on its own: characterize its own "
+                f"optimum ignoring the other objectives, as a baseline.",
+                "multi_objective", f"objective:{obj}",
+            ))
+            out.append((
+                f"Identify the trade-off between '{obj}' and the other objectives "
+                f"and quantify the Pareto frontier.",
+                "multi_objective", f"objective:{obj}",
+            ))
+
     # --- Goal decomposition (divide & conquer on the objective) ---
-    if goal:
+    # Skipped for vague problems: echoing an undefined objective ('Make it
+    # better.') produces spurious subproblems. Clarification angles above do the
+    # real work until the objective is pinned down.
+    if goal and not structure.is_vague:
         out.append((
             f"Decompose the objective '{goal}' into independent sub-goals whose "
             f"joint satisfaction implies the objective.",
@@ -764,7 +895,10 @@ def _candidate_subproblems(structure: ProblemStructure) -> List[Tuple[str, str, 
             "counterexample_search", "success_criterion",
         ))
 
-    # --- Type-specific heuristic ---
+    # --- Type-specific heuristic (skipped when vague: a type-specific angle
+    #     on an undefined objective just echoes the vagueness) ---
+    if structure.is_vague:
+        return out
     if structure.problem_type == "optimization":
         out.append((
             f"Formulate the objective function and feasible region for "
@@ -816,12 +950,20 @@ def decompose(
 
     # Rank generated candidates by relevance-by-construction (slot importance),
     # blended with a light semantic term for tie-breaking among equal slots.
+    # Clarification angles (vague problems) and per-objective angles (multi-goal
+    # problems) get a small PRIORITY boost so they sort above the generic goal
+    # angles they are meant to gate/expand — otherwise the goal angles, which
+    # embed the goal text verbatim, win the semantic tie-break and crowd them
+    # out of the top-k.
+    _PRIORITY_SLOTS = {"clarification", "objective"}
     scored: List[Subproblem] = []
     for text, heuristic, slot in candidates:
         anchor_rel = anchored_relevance(structure, slot)
         sem, breakdown = relevance_score(parent, text)
-        rel = min(1.0, 0.75 * anchor_rel + 0.25 * sem)
-        breakdown = {"anchor": float(anchor_rel), **breakdown}
+        kind = slot.split(":")[0]
+        boost = 0.06 if kind in _PRIORITY_SLOTS else 0.0
+        rel = min(1.0, 0.75 * anchor_rel + 0.25 * sem + boost)
+        breakdown = {"anchor": float(anchor_rel), "priority_boost": boost, **breakdown}
         scored.append(Subproblem(
             text=text, heuristic=heuristic, target_slot=slot,
             relevance=rel, is_new=text not in known, breakdown=breakdown,
@@ -878,7 +1020,8 @@ def decompose(
     old_kept = [s for s in kept if not s.is_new]
 
     present_slot_kinds = []
-    for kind in ("goal", "constraint", "unknown", "entity", "success_criterion"):
+    for kind in ("goal", "constraint", "unknown", "entity", "success_criterion",
+                 "objective"):
         if any(s.target_slot.split(":")[0] == kind for s in new_all):
             present_slot_kinds.append(kind)
 
@@ -908,6 +1051,10 @@ def decompose(
     slots_present = {s.target_slot.split(":")[0] for s in new_kept}
     expected_slots = {"goal", "constraint", "unknown", "entity",
                       "success_criterion"}
+    # Vague problems legitimately cover different slots than well-posed ones
+    # (clarification instead of entity/unknown); don't penalise that.
+    if structure.is_vague:
+        expected_slots = {"goal", "constraint", "success_criterion"}
     covered = len(slots_present & expected_slots)
 
     return {

@@ -51,6 +51,8 @@ SCENARIOS = [
     # --- multi-goal ---
     ("multi-goal", "Minimize latency AND cost AND carbon footprint for a global API.", "optimization"),
     ("multi-goal", "Detect fraud, reduce false positives, and keep the model explainable to auditors.", "design"),
+    ("multi-goal", "Build a battery that is lighter, charges faster, and lasts longer.", "optimization"),
+    ("multi-goal", "Design a drone that flies longer, carries more, and stays quiet.", "design"),
     # --- ill-posed ---
     ("ill-posed", "Make it better.", "explanation"),
     ("ill-posed", "Why is everything broken?", "diagnosis"),
