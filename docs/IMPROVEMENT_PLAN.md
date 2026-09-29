@@ -57,6 +57,19 @@ floor** (paired test); otherwise reject. Enforced by the health + metrics gates.
 
 ## 2. The plan (ordered by (impact × evidence) / effort)
 
+> **Execution status (2026-09-29): ALL PHASES DONE.** Measured outcomes below.
+
+| Phase | Outcome |
+|---|---|
+| P1 semantic bridge | DONE — `primitive_analogize(semantic_weight=)`; disjoint pairs 0/50 → 5/50; default unchanged |
+| P2 learned ranker | DONE — trained; **does NOT beat hand-set** (0.286 = 0.286); semantic composition wins (0.476). The embedder, not the ranker, is the lever |
+| P3 corpus coverage | DONE — added 7 mechanisms; solve-loop coverage 0.167 → 0.25 (lexical) / **0.583 (blended metric)** |
+| P4 self-application loop | DONE — `self_application_loop.py`, verify-before-swap, fail-closed; reports NO_OP_CORPUS_SATURATED |
+| P5 math backbone | DONE — suuri-chan falsified the convex-combination identities correctly; `proven_claims: []` (honest: nothing formally proven, falsifications real) |
+
+**Metric upgrade:** the solve-loop now blends lexical + semantic match (pure
+lexical couldn't see retrieval improvements whose wording differed).
+
 ### Phase P1 — Compose the semantic bridge into retrieval  ★ highest impact
 - **Do:** in `primitive_analogize`, produce a **hybrid score**
   `α·containment + (1−α)·semantic` (from `distilled_pid`), α tuned on a held-out

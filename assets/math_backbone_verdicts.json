@@ -1,0 +1,28 @@
+{
+  "tool": "suuri-chan",
+  "role": "exact falsifier / symbolic checker",
+  "honesty_note": "INCONCLUSIVE is treated as 'no evidence', never as proven.",
+  "verdicts": {
+    "C1_convex_combination_neq_input": {
+      "claim": "0.6*x + 0.4*y == x",
+      "suuri_verdict": "FALSIFIED",
+      "interpretation": "correct: a convex combination lies between its inputs, so composition never exceeds the best component \u2014 it can only combine strengths."
+    },
+    "C2_half_sum_neq_sum": {
+      "claim": "0.5*x + 0.5*y == x + y",
+      "suuri_verdict": "FALSIFIED",
+      "interpretation": "correct."
+    },
+    "C3_containment_zero_on_disjoint": {
+      "claim": "containment(T,S)=|T\u2229S|/|T| == 0 when T\u2229S=\u2205",
+      "suuri_verdict": "TRUE_TRIVIAL",
+      "interpretation": "by definition of set intersection; no re-weighting changes it."
+    },
+    "C4_min_identity": {
+      "claim": "min(x,y) == 0.5x+0.5y+|0.5x-0.5y|",
+      "suuri_verdict": "INCONCLUSIVE",
+      "interpretation": "abs/min not parseable by suuri-chan; it correctly fails closed with INCONCLUSIVE rather than a false 'proven'."
+    }
+  },
+  "proven_claims": []
+}
