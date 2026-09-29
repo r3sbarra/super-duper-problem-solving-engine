@@ -78,7 +78,7 @@
     {
       "subsystem": "latent.coconut.bfs",
       "status": "OK",
-      "detail": "[[('add_cache', array([-8.19172635e-03,  1.25453212e-02,  1.39016274e-01,  2.21971948e-02,\n        1.33929298e-02, -4.05707642e-03, -9.88851461e-03,  "
+      "detail": "[[('add_cache', array([-1.67490131e-02, -1.76279175e-02,  1.47000169e-01,  4.78339286e-03,\n       -2.08827008e-02, -7.37374118e-03, -4.34554729e-02,  "
     },
     {
       "subsystem": "latent.dot.denoise",
@@ -118,7 +118,7 @@
     {
       "subsystem": "meta.self_diagnostic",
       "status": "OK",
-      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 0.9799296926160863, "
+      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 1.2824034713039139, "
     },
     {
       "subsystem": "memory.consolidate",

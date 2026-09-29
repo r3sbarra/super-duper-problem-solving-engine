@@ -26,6 +26,33 @@ from typing import Dict, List
 # gets matched against a new problem; the solution_direction is the concrete
 # design/material/mechanism that resolved it.
 DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
+    # --- Meta-engineering / self-improvement (added after the recursive
+    #     self-review showed the corpus had NO vocabulary for the engine's own
+    #     class of problem, so it could not retrieve a solution for itself) ---
+    {
+        "problem_context": "a decomposer produces generic subproblems that do not lead to solved problems",
+        "solution_direction": "Add a solution-synthesis stage that proposes a concrete mechanism for each subproblem, then close the loop with whole-problem solution retrieval",
+    },
+    {
+        "problem_context": "retrieval cannot find a solution for an abstract or meta problem outside the corpus",
+        "solution_direction": "Expand the vector corpus with solution ideas for the missing domain so retrieval generalizes beyond hand-authored cases",
+    },
+    {
+        "problem_context": "several competing design proposals must be chosen between",
+        "solution_direction": "Rank the options on impact, effort and regression risk with a multi-objective Pareto resolver instead of a pass/fail filter",
+    },
+    {
+        "problem_context": "a subsystem passes every input and cannot discriminate good from bad",
+        "solution_direction": "Add a discriminative check that the output varies across a known-good/known-bad pair, not just that it runs",
+    },
+    {
+        "problem_context": "a component silently returns an empty or constant result",
+        "solution_direction": "Fail closed with an explicit empty-result sentinel and a degeneracy guard so the caller never trusts a coin-flip",
+    },
+    {
+        "problem_context": "an engine should improve its own reasoning substrate",
+        "solution_direction": "Run a recursive self-review: introspect measured weaknesses, frame them as a problem, and feed them back through the engine's own machinery",
+    },
     # --- Materials / structural ---
     {
         "problem_context": "make a dense material float or reduce its weight while keeping strength",

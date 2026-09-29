@@ -145,6 +145,13 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"rolling baseline|deviate.*threshold|drift.*normal|metric.*out of range", "baseline_monitoring"),
     (r"blue-green|canary|deploy.*without downtime|fraction.*traffic|new version.*risk", "canary_deploy"),
     (r"root cause|intermittent|hard to reproduce|structured logging|tracing|reconstruct.*evidence|only happens sometimes|figure out where", "root_cause_tracing"),
+    # --- meta-engineering / self-improvement ---
+    (r"decompos\w*.*(solution|solve)|lead to solved|close the loop|end.to.end.*solv|solution.synthesis|synthesis stage", "solution_synthesis"),
+    (r"retriev\w*.*(solution|mechanism|analog)|whole.problem.*retriev|candidate solutions", "solution_retrieval"),
+    (r"expand.*corpus|enrich.*corpus|more training|widen.*coverage|generaliz", "corpus_expansion"),
+    (r"rank.*(option|proposal|candidate)|score.*alternative|pareto|trade.?off.*rank|multi.?objective", "option_ranking"),
+    (r"self.review|self.audit|recursive|introspect|apply.*to itself|improve (the|its) (engine|itself)", "self_review"),
+    (r"fail.?closed|fail.?safe|sanity.?filter|guard(rail)?|invariant.*check|regression.?guard", "robustness_guard"),
 ]
 
 # Object-type primitives: what kind of thing the problem is about.
@@ -164,6 +171,7 @@ OBJECT_PRIMITIVES: List[tuple] = [
     (r"server|node|replica|cluster|network|traffic|load balancer|queue|message|distributed", "object_infra"),
     (r"user|request|access|permission|password|credential|attack|threat|intrusion", "object_security"),
     (r"data|dataset|schema|query|index|metric|log|pipeline|backup|deploy|version", "object_data"),
+    (r"engine|reasoning|decompos|retriev|corpus|primitive|pipeline|agent|solver|self.improvement|meta", "object_engine"),
 ]
 
 
