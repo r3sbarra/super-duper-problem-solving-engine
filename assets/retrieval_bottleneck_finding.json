@@ -1,0 +1,13 @@
+{
+  "corpus_size": 197,
+  "distinct_solutions": 196,
+  "teacher": "nomic-embed-text (ollama)",
+  "mean_sim_own": 0.658,
+  "mean_sim_random": 0.429,
+  "margin": 0.229,
+  "mean_rank_of_correct": 194,
+  "recall_at_1": 0.005,
+  "recall_at_20": 0.01,
+  "bottleneck": "corpus discriminability + top-1-over-197 harshness, NOT solely the encoder",
+  "actionable_path": "bi-encoder as candidate generator + discriminative reranker (or cross-encoder reading problem and candidate together); a bi-encoder alone cannot separate this pool"
+}

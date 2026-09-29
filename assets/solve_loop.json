@@ -16,7 +16,7 @@
     },
     {
       "problem": "Reduce cache invalidation spikes in p99 latency.",
-      "best_recall": 0.397,
+      "best_recall": 0.398,
       "best_rank": 3,
       "covered": false,
       "idea_best_recall": 0.349,
@@ -43,7 +43,7 @@
     },
     {
       "problem": "Prevent one slow backend from taking down the whole service.",
-      "best_recall": 0.495,
+      "best_recall": 0.496,
       "best_rank": 2,
       "covered": true,
       "idea_best_recall": 0.8,
@@ -55,7 +55,7 @@
       "best_recall": 0.377,
       "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.347,
+      "idea_best_recall": 0.346,
       "idea_covered": false,
       "best_subproblem": "Characterize the boundary/special cases of 'Estimate how long a queue takes to d"
     },
@@ -64,7 +64,7 @@
       "best_recall": 0.4,
       "best_rank": 1,
       "covered": true,
-      "idea_best_recall": 0.407,
+      "idea_best_recall": 0.406,
       "idea_covered": true,
       "best_subproblem": "State the strongest necessary condition for 'battery charge' to hold, and check "
     },
@@ -73,7 +73,7 @@
       "best_recall": 0.457,
       "best_rank": 3,
       "covered": true,
-      "idea_best_recall": 0.596,
+      "idea_best_recall": 0.597,
       "idea_covered": true,
       "best_subproblem": "Characterize the boundary/special cases of 'Find the cheapest way to connect all"
     },
@@ -88,10 +88,10 @@
     },
     {
       "problem": "Explain why a recommendation engine becomes less diverse over time.",
-      "best_recall": 0.398,
+      "best_recall": 0.4,
       "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.354,
+      "idea_best_recall": 0.355,
       "idea_covered": false,
       "best_subproblem": "Characterize the boundary/special cases of 'Explain why a recommendation engine "
     },
@@ -109,7 +109,7 @@
       "best_recall": 0.4,
       "best_rank": 5,
       "covered": true,
-      "idea_best_recall": 0.372,
+      "idea_best_recall": 0.37,
       "idea_covered": false,
       "best_subproblem": "Relax or remove the constraint 'Detect a data race that only fails sometimes.' a"
     }

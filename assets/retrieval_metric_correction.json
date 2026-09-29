@@ -1,0 +1,9 @@
+{
+  "corpus_size": 197,
+  "metric": "paired CAR (correct solution > random other solution)",
+  "polarity": 0.645,
+  "distilled_pid": 0.777,
+  "ollama_teacher": 1.0,
+  "correction": "P6 over-claimed 'bounded family': the student (0.777) is below the teacher (0.990), so distillation headroom is REAL and closable.",
+  "design_implication": "retrieval = shortlist + rerank; top-1 over a 197-way near-duplicate pool is not a fair metric for any encoder"
+}
