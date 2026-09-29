@@ -30,6 +30,7 @@ def test_all_mcp_tools_listed():
         "super_solver_kt_boundary",
         "super_solver_next_experiment",
         "super_solver_primitive_analogize",
+        "super_solver_pareto",
     ]:
         assert expected in names
 
@@ -49,6 +50,12 @@ def test_all_mcp_tools_listed():
             "candidate_designs": [{"design_id": "d1", "name": "a", "cost": 1}],
         }),
         ("super_solver_primitive_analogize", {"specification": "make a climbing pad grip walls"}),
+        ("super_solver_pareto", {
+            "objectives": [{"name": "latency", "direction": "minimize"},
+                           {"name": "cost", "direction": "minimize"}],
+            "candidates": [{"name": "a", "values": {"latency": 10, "cost": 90}},
+                           {"name": "b", "values": {"latency": 90, "cost": 10}}],
+        }),
     ],
 )
 def test_mcp_tool_callable(name, args):

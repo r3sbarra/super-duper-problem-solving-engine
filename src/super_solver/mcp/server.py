@@ -124,6 +124,33 @@ async def list_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
+            name="super_solver_pareto",
+            description=("Resolves a multi-objective trade-off: given objectives (with"
+                           " direction) and candidate solutions scored on each, returns the"
+                           " non-dominated Pareto frontier, the knee/compromise point, a"
+                           " scalarized ranking, and which objective pairs actually trade off."),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "objectives": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": "[{name, direction: 'minimize'|'maximize'}]"
+                    },
+                    "candidates": {
+                        "type": "array",
+                        "items": {"type": "object"},
+                        "description": "[{name, values: {objective_name: float}}]"
+                    },
+                    "weights": {
+                        "type": "object",
+                        "description": "Optional objective weights for the scalarized ranking"
+                    },
+                },
+                "required": ["objectives", "candidates"],
+            },
+        ),
+        types.Tool(
             name="super_solver_kt_boundary",
             description="Applies Kepner-Tregoe IS / IS-NOT 4D boundary separation to isolate root cause or system failure envelope.",
             inputSchema={
@@ -233,6 +260,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         wors = arguments["worsening_parameter"]
         principles = engine.triz.resolve_contradiction_matrix(imp, wors)
         return [types.TextContent(type="text", text=json.dumps({"improving": imp, "worsening": wors, "recommended_principles": principles}, indent=2, default=str))]
+
+    elif name == "super_solver_pareto":
+        objectives = arguments["objectives"]
+        candidates = arguments["candidates"]
+        weights = arguments.get("weights")
+        result = engine.resolve_pareto(objectives, candidates, weights)
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
 
     elif name == "super_solver_kt_boundary":
         is_facts = arguments["is_facts"]

@@ -101,6 +101,9 @@ class SuperDuperProblemSolvingEngine:
         self.synthesizer = CodeSynthesizer(client=llm_client, sandbox=self.sandbox)
         self.diagnostician = AutomatedDiagnostician(client=llm_client, kt_engine=self.kt)
         self.ingenuity = UniversalIngenuityEngine()
+        from super_solver.frameworks import pareto as _pareto
+
+        self.pareto = _pareto
 
     def program(
         self,
@@ -1167,6 +1170,31 @@ class SuperDuperProblemSolvingEngine:
     def check_smt_lra(self, constraints: List[str]) -> SMTResult:
         """Verifies feasibility of linear real arithmetic inequalities."""
         return self.smt.check_lra_satisfiability(constraints)
+
+    def resolve_pareto(
+        self,
+        objectives: List[Dict[str, Any]],
+        candidates: List[Dict[str, Any]],
+        weights: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, Any]:
+        """Resolve a multi-objective trade-off into a Pareto frontier.
+
+        ``objectives``: [{name, direction: 'minimize'|'maximize'}]
+        ``candidates``: [{name, values: {objective: float}, ...}]
+        Returns the non-dominated front, knee point, scalarized ranking, and
+        conflict structure (objective pairs that trade off).
+        """
+        from super_solver.frameworks.pareto import Candidate, Objective
+
+        objs = [
+            Objective(name=o["name"], direction=o.get("direction", "minimize"))
+            for o in objectives
+        ]
+        cands = [
+            Candidate(name=c["name"], values=c["values"], payload=c)
+            for c in candidates
+        ]
+        return self.pareto.resolve(objs, cands, weights).to_dict()
 
     def check_smt_euf(
         self,

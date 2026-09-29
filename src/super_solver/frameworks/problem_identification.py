@@ -822,10 +822,13 @@ def _candidate_subproblems(structure: ProblemStructure) -> List[Tuple[str, str, 
                 f"optimum ignoring the other objectives, as a baseline.",
                 "multi_objective", f"objective:{obj}",
             ))
+        if len(structure.objectives) >= 2:
             out.append((
-                f"Identify the trade-off between '{obj}' and the other objectives "
-                f"and quantify the Pareto frontier.",
-                "multi_objective", f"objective:{obj}",
+                "Build the Pareto frontier across the objectives "
+                f"({', '.join(structure.objectives[:4])}): enumerate non-dominated "
+                "candidates and identify the knee/compromise point and the "
+                "objective pairs that genuinely trade off.",
+                "pareto", "objective:pareto_frontier",
             ))
 
     # --- Goal decomposition (divide & conquer on the objective) ---
