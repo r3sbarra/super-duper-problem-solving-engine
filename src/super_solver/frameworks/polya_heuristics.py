@@ -73,6 +73,56 @@ class PolyaHeuristicsEngine:
               "is_essential": bool,
               "is_new": bool,
             }
+
+        NOTE: this method now delegates to the principled identification +
+        decomposition pipeline (``problem_identification.decompose``), which
+        anchors subproblems on identified slots (goal/constraint/unknown/entity/
+        success-criterion) instead of filling templates with the problem's most
+        frequent tokens. The old template path produced vacuous subproblems
+        (e.g. "Test the asymptotic behavior of delivery...") and is retained
+        only as a fallback if the principled module is unavailable.
+        """
+        try:
+            from super_solver.frameworks.problem_identification import (
+                decompose as _decompose,
+            )
+
+            known = list(known_subproblems or [])
+            out = _decompose(
+                problem_specification,
+                known_subproblems=known,
+                max_new=max_new,
+            )
+            # This method's contract is GENERATION of new subproblems;
+            # re-ranking caller-supplied ones is decompose_auxiliary_problems'/
+            # the bridge's job. Emit only genuinely-new candidates here.
+            return [
+                {
+                    "subproblem": s["subproblem"],
+                    "heuristic": s.get("heuristic", ""),
+                    "relevance_score": float(s.get("relevance_score", 0.0)),
+                    "is_essential": bool(s.get("is_essential", False)),
+                    "is_new": True,
+                }
+                for s in out["subproblems"]
+                if s.get("is_new", True)
+            ]
+        except Exception:
+            pass
+        return self._generate_auxiliary_problems_legacy(
+            problem_specification, known_subproblems, max_new
+        )
+
+    def _generate_auxiliary_problems_legacy(
+        self,
+        problem_specification: str,
+        known_subproblems: Optional[List[str]] = None,
+        max_new: int = 8,
+    ) -> List[Dict[str, Any]]:
+        """Legacy frequency-anchor template generator (fallback only).
+
+        Superseded by the principled pipeline; kept so the engine still emits
+        something if that module fails to import.
         """
         import re
         from collections import Counter
