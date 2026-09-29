@@ -1,0 +1,11 @@
+{
+  "task": "latent goal navigation (2 good ops, 8 noise)",
+  "trials": 20,
+  "guided_mean_proximity": -0.6521,
+  "random_mean_proximity": -0.826,
+  "guided_good_op_fraction": 1.0,
+  "random_good_op_fraction": 0.2,
+  "guided_win_rate": 1.0,
+  "verdict": "GUIDED_BEATS_RANDOM",
+  "note": "proximity is step-size-confounded; good-op fraction is the capability signal (random baseline 0.2)"
+}
