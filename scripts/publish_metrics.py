@@ -151,10 +151,38 @@ FLOORS = {
 }
 
 
+def _print_delta(a: dict, b: dict, prefix: str = ""):
+    for k in sorted(set(a) | set(b)):
+        va, vb = a.get(k), b.get(k)
+        if isinstance(va, dict) and isinstance(vb, dict):
+            _print_delta(va, vb, prefix + k + ".")
+        elif isinstance(va, (int, float)) and isinstance(vb, (int, float)):
+            d = vb - va
+            if abs(d) > 1e-9:
+                arrow = "+" if d > 0 else ""
+                print(f"  {prefix}{k}: {va} -> {vb} ({arrow}{d:.4f})")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--diff", action="store_true",
+                    help="print the delta between the last two history entries")
     args = ap.parse_args()
+
+    if args.diff:
+        hist = os.path.join(ASSETS, "metrics_history.jsonl")
+        if not os.path.exists(hist):
+            print("no history yet")
+            return
+        lines = [json.loads(x) for x in open(hist) if x.strip()]
+        if len(lines) < 2:
+            print("need >= 2 history entries to diff")
+            return
+        a, b = lines[-2], lines[-1]
+        print(f"diff {a['git_rev']} -> {b['git_rev']}")
+        _print_delta(a["metrics"], b["metrics"])
+        return
 
     metrics = collect()
     payload = {
@@ -185,7 +213,18 @@ def main():
     os.makedirs(ASSETS, exist_ok=True)
     with open(ARTIFACT, "w") as f:
         json.dump(payload, f, indent=2)
+
+    # T3.2 — append to a rolling history for trending / regression diffing.
+    hist = os.path.join(ASSETS, "metrics_history.jsonl")
+    with open(hist, "a") as hf:
+        hf.write(json.dumps({
+            "git_rev": payload["git_rev"],
+            "generated_at": payload["generated_at"],
+            "metrics": metrics,
+        }) + "\n")
+
     print(f"wrote {ARTIFACT}")
+    print(f"appended {hist}")
     print(json.dumps(metrics, indent=2))
 
 
