@@ -8,7 +8,7 @@
     {
       "subsystem": "core.dpll.refute",
       "status": "OK",
-      "detail": "{'proved': True, 'verdict': 'LOGICALLY_SOUND_PROOF', 'summary': \"Target claim 'C' is strictly entailed by premises under propositional resolution refutation. Ne"
+      "detail": "{'proved': True, 'verdict': 'LOGICALLY_SOUND_PROOF', 'summary': \"Target claim 'C' is strictly entailed by premises under propositional resolution refu"
     },
     {
       "subsystem": "core.smt_lra",
@@ -23,47 +23,47 @@
     {
       "subsystem": "platt.crucial_experiments",
       "status": "OK",
-      "detail": "[CrucialExperiment(id='exp_auto_purity_control', name='High-Resolution Purity & Systematic Filtering Assay', description='Apply ultra-strict kinematic or compos"
+      "detail": "[CrucialExperiment(id='exp_auto_purity_control', name='High-Resolution Purity & Systematic Filtering Assay', description='Apply ultra-strict kinematic"
     },
     {
       "subsystem": "triz.principles",
       "status": "OK",
-      "detail": "[{'principle_id': 38, 'name': 'Strong Oxidants', 'description': 'Replace normal environment with enriched or active field/reaction (e.g. oxygen-enriched, ionize"
+      "detail": "[{'principle_id': 38, 'name': 'Strong Oxidants', 'description': 'Replace normal environment with enriched or active field/reaction (e.g. oxygen-enrich"
     },
     {
       "subsystem": "kt.boundary",
       "status": "OK",
-      "detail": "{'is_facts_count': 2, 'is_not_facts_count': 2, 'hyperplane_norm': 1.2839821577072144, 'candidate_evaluations': [{'cause': \"an interaction between 'bedroom' and "
+      "detail": "{'is_facts_count': 2, 'is_not_facts_count': 2, 'hyperplane_norm': 1.2839821577072144, 'candidate_evaluations': [{'cause': \"an interaction between 'bed"
     },
     {
       "subsystem": "polya.aux",
       "status": "OK",
-      "detail": "[{'subproblem': \"Decompose the objective 'Prove there are infinitely many primes' into independent sub-goals whose joint satisfaction implies the objective.\", '"
+      "detail": "[{'subproblem': \"Decompose the objective 'Prove there are infinitely many primes' into independent sub-goals whose joint satisfaction implies the obje"
     },
     {
       "subsystem": "gentner.align",
       "status": "OK",
-      "detail": "{'structural_alignment_score': 1.0, 'systematic_match_count': 1, 'entity_mappings': {'heat': 'water', 'cold': 'low'}, 'matches': [{'base_relation': 'flows_to(he"
+      "detail": "{'structural_alignment_score': 1.0, 'systematic_match_count': 1, 'entity_mappings': {'heat': 'water', 'cold': 'low'}, 'matches': [{'base_relation': 'f"
     },
     {
       "subsystem": "peirce.abduct",
       "status": "OK",
-      "detail": "[Hypothesis(id='hyp_auto_emergent_phase_hypothesis', title='Structural Phase / Emergent Non-Linear Dynamics', description='The plant grew toward window is drive"
+      "detail": "[Hypothesis(id='hyp_auto_emergent_phase_hypothesis', title='Structural Phase / Emergent Non-Linear Dynamics', description='The plant grew toward windo"
     },
     {
       "subsystem": "toc.evaporate",
       "status": "OK",
-      "detail": "{'resolved': False, 'winning_injection': 'automate testing', 'evaporation_score': 0.0274253211915493, 'rankings': [{'injection': 'automate testing', 'score': 0."
+      "detail": "{'resolved': False, 'winning_injection': 'automate testing', 'evaporation_score': 0.0274253211915493, 'rankings': [{'injection': 'automate testing', '"
     },
     {
       "subsystem": "problem_id.decompose",
       "status": "OK",
-      "detail": "{'structure': {'raw': 'Shortest-path routing under time-window constraints.', 'problem_type': 'optimization', 'entities': ['time-window constraints', 'shortest-"
+      "detail": "{'structure': {'raw': 'Shortest-path routing under time-window constraints.', 'problem_type': 'optimization', 'entities': ['time-window constraints', "
     },
     {
       "subsystem": "vectorize.primitive_analogize",
       "status": "OK",
-      "detail": "[{'content': 'Use a low-tack adhesive that was originally a failed super-strong glue (Post-it)', 'title': 'make a paper note that sticks temporarily and can be "
+      "detail": "[{'content': 'Use a low-tack adhesive that was originally a failed super-strong glue (Post-it)', 'title': 'make a paper note that sticks temporarily a"
     },
     {
       "subsystem": "search.negative_manifold",
@@ -73,52 +73,52 @@
     {
       "subsystem": "search.mcts.best_path",
       "status": "OK",
-      "detail": "[('add_cache', array([0.        , 0.        , 0.16449937, 0.        , 0.        ,\n       0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.16"
+      "detail": "[('add_cache', array([0.        , 0.        , 0.16449937, 0.        , 0.        ,\n       0.        , 0.        , 0.        , 0.        , 0.        ,\n "
     },
     {
       "subsystem": "latent.coconut.bfs",
       "status": "OK",
-      "detail": "[[('add_cache', array([ 5.24267559e-03,  5.12997311e-03,  1.12755937e-01,  1.74520103e-02,\n       -4.00699060e-03, -1.17306278e-02,  5.53387559e-03, -1.54863083"
+      "detail": "[[('add_cache', array([ 8.25987303e-05,  6.93716966e-03,  1.39559259e-01,  3.98475914e-04,\n       -5.60294308e-03,  2.24434977e-02, -8.97443494e-03, -"
     },
     {
       "subsystem": "latent.dot.denoise",
       "status": "OK",
-      "detail": "[array([0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.31153112, 0.    "
+      "detail": "[array([0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.        , 0.        , 0.        , 0.        , 0.        ,\n       0.311531"
     },
     {
       "subsystem": "tournament.match",
       "status": "OK",
-      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.SURVIVED_ROBUST: 'SURVIVED_ROBUST'>, robustness_score=1.0, survive"
+      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.SURVIVED_ROBUST: 'SURVIVED_ROBUST'>, robustness_score=1."
     },
     {
       "subsystem": "math.verify_flawed",
       "status": "OK",
-      "detail": "ProofVerificationResult(paper_id='x', paper_title='P vs NP', target_conjecture='P versus NP', verdict=<VerificationStatus.REFUTED_FLAWED: 'REFUTED_FLAWED'>, con"
+      "detail": "ProofVerificationResult(paper_id='x', paper_title='P vs NP', target_conjecture='P versus NP', verdict=<VerificationStatus.REFUTED_FLAWED: 'REFUTED_FLA"
     },
     {
       "subsystem": "boed.rank",
       "status": "OK",
-      "detail": "[{'design_id': 'd1', 'name': 'a', 'prior_entropy': 0.6931471805579453, 'expected_posterior_entropy': 0.32508297338944825, 'expected_information_gain': 0.3680642"
+      "detail": "[{'design_id': 'd1', 'name': 'a', 'prior_entropy': 0.6931471805579453, 'expected_posterior_entropy': 0.32508297338944825, 'expected_information_gain':"
     },
     {
       "subsystem": "pareto.resolve",
       "status": "OK",
-      "detail": "{'pareto_front': ['a', 'b'], 'dominated': [], 'knee': 'a', 'scalarized_ranking': [{'candidate': 'a', 'score': 0.5}, {'candidate': 'b', 'score': 0.5}], 'conflict"
+      "detail": "{'pareto_front': ['a', 'b'], 'dominated': [], 'knee': 'a', 'scalarized_ranking': [{'candidate': 'a', 'score': 0.5}, {'candidate': 'b', 'score': 0.5}],"
     },
     {
       "subsystem": "ingenuity.audit",
       "status": "OK",
-      "detail": "[AdversarialAuditReport(candidate_description='add a bounded cache with fallback', domain_context='systems', overall_resilience=0.9377876660823822, is_sound=Tru"
+      "detail": "[AdversarialAuditReport(candidate_description='add a bounded cache with fallback', domain_context='systems', overall_resilience=0.9377876660823822, is"
     },
     {
       "subsystem": "meta.self_audit",
       "status": "OK",
-      "detail": "{'self_evaluation_status': 'AUDIT_PASSED_HEALTHY', 'dpll_invariant_verification': {'proved': True, 'verdict': 'LOGICALLY_SOUND_PROOF'}, 'causal_intervention_aud"
+      "detail": "{'self_evaluation_status': 'AUDIT_PASSED_HEALTHY', 'dpll_invariant_verification': {'proved': True, 'verdict': 'LOGICALLY_SOUND_PROOF'}, 'causal_interv"
     },
     {
       "subsystem": "meta.self_diagnostic",
       "status": "OK",
-      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 0.9567899581468113, 'repulsion"
+      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 1.7015865426224308, "
     },
     {
       "subsystem": "memory.consolidate",
@@ -128,17 +128,17 @@
     {
       "subsystem": "code.synthesize",
       "status": "OK",
-      "detail": "SynthesisResult(success=True, code='# Deterministic placeholder for: return the sum of a list\\ndef solution(*args, **kwargs):\\n    return True\\n', test_code='as"
+      "detail": "SynthesisResult(success=True, code='# Deterministic placeholder for: return the sum of a list\\ndef solution(*args, **kwargs):\\n    return True\\n', tes"
     },
     {
       "subsystem": "diagnose",
       "status": "OK",
-      "detail": "DiagnosticReport(problem_summary='server returns 500 under load intermittently', boundary=KTBoundary(identity_is='server returns 500 under load intermittently',"
+      "detail": "DiagnosticReport(problem_summary='server returns 500 under load intermittently', boundary=KTBoundary(identity_is='server returns 500 under load interm"
     },
     {
       "subsystem": "suggest_paths",
       "status": "OK",
-      "detail": "[SuggestedPath(path_id='path_gentner_analogy', strategy_type='ANALOGICAL_STRUCTURAL_TRANSFER', title='Cross-Domain Relational Structure Mapping', description=\"M"
+      "detail": "[SuggestedPath(path_id='path_gentner_analogy', strategy_type='ANALOGICAL_STRUCTURAL_TRANSFER', title='Cross-Domain Relational Structure Mapping', desc"
     }
   ]
 }

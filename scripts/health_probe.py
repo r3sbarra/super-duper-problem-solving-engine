@@ -27,17 +27,35 @@ os.environ.setdefault(
 RESULTS = []
 
 
-def probe(name, fn):
+def probe(name, fn, discriminate=None):
+    """Run a subsystem probe.
+
+    ``discriminate``: optional fn(out) -> bool returning True when the output is
+    NON-discriminating (degenerate). Complements the empty-output check with a
+    semantic degeneracy test (e.g. all scores identical, single verdict across a
+    pair that should differ).
+    """
     try:
         out = fn()
     except Exception as e:
         RESULTS.append({"subsystem": name, "status": "FAIL",
                         "detail": f"{type(e).__name__}: {e}"})
         return
-    deg = (out is None) or (isinstance(out, (list, dict, str, tuple)) and len(out) == 0)
+    empty = (out is None) or (isinstance(out, (list, dict, str, tuple)) and len(out) == 0)
+    deg = empty
+    reason = "empty output"
+    if not deg and discriminate is not None:
+        try:
+            if discriminate(out):
+                deg = True
+                reason = "non-discriminating output"
+        except Exception as e:
+            RESULTS.append({"subsystem": name, "status": "FAIL",
+                            "detail": f"discriminate raised: {type(e).__name__}: {e}"})
+            return
     RESULTS.append({"subsystem": name,
                     "status": "DEGENERATE" if deg else "OK",
-                    "detail": repr(out)[:160]})
+                    "detail": (reason + " | " if deg else "") + repr(out)[:150]})
 
 
 def _emb():
@@ -103,11 +121,13 @@ def main():
 
     # --- tournament / math ---
     probe("tournament.match", lambda: e.run_tournament(
-        ["add a cache to reduce latency", "a proof that P != NP via monotone circuits"]))
+        ["add a cache to reduce latency", "a proof that P != NP via monotone circuits"]),
+        discriminate=_tournament_nondiscriminating)
     probe("math.verify_flawed", lambda: e.verify_math_paper(
         paper_id="x", paper_title="P vs NP",
         abstract_text="Berg-Ulfberg monotone approximation lower bound for Clique.",
-        target_conjecture="P versus NP"))
+        target_conjecture="P versus NP"),
+        discriminate=_math_nondiscriminating)
 
     # --- boed / pareto / ingenuity ---
     probe("boed.rank", lambda: e.boed.rank_experiments(
@@ -117,7 +137,8 @@ def main():
          "d2": {"pos": {"h1": 0.5, "h2": 0.5}, "neg": {"h1": 0.5, "h2": 0.5}}}))
     probe("pareto.resolve", lambda: e.resolve_pareto(
         [{"name": "x", "direction": "minimize"}, {"name": "y", "direction": "minimize"}],
-        [{"name": "a", "values": {"x": 1, "y": 9}}, {"name": "b", "values": {"x": 9, "y": 1}}]))
+        [{"name": "a", "values": {"x": 1, "y": 9}}, {"name": "b", "values": {"x": 9, "y": 1}}]),
+        discriminate=lambda o: len(o.get("pareto_front", [])) == 0)
     probe("ingenuity.audit", lambda: e.ingenuity.audit_hypotheses(
         ["add a bounded cache with fallback"], "reduce latency", "systems"))
 
@@ -147,6 +168,22 @@ def main():
 def _nm(e):
     e.repulsor.register_dead_end("add a cache in front of the database")
     return e.repulsor.check_proximity(_emb().encode("add a cache in front of the database"))
+
+
+def _tournament_nondiscriminating(results):
+    """Degenerate if a known-flawed and a sound hypothesis get the SAME survival."""
+    by = {r.hypothesis: r for r in results}
+    flawed = next((r for h, r in by.items() if "P != NP" in h), None)
+    sound = next((r for h, r in by.items() if "cache" in h), None)
+    if flawed is None or sound is None:
+        return False
+    return bool(flawed.survived == sound.survived and flawed.verdict == sound.verdict)
+
+
+def _math_nondiscriminating(result):
+    """A known-flawed barrier paper must not come back as VERIFIED_SOUND."""
+    v = str(getattr(result, "verdict", ""))
+    return "VERIFIED_SOUND" in v
 
 
 if __name__ == "__main__":
