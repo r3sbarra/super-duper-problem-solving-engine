@@ -79,3 +79,15 @@ def test_self_application_log_is_fail_closed():
         # nothing is adopted without a measured strict improvement
         if d["decision"] == "ADOPT_CANDIDATE":
             assert d["strict_improvement"] and d["transfer_ok"]
+
+
+def test_embedder_retrieval_finding_recorded():
+    """P6 locked-in negative result: the hashed-feature embedder cannot be
+    trained to retrieval semantics. If a future encoder DOES reach retrieval
+    top-1 > 0.2 on the 197-pair corpus, update docs/IMPROVEMENT_PLAN.md P6."""
+    path = os.path.join(ASSETS, "embedder_retrieval_finding.json")
+    if not os.path.exists(path):
+        pytest.skip("finding absent")
+    f = json.load(open(path))
+    assert f["retrieval_training_improved"] is False
+    assert f["distilled_top1"] <= 0.2

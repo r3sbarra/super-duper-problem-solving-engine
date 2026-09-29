@@ -1,0 +1,7 @@
+{
+  "corpus_size": 197,
+  "distilled_top1": 0.0,
+  "identity_top1": 0.0,
+  "retrieval_training_improved": false,
+  "conclusion": "hashed-feature student cannot be trained to retrieval semantics; needs a fundamentally richer encoder (learned token embeddings / small transformer). This bounds every retrieval-only plan (R1)."
+}

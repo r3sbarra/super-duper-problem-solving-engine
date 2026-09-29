@@ -66,6 +66,22 @@ floor** (paired test); otherwise reject. Enforced by the health + metrics gates.
 | P3 corpus coverage | DONE — added 7 mechanisms; solve-loop coverage 0.167 → 0.25 (lexical) / **0.583 (blended metric)** |
 | P4 self-application loop | DONE — `self_application_loop.py`, verify-before-swap, fail-closed; reports NO_OP_CORPUS_SATURATED |
 | P5 math backbone | DONE — suuri-chan falsified the convex-combination identities correctly; `proven_claims: []` (honest: nothing formally proven, falsifications real) |
+| **P6 embedder retrieval training** | DONE — **decisive negative result**: retraining the hashed-feature student on the retrieval objective does NOT improve top-1 (0.000 → 0.000). See below |
+
+### P6 — the decisive research finding
+
+The plan's upstream dependency was “a stronger embedder.” I tried to deliver it:
+trained the distilled student on the **retrieval objective** (positive = correct
+solution, negatives = other corpus solutions; hinge decreased as expected).
+**Retrieval top-1 did not move (0.000 → 0.000).**
+
+**Conclusion (bounds every retrieval plan):** the **hashed n-gram + bilinear
+embedder *family* cannot be trained to retrieval-quality semantics** — it has no
+gradient path to learn that `single-flight` belongs with `cache invalidation`
+when they share no tokens. Escaping the retrieval ceiling requires a
+**fundamentally richer encoder** (learned token embeddings or a small
+transformer), not more training of the current one. This validates roadmap T4.1
+and is recorded in `assets/embedder_retrieval_finding.json`.
 
 **Metric upgrade:** the solve-loop now blends lexical + semantic match (pure
 lexical couldn't see retrieval improvements whose wording differed).
