@@ -66,7 +66,33 @@ floor** (paired test); otherwise reject. Enforced by the health + metrics gates.
 | P3 corpus coverage | DONE — added 7 mechanisms; solve-loop coverage 0.167 → 0.25 (lexical) / **0.583 (blended metric)** |
 | P4 self-application loop | DONE — `self_application_loop.py`, verify-before-swap, fail-closed; reports NO_OP_CORPUS_SATURATED |
 | P5 math backbone | DONE — suuri-chan falsified the convex-combination identities correctly; `proven_claims: []` (honest: nothing formally proven, falsifications real) |
-| **P6 embedder retrieval training** | DONE — **decisive negative result**: retraining the hashed-feature student on the retrieval objective does NOT improve top-1 (0.000 → 0.000). See below |
+| **P6 embedder retrieval training** | DONE — decisive negative: 0.000 → 0.000 (top-1 over 197). **Later CORRECTED by P7** |
+| **P7 metric correction + paired distillation** | DONE — P6 used the wrong metric; paired-CAR is right; student 0.750 → 0.792, adopted, no regression |
+
+### P7 — the metric correction (supersedes P6's strong claim)
+
+P6 measured **top-1 over a 197-way near-duplicate pool** and concluded the hashed
+embedder family was bounded. That metric is misleading: **even the strong
+pretrained teacher (nomic-embed-text) scores top-1 0.005** on the same pool.
+Measured on the right metric — **paired CAR** (correct solution > a random other):
+
+| encoder | paired CAR | top-1 over 197 |
+|---|---|---|
+| polarity | 0.645 | 0.000 |
+| distilled_pid (student) | 0.777 | 0.000 |
+| nomic-embed-text (teacher) | **1.000** | 0.005 |
+
+Conclusions:
+1. **All encoders carry strong *relative* signal; none achieves *absolute* top-1**
+   over a 197-way near-duplicate pool → retrieval must be **shortlist + rerank**.
+2. A **cross-encoder reranker** (reading problem and candidate jointly) also fails
+   (mean rank 194/197) → the **pool**, not only the encoder, is the limit.
+3. The **distillation headroom is real**: student 0.777 < teacher 1.000.
+
+Action: trained the student to match the teacher's **paired preferences**
+(`scripts/distill_paired.py`) → paired-CAR **0.750 → 0.792**, adopted under a
+**multi-metric verify-before-swap gate** (improve paired AND hold OOD scorer-CAR).
+I caught my own single-metric adoption regression and fixed the gate.
 
 ### P6 — the decisive research finding
 
