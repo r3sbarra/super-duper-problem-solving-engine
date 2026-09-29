@@ -1,0 +1,24 @@
+{
+  "baseline_metric": 0.5833,
+  "baseline_transfer_ok": true,
+  "decisions": [
+    {
+      "candidate": "detect a data race that only fails sometimes under concurrency",
+      "metric_with": 0.5833,
+      "metric_base": 0.5833,
+      "strict_improvement": false,
+      "transfer_ok": true,
+      "decision": "NO_OP_CORPUS_SATURATED",
+      "reason": "candidate already covered by the corpus (no delta)"
+    },
+    {
+      "candidate": "reduce cache invalidation spikes in p99 latency when many keys expire ",
+      "metric_with": 0.5833,
+      "metric_base": 0.5833,
+      "strict_improvement": false,
+      "transfer_ok": true,
+      "decision": "NO_OP_CORPUS_SATURATED",
+      "reason": "candidate already covered by the corpus (no delta)"
+    }
+  ]
+}

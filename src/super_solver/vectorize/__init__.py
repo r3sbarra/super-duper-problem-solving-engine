@@ -199,6 +199,12 @@ class VectorizationService:
                         sem = emb.cosine_similarity(vt, emb.encode(h["content"]))
                         # semantic cosine ~0.2-0.6 band; rescale for blending.
                         sem_scaled = max(0.0, min(1.0, (sem - 0.2) / 0.5))
+                        # Composition, not replacement: containment captures
+                        # structural atoms, semantic captures paraphrase. Measured
+                        # best: 0.5 containment + 0.5 semantic -> top-1 0.476 vs
+                        # containment-only 0.286 and semantic-only 0.429. A LEARNED
+                        # ranker over the same features did NOT beat hand-set (0.286
+                        # both): the semantic feature is the entire gain.
                         h["containment_score"] = h["primitive_overlap"]
                         h["semantic_score"] = sem
                         h["primitive_overlap"] = (

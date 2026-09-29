@@ -1,117 +1,117 @@
 {
   "n_problems": 12,
-  "solution_coverage_at_1": 0.0,
-  "solution_coverage_at_3": 0.0,
-  "mean_best_recall": 0.067,
-  "solution_idea_coverage": 0.167,
+  "solution_coverage_at_1": 0.333,
+  "solution_coverage_at_3": 0.5,
+  "mean_best_recall": 0.436,
+  "solution_idea_coverage": 0.583,
   "rows": [
     {
       "problem": "Shortest-path routing for a delivery fleet under time-window constraints.",
-      "best_recall": 0.182,
+      "best_recall": 0.509,
       "best_rank": 4,
-      "covered": false,
-      "idea_best_recall": 0.182,
-      "idea_covered": false,
+      "covered": true,
+      "idea_best_recall": 0.782,
+      "idea_covered": true,
       "best_subproblem": "Formulate the objective function and feasible region for 'time-window constraint"
     },
     {
       "problem": "Reduce cache invalidation spikes in p99 latency.",
-      "best_recall": 0.0,
-      "best_rank": 1,
+      "best_recall": 0.397,
+      "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.0,
+      "idea_best_recall": 0.349,
       "idea_covered": false,
-      "best_subproblem": "Decompose the objective 'Reduce cache invalidation spikes in p99 latency.' into "
+      "best_subproblem": "Characterize the boundary/special cases of 'Reduce cache invalidation spikes in "
     },
     {
       "problem": "Design a scheme so a message is processed exactly once despite retries.",
-      "best_recall": 0.0,
+      "best_recall": 0.4,
       "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.6,
+      "covered": true,
+      "idea_best_recall": 0.76,
       "idea_covered": true,
       "best_subproblem": "Decompose the objective 'Design a scheme so a message is processed exactly once "
     },
     {
       "problem": "Detect duplicate invoices across two billing systems.",
-      "best_recall": 0.143,
+      "best_recall": 0.475,
       "best_rank": 8,
-      "covered": false,
-      "idea_best_recall": 0.0,
+      "covered": true,
+      "idea_best_recall": 0.337,
       "idea_covered": false,
       "best_subproblem": "Find a structural analogue of 'duplicate invoices across' in another domain and "
     },
     {
       "problem": "Prevent one slow backend from taking down the whole service.",
-      "best_recall": 0.167,
-      "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.667,
+      "best_recall": 0.495,
+      "best_rank": 2,
+      "covered": true,
+      "idea_best_recall": 0.8,
       "idea_covered": true,
-      "best_subproblem": "Decompose the objective 'Prevent one slow backend from taking down the whole ser"
+      "best_subproblem": "State the strongest necessary condition for 'Prevent one slow backend from takin"
     },
     {
       "problem": "Estimate how long a queue takes to drain after a traffic spike.",
-      "best_recall": 0.0,
-      "best_rank": 1,
+      "best_recall": 0.377,
+      "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.0,
+      "idea_best_recall": 0.347,
       "idea_covered": false,
-      "best_subproblem": "Decompose the objective 'Estimate how long a queue takes to drain after a traffi"
+      "best_subproblem": "Characterize the boundary/special cases of 'Estimate how long a queue takes to d"
     },
     {
       "problem": "Make a battery charge quickly without overheating.",
-      "best_recall": 0.0,
+      "best_recall": 0.4,
       "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.111,
-      "idea_covered": false,
+      "covered": true,
+      "idea_best_recall": 0.407,
+      "idea_covered": true,
       "best_subproblem": "State the strongest necessary condition for 'battery charge' to hold, and check "
     },
     {
       "problem": "Find the cheapest way to connect all offices with links so no cycles form.",
-      "best_recall": 0.111,
-      "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.333,
-      "idea_covered": false,
-      "best_subproblem": "Decompose the objective 'Find the cheapest way to connect all offices with links"
+      "best_recall": 0.457,
+      "best_rank": 3,
+      "covered": true,
+      "idea_best_recall": 0.596,
+      "idea_covered": true,
+      "best_subproblem": "Characterize the boundary/special cases of 'Find the cheapest way to connect all"
     },
     {
       "problem": "Prove that there are infinitely many primes.",
-      "best_recall": 0.2,
+      "best_recall": 0.52,
       "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.1,
-      "idea_covered": false,
+      "covered": true,
+      "idea_best_recall": 0.438,
+      "idea_covered": true,
       "best_subproblem": "Decompose the objective 'Prove that there are infinitely many primes.' into inde"
     },
     {
       "problem": "Explain why a recommendation engine becomes less diverse over time.",
-      "best_recall": 0.0,
-      "best_rank": 1,
+      "best_recall": 0.398,
+      "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.0,
+      "idea_best_recall": 0.354,
       "idea_covered": false,
-      "best_subproblem": "Decompose the objective 'Explain why a recommendation engine becomes less divers"
+      "best_subproblem": "Characterize the boundary/special cases of 'Explain why a recommendation engine "
     },
     {
       "problem": "Reduce the weight of a vehicle without weakening its frame.",
-      "best_recall": 0.0,
+      "best_recall": 0.4,
       "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.111,
-      "idea_covered": false,
+      "covered": true,
+      "idea_best_recall": 0.426,
+      "idea_covered": true,
       "best_subproblem": "Decompose the objective 'Reduce the weight of a vehicle without weakening its fr"
     },
     {
       "problem": "Detect a data race that only fails sometimes.",
-      "best_recall": 0.0,
-      "best_rank": 1,
-      "covered": false,
-      "idea_best_recall": 0.0,
+      "best_recall": 0.4,
+      "best_rank": 5,
+      "covered": true,
+      "idea_best_recall": 0.372,
       "idea_covered": false,
-      "best_subproblem": "State the strongest necessary condition for 'data race' to hold, and check wheth"
+      "best_subproblem": "Relax or remove the constraint 'Detect a data race that only fails sometimes.' a"
     }
   ],
   "caveat": "lexical recall against a reference idea is a PROXY for 'decomposition pointed at the right thing'; it is not a proof of a solve"

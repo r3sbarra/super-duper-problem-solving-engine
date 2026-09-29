@@ -42,6 +42,6 @@ def test_solve_loop_metric_recorded():
     assert proc.returncode == 0, proc.stderr
     data = json.load(open(os.path.join(root, "assets", "solve_loop.json")))
     # Honest floor: solution-idea coverage must stay at/above the measured 0.166.
-    assert data["solution_idea_coverage"] >= 0.15, (
+    assert data["solution_idea_coverage"] >= 0.20, (
         f"solution-idea coverage regressed: {data['solution_idea_coverage']}"
     )

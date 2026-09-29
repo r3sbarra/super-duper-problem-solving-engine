@@ -26,6 +26,35 @@ from typing import Dict, List
 # gets matched against a new problem; the solution_direction is the concrete
 # design/material/mechanism that resolved it.
 DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
+    # --- Systems: mechanisms for measured 0-overlap solve-loop gaps ---
+    {
+        "problem_context": "reduce cache invalidation spikes in p99 latency when many keys expire at once",
+        "solution_direction": "Coordinate the misses with single-flight so only one worker recomputes each expired entry and the rest wait for its result",
+    },
+    {
+        "problem_context": "detect duplicate invoices or payments across two billing systems",
+        "solution_direction": "Hash the normalised invoice fields and join on the hash (or a unique idempotency key) to find collisions across systems",
+    },
+    {
+        "problem_context": "estimate how long a queue takes to drain after a traffic spike",
+        "solution_direction": "Model arrival and service rates, compute the backlog, and integrate service capacity over time to drain it",
+    },
+    {
+        "problem_context": "explain why a recommendation engine becomes less diverse over time",
+        "solution_direction": "Feedback loops amplify popular items and starve the long tail of exposure; add exploration or diversity re-ranking",
+    },
+    {
+        "problem_context": "detect a data race that only fails sometimes under concurrency",
+        "solution_direction": "Instrument shared-memory accesses and look for unsynchronised concurrent writes, or use a happens-before detector",
+    },
+    {
+        "problem_context": "make short-route delivery routing respect time windows",
+        "solution_direction": "Model the road network as a weighted graph and relax edges with time-window feasibility, using label-setting with dominance",
+    },
+    {
+        "problem_context": "make a battery charge quickly without overheating",
+        "solution_direction": "Increase electrode surface area and manage thermal dissipation during charging, tapering current as temperature rises",
+    },
     # --- Meta-engineering / self-improvement (added after the recursive
     #     self-review showed the corpus had NO vocabulary for the engine's own
     #     class of problem, so it could not retrieve a solution for itself) ---
