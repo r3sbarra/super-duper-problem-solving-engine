@@ -1,0 +1,34 @@
+{
+  "version": "0.1.0",
+  "git_rev": "b61fe99",
+  "generated_at": "2026-09-29T20:28:35+00:00",
+  "metrics": {
+    "probe_suites": {
+      "stress_32": {
+        "n": 24,
+        "scorer_car": 1.0,
+        "distilled_raw_car": 1.0,
+        "polarity_car": 0.2083
+      },
+      "holdout_v2_48": {
+        "n": 48,
+        "scorer_car": 1.0,
+        "distilled_raw_car": 1.0,
+        "polarity_car": 0.125
+      },
+      "ood_13": {
+        "n": 13,
+        "scorer_car": 0.9231,
+        "distilled_raw_car": 0.7692,
+        "polarity_car": 0.5385
+      }
+    },
+    "scenario_bench": {
+      "n": 24,
+      "type_accuracy": 0.8333,
+      "mean_slot_coverage": 0.9167,
+      "vacuous_subproblems": 0
+    },
+    "distilled_artifact_sha256_16": "0f4881ccf7063c03"
+  }
+}
