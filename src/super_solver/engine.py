@@ -758,6 +758,21 @@ class SuperDuperProblemSolvingEngine:
         combined = (problem_specification + " " + (context or "")).lower()
         candidates: List[SuggestedPath] = []
 
+        # --- Identify the problem first so paths are ANCHORED on its structure
+        # (type / entities / constraints / goal) rather than generic templates.
+        try:
+            from super_solver.frameworks.problem_identification import (
+                identify_problem,
+            )
+
+            struct = identify_problem(problem_specification)
+        except Exception:
+            struct = None
+        goal = (struct.goal if struct else "") or problem_specification[:80]
+        entities = list(struct.entities) if struct else []
+        ent_str = ", ".join(entities[:3]) if entities else "the key components"
+        ptype = struct.problem_type if struct else "explanation"
+
         # 1. Check for Mathematical Barriers / Conjectures (Lakatos Engine)
         if any(
             term in combined
@@ -781,8 +796,18 @@ class SuperDuperProblemSolvingEngine:
             math_paths = self.math_verifier.suggest_repair_paths(dummy_res)
             candidates.extend(math_paths)
 
-        # 2. TRIZ Contradiction-Resolving Path
-        triz_ops = self.triz.suggest_principles(problem_specification, top_k=2)
+        # 2. TRIZ Contradiction-Resolving Path, anchored on the identified
+        #    contradiction when the problem names an improving/worsening pair,
+        #    else on the structured contradiction built from goal + constraints.
+        #    (TRIZ is an engineering method; for proof/explanation problems it is
+        #    a stretch, but it is retained as a divergent heuristic rather than
+        #    suppressed, so no previously-available path is lost.)
+        contradiction_text = problem_specification
+        if struct and struct.constraints:
+            contradiction_text = (
+                f"Improve '{goal}' without violating '{struct.constraints[0][:80]}'"
+            )
+        triz_ops = self.triz.suggest_principles(contradiction_text, top_k=2)
         if triz_ops:
             op1 = triz_ops[0]
             op2 = triz_ops[1] if len(triz_ops) > 1 else triz_ops[0]
@@ -791,9 +816,9 @@ class SuperDuperProblemSolvingEngine:
                     path_id="path_triz_transform",
                     strategy_type="TRIZ_INVENTIVE_CONTRADICTION",
                     title=f"Inventive Principle #{op1['principle_id']} ({op1['name']}) Resolution",
-                    description=f"Resolve core trade-off using '{op1['name']}': {op1['description']}. Complement with Principle #{op2['principle_id']} ('{op2['name']}').",
+                    description=f"Resolve the core trade-off in '{goal}' using '{op1['name']}': {op1['description']}. Complement with Principle #{op2['principle_id']} ('{op2['name']}').",
                     rationale="Overcomes trade-off without compromise by transforming the operational parameter space.",
-                    recommended_next_action=f"Apply {op1['name']} to decouple conflicting parameters in {problem_specification[:40]}...",
+                    recommended_next_action=f"Apply {op1['name']} to the conflicting parameters governing {ent_str}.",
                 )
             )
 
@@ -803,9 +828,9 @@ class SuperDuperProblemSolvingEngine:
                 path_id="path_polya_working_backwards",
                 strategy_type="POLYA_DECOMPOSITION_WORKING_BACKWARDS",
                 title="Teleological Goal Regression & Auxiliary Subproblem Isolation",
-                description="Assume target solution is achieved in a simplified ideal limit. Work backward to identify necessary precursor lemmas/milestones, isolating the simplest non-trivial subproblem.",
+                description=f"Assume the objective '{goal}' is achieved; work backward to the necessary precursor milestones, isolating the simplest non-trivial subproblem over {ent_str}.",
                 rationale="Reduces cognitive search dimensionality by projecting from known goal invariants back to current state.",
-                recommended_next_action="Identify minimal non-trivial toy instance or boundary subproblem where the phenomenon isolates cleanly.",
+                recommended_next_action=f"Identify the minimal non-trivial instance of '{goal}' where {ent_str} isolates cleanly.",
             )
         )
 
@@ -815,9 +840,9 @@ class SuperDuperProblemSolvingEngine:
                 path_id="path_gentner_analogy",
                 strategy_type="ANALOGICAL_STRUCTURAL_TRANSFER",
                 title="Cross-Domain Relational Structure Mapping",
-                description="Map causal relational network from a previously solved isomorphic domain (e.g. condensed matter phase transitions, evolutionary MSA co-evolution, or network flow).",
+                description=f"Map the causal relational network of '{goal}' onto a solved isomorphic domain sharing the same structure as {ent_str}.",
                 rationale="Reuses verified high-order causal relations rather than exploring from zero priors.",
-                recommended_next_action="Query episodic breakthrough memory for cross-domain systems sharing the same causal graph topology.",
+                recommended_next_action=f"Query episodic breakthrough memory for cross-domain systems sharing the causal graph of {ent_str}.",
             )
         )
 
@@ -827,11 +852,39 @@ class SuperDuperProblemSolvingEngine:
                 path_id="path_platt_crucial_assay",
                 strategy_type="PLATT_STRONG_INFERENCE_ASSAY",
                 title="High-Resolution Differential Crucial Experiment",
-                description="Design an empirical or computational assay with zero-overlap predictions between the top 2 competing mechanisms to force an informational bifurcation.",
+                description=f"Design an assay whose predictions for the top two competing explanations of '{goal}' are disjoint, forcing an informational bifurcation.",
                 rationale="Guarantees maximum Shannon information gain and immediate pruning of at least 50% of the active hypothesis manifold.",
-                recommended_next_action="Synthesize mutually exclusory predictions across extreme boundary parameters.",
+                recommended_next_action=f"Synthesize mutually exclusory predictions about {ent_str} across extreme boundary parameters.",
             )
         )
+
+        # 5b. Type-specific path (grounds the suggestion in the problem type)
+        _TYPE_PATH = {
+            "proof": ("COUNTEREXAMPLE_SEARCH", "Adversarial Counterexample Exhaustion",
+                     f"Scan a large parameter range for a counterexample to '{goal}' before attempting a proof."),
+            "diagnosis": ("KT_BOUNDARY_SEPARATION", "IS / IS-NOT Cause Boundary",
+                          f"Separate what IS true about the failure from what IS-NOT to bound the causes of '{goal}'."),
+            "optimization": ("CONSTRAINT_ACTIVATION", "Active-Constraint Reduction",
+                             f"Formulate the objective and feasible region for '{goal}', then identify the active constraints at the optimum."),
+            "design": ("FUNCTION_CONTRADICTION", "Functional Trade-off Dissolution",
+                       f"Enumerate the functional requirements and physical constraints for '{goal}', then dissolve a trade-off among {ent_str}."),
+            "estimation": ("SAMPLE_BOUND", "Sampling & Bound Construction",
+                           f"Build an unbiased estimator for '{goal}' with an explicit error bound."),
+            "search": ("SPACE_PRUNING", "Branch-and-Bound Space Pruning",
+                       f"Bound and prune the search space for '{goal}' using a monotone heuristic."),
+        }
+        if ptype in _TYPE_PATH:
+            sid, stitle, saction = _TYPE_PATH[ptype]
+            candidates.append(
+                SuggestedPath(
+                    path_id=f"path_type_{ptype}",
+                    strategy_type=sid,
+                    title=stitle,
+                    description=f"{stitle} path tailored to a {ptype}-type problem: {saction}",
+                    rationale=f"Matches the identified problem type ({ptype}).",
+                    recommended_next_action=saction,
+                )
+            )
 
         # Compute dynamic vector metrics: Feasibility, Novelty, Dead-End Margin
         v_prob = embedding_service.encode(problem_specification)
@@ -852,10 +905,27 @@ class SuperDuperProblemSolvingEngine:
             p.novelty_score = round(novelty, 2)
             p.dead_end_safety_margin = round(safety_margin, 2)
 
-        # Composite ranking
+        # Composite ranking. Framework-specialised paths (e.g. Lakatos
+        # barrier-evasion for a problem with a known mathematical barrier) are
+        # given a relevance bonus so problem-specific evidence is not crowded
+        # out by generic heuristic paths.
+        specialized_types = {
+            "LAKATOS_BARRIER_EVASION", "BARRIER_EVASION", "ARITHMETIZATION",
+            "FINE_GRAINED", "MATHEMATICAL",
+        }
+        for p in candidates:
+            st = str(getattr(p, "strategy_type", "")).upper()
+            tid = str(getattr(p, "path_id", "")).lower()
+            p._is_specialized = (
+                any(k in st for k in specialized_types)
+                or "math" in tid or "barrier" in tid
+            )
         candidates.sort(
             key=lambda p: (
-                0.4 * p.feasibility_score + 0.3 * p.novelty_score + 0.3 * p.dead_end_safety_margin
+                (0.15 if getattr(p, "_is_specialized", False) else 0.0)
+                + 0.4 * p.feasibility_score
+                + 0.3 * p.novelty_score
+                + 0.3 * p.dead_end_safety_margin
             ),
             reverse=True,
         )
