@@ -199,6 +199,13 @@ def _noun_phrases(text: str, max_phrases: int = 6) -> List[str]:
         "avoid", "achieve", "improve", "optimize", "detect", "explain",
         "prove", "find", "estimate", "predict", "route", "scale",
         "speed", "lose", "writes", "write", "storing", "store", "handle",
+        # symptom / analysis verbs that otherwise contaminate entities
+        "slows", "slowed", "slowing", "overheats", "overheated", "overheating",
+        "flooding", "flooded", "isolate", "diagnose", "diagnosing", "fails",
+        "failing", "failed", "causes", "caused", "causing", "grows", "growing",
+        "drops", "dropping", "rises", "rising", "leaks", "leaking", "runs",
+        "running", "shows", "showing", "occurs", "occurring", "happens",
+        "spikes", "spiking", "degrades", "degrading", "recovers", "recovering",
     }
     _MAX_RUN = 3  # a noun phrase is at most 3 words
     words = re.findall(r"[A-Za-z][A-Za-z0-9\-']+", text)
@@ -227,10 +234,11 @@ def _noun_phrases(text: str, max_phrases: int = 6) -> List[str]:
         if p not in seen:
             seen.add(p)
             ranked.append(p)
-    # Fall back to single content tokens when no multi-word phrase exists.
+    # Fall back to single content tokens when no multi-word phrase exists,
+    # EXCLUDING break-verbs (a symptom verb like 'overheats' is not an entity).
     if not ranked:
         for t in _content_tokens(text):
-            if t not in seen:
+            if t not in seen and t not in _VERB_BREAK:
                 seen.add(t)
                 ranked.append(t)
     return ranked[:max_phrases]

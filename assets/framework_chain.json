@@ -1,0 +1,92 @@
+{
+  "n": 3,
+  "chains_ok": "3/3",
+  "results": [
+    {
+      "problem": "The service slows down only at month-end; diagnose and isolate the cause.",
+      "chain": [
+        {
+          "stage": "identify",
+          "type": "diagnosis",
+          "entities": [
+            "service slows down",
+            "month-end diagnose"
+          ]
+        },
+        {
+          "stage": "kt_boundary",
+          "leading_cause": "an interaction between 'diagnose' and 'month-end' specific to the IS regime",
+          "n_candidates": 3
+        },
+        {
+          "stage": "abduct",
+          "n_hypotheses": 4,
+          "top": "The service slows down only is an observational artifact cau"
+        },
+        {
+          "stage": "platt_assay",
+          "n_experiments": 2,
+          "top": "High-Resolution Purity & Systematic Filtering Assay"
+        }
+      ],
+      "stages_ok": true
+    },
+    {
+      "problem": "A battery overheats during fast charging; find the root cause.",
+      "chain": [
+        {
+          "stage": "identify",
+          "type": "diagnosis",
+          "entities": [
+            "battery overheats"
+          ]
+        },
+        {
+          "stage": "kt_boundary",
+          "leading_cause": null,
+          "n_candidates": 0
+        },
+        {
+          "stage": "abduct",
+          "n_hypotheses": 4,
+          "top": "The battery overheats during fast arises from unmodeled exte"
+        },
+        {
+          "stage": "platt_assay",
+          "n_experiments": 2,
+          "top": "High-Resolution Purity & Systematic Filtering Assay"
+        }
+      ],
+      "stages_ok": true
+    },
+    {
+      "problem": "Detect fraud without flooding analysts with false positives.",
+      "chain": [
+        {
+          "stage": "identify",
+          "type": "search",
+          "entities": [
+            "flooding analysts",
+            "false positives"
+          ]
+        },
+        {
+          "stage": "kt_boundary",
+          "leading_cause": "an interaction between 'false' and 'positives' specific to the IS regime",
+          "n_candidates": 3
+        },
+        {
+          "stage": "abduct",
+          "n_hypotheses": 4,
+          "top": "The detect fraud without flooding is an observational artifa"
+        },
+        {
+          "stage": "platt_assay",
+          "n_experiments": 2,
+          "top": "High-Resolution Purity & Systematic Filtering Assay"
+        }
+      ],
+      "stages_ok": true
+    }
+  ]
+}

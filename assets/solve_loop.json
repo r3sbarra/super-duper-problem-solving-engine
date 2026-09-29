@@ -111,7 +111,7 @@
       "covered": false,
       "idea_best_recall": 0.0,
       "idea_covered": false,
-      "best_subproblem": "Decompose the objective 'fails sometimes data race' into independent sub-goals w"
+      "best_subproblem": "State the strongest necessary condition for 'data race' to hold, and check wheth"
     }
   ],
   "caveat": "lexical recall against a reference idea is a PROXY for 'decomposition pointed at the right thing'; it is not a proof of a solve"

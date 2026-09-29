@@ -1,0 +1,242 @@
+{
+  "super_solver_analogize": {
+    "description": "Retrieves cross-domain structural analogies using Vector Symbolic Architecture (VSA) / Hyperdimensional Computing (HDC) and Gentner's Structure-Mapping Engine.",
+    "inputSchema": {
+      "properties": {
+        "specification": {
+          "description": "Description of the target system or challenge to find analogies for",
+          "type": "string"
+        },
+        "top_k": {
+          "default": 3,
+          "description": "Number of analogies to retrieve",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "specification"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_decompose": {
+    "description": "Decomposes a difficult research or engineering problem into auxiliary angles. First IDENTIFIES the problem (type/entities/givens/unknowns/constraints/goal), then generates subproblems anchored on those slots via Polya heuristics and TRIZ inventive principles. Returns problem_structure, ranked auxiliary_angles, suggested_triz_operators and decomposition_metrics (slot coverage, relevance spread).",
+    "inputSchema": {
+      "properties": {
+        "initial_subproblems": {
+          "description": "Known subproblems or aspects already identified",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "topic": {
+          "description": "The problem or research topic to decompose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_deflect": {
+    "description": "Evaluates if a proposed approach or finding is in the attraction basin of known dead ends, and computes geometric deflection in continuous representation space.",
+    "inputSchema": {
+      "properties": {
+        "known_dead_ends": {
+          "description": "List of known failed approaches / dead ends",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "proposed_content": {
+          "description": "The idea, angle, or finding to test",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposed_content"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_identify": {
+    "description": "Identifies a problem's structure: problem type (optimization/proof/search/estimation/design/diagnosis/explanation), entities, givens, unknowns, constraints, goal and success criteria. Use BEFORE decomposition to see how the engine understands the problem.",
+    "inputSchema": {
+      "properties": {
+        "specification": {
+          "description": "The problem statement to identify",
+          "type": "string"
+        },
+        "title": {
+          "description": "Optional short title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "specification"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_kt_boundary": {
+    "description": "Applies Kepner-Tregoe IS / IS-NOT 4D boundary separation to isolate root cause or system failure envelope.",
+    "inputSchema": {
+      "properties": {
+        "is_facts": {
+          "description": "Facts that ARE true / observed",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "is_not_facts": {
+          "description": "Facts that COULD be true but ARE NOT",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "is_facts",
+        "is_not_facts"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_next_experiment": {
+    "description": "Ranks candidate experiment designs using Bayesian Optimal Experimental Design (BOED) by cost-penalized Expected Information Gain.",
+    "inputSchema": {
+      "properties": {
+        "candidate_designs": {
+          "description": "List of experiment design dicts with design_id, name, parameters, cost",
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "hypothesis_priors": {
+          "description": "Mapping from hypothesis ID to prior probability float",
+          "type": "object"
+        },
+        "likelihood_matrix": {
+          "description": "Nested mapping: design_id -> outcome -> hypothesis_id -> float",
+          "type": "object"
+        }
+      },
+      "required": [
+        "hypothesis_priors",
+        "candidate_designs"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_pareto": {
+    "description": "Resolves a multi-objective trade-off: given objectives (with direction) and candidate solutions scored on each, returns the non-dominated Pareto frontier, the knee/compromise point, a scalarized ranking, and which objective pairs actually trade off.",
+    "inputSchema": {
+      "properties": {
+        "candidates": {
+          "description": "[{name, values: {objective_name: float}}]",
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "objectives": {
+          "description": "[{name, direction: 'minimize'|'maximize'}]",
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "weights": {
+          "description": "Optional objective weights for the scalarized ranking",
+          "type": "object"
+        }
+      },
+      "required": [
+        "objectives",
+        "candidates"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_primitive_analogize": {
+    "description": "Performs cross-domain analogical transfer by extracting structural primitives (action + object atoms) and computing overlap with stored solutions. Overcomes surface cosine similarity limits.",
+    "inputSchema": {
+      "properties": {
+        "min_overlap": {
+          "default": 0.0,
+          "description": "Minimum structural primitive overlap ratio",
+          "type": "number"
+        },
+        "specification": {
+          "description": "Description of the target system to analogize",
+          "type": "string"
+        },
+        "top_k": {
+          "default": 3,
+          "description": "Number of cross-domain analogs to retrieve",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "specification"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_suggest_paths": {
+    "description": "Suggests next optimal exploratory or reasoning paths avoiding dead ends using continuous thought guidance.",
+    "inputSchema": {
+      "properties": {
+        "current_goal": {
+          "description": "The current problem goal",
+          "type": "string"
+        },
+        "dead_ends": {
+          "description": "Known dead ends",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "explored_paths": {
+          "description": "Paths already tried",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "current_goal"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_triz_solve": {
+    "description": "Uses Altshuller's TRIZ contradiction matrix to resolve trade-offs between improving and worsening parameters.",
+    "inputSchema": {
+      "properties": {
+        "improving_parameter": {
+          "description": "What property or parameter needs to be improved",
+          "type": "string"
+        },
+        "worsening_parameter": {
+          "description": "What property deteriorates as a side-effect",
+          "type": "string"
+        }
+      },
+      "required": [
+        "improving_parameter",
+        "worsening_parameter"
+      ],
+      "type": "object"
+    }
+  }
+}
