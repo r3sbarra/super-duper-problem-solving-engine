@@ -18,7 +18,6 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -87,8 +86,18 @@ class VectorIndex:
         metadata: Optional[Dict[str, Any]] = None,
         item_id: Optional[str] = None,
     ) -> str:
-        """Insert (or replace) a typed vector. Returns its id."""
-        item_id = item_id or str(uuid.uuid4())
+        """Insert (or replace) a typed vector. Returns its id.
+
+        The id is derived DETERMINISTICALLY from (kind, content) so re-storing
+        the same solution replaces it instead of accumulating duplicates
+        (measured: the previous random-id scheme left 738 rows for 186 distinct
+        solutions, so retrieval returned the same analog up to 8 times).
+        """
+        if item_id is None:
+            import hashlib
+
+            digest = hashlib.sha256(f"{kind}\x00{content}".encode("utf-8")).hexdigest()
+            item_id = f"{kind}:{digest[:32]}"
         blob = np.asarray(vector, dtype=np.float32).tobytes()
         meta = json.dumps(metadata or {})
         with self._conn:

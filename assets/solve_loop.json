@@ -64,7 +64,7 @@
       "best_recall": 0.0,
       "best_rank": 1,
       "covered": false,
-      "idea_best_recall": 0.0,
+      "idea_best_recall": 0.111,
       "idea_covered": false,
       "best_subproblem": "State the strongest necessary condition for 'battery charge' to hold, and check "
     },

@@ -162,10 +162,17 @@ class VectorizationService:
         """
         from super_solver.vectorize.primitives import match_by_primitives
 
-        sources = [
-            {"title": row[2] or "", "solution": row[3]}
-            for row in self.index._rows("solution")
-        ]
+        # The index accumulates duplicates (measured: 738 rows, 186 distinct
+        # contents — up to 8 copies of a solution). Dedupe by solution text so
+        # retrieval returns DISTINCT analogs instead of the same one repeated.
+        seen = set()
+        sources = []
+        for row in self.index._rows("solution"):
+            sol = row[3]
+            if sol in seen:
+                continue
+            seen.add(sol)
+            sources.append({"title": row[2] or "", "solution": sol})
         hits = match_by_primitives(target_text, sources, top_k=top_k)
         return [
             {

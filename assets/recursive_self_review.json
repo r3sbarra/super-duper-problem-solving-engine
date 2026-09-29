@@ -1,0 +1,174 @@
+{
+  "self_description": {
+    "n_subsystems": 27,
+    "failing_subsystems": 0,
+    "solve_loop_idea_coverage": 0.167,
+    "subproblem_only_coverage": 0.0,
+    "ood_scorer_car": 0.9231,
+    "polarity_baseline_car": 0.5385
+  },
+  "problem": "The super-solver problem-solving engine decomposes problems well but its decomposition covers almost none of the problem-specific solution idea (solution-idea coverage 0.167 vs subproblem coverage 0.0); it is a decomposer and mechanism-retriever, not yet an end-to-end solver. Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.",
+  "identify": {
+    "type": "optimization",
+    "entities": [
+      "super-solver problem-solving engine",
+      "decomposition covers almost",
+      "idea solution-idea coverage",
+      "measured health subsystems",
+      "subproblem coverage",
+      "retrieval accuracy"
+    ],
+    "objectives": [],
+    "is_vague": false
+  },
+  "decompose": {
+    "subproblems": [
+      "Decompose the objective 'Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.' into independent sub-goals whose joint satisfaction implies the objective.",
+      "State the strongest necessary condition for 'Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.' to hold, and check whether it is satisfiable.",
+      "Characterize the boundary/special cases of 'Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.' (degenerate inputs, limiting values) and test the objective there.",
+      "Formulate the objective function and feasible region for 'Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.', then identify the active constraints at the optimum.",
+      "Design a decisive test for the success criterion 'Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.': what observation would falsify it?",
+      "Establish a quantitative estimate or test for 'the value/behaviour of super-solver problem-solving engine', with the measurement or derivation that would falsify it."
+    ],
+    "slot_coverage": 0.8,
+    "solution_ideas": [
+      "<no structural primitives extracted>"
+    ]
+  },
+  "self_retrieval_gap": "the engine CANNOT retrieve a solution idea for its own meta problem: the primitive matcher has no domain vocabulary for meta-engineering, so retrieval is corpus-bound (works for systems/math problems, not abstract self-improvement problems).",
+  "suggest_paths": [
+    {
+      "title": "Active-Constraint Reduction",
+      "strategy": "CONSTRAINT_ACTIVATION",
+      "action": "Formulate the objective and feasible region for 'Improve the engine so that its decompositions lead to solved problems, "
+    },
+    {
+      "title": "Inventive Principle #23 (Feedback) Resolution",
+      "strategy": "TRIZ_INVENTIVE_CONTRADICTION",
+      "action": "Apply Feedback to the conflicting parameters governing super-solver problem-solving engine, decomposition covers almost,"
+    },
+    {
+      "title": "High-Resolution Differential Crucial Experiment",
+      "strategy": "PLATT_STRONG_INFERENCE_ASSAY",
+      "action": "Synthesize mutually exclusory predictions about super-solver problem-solving engine, decomposition covers almost, idea s"
+    },
+    {
+      "title": "Teleological Goal Regression & Auxiliary Subproblem Isolation",
+      "strategy": "POLYA_DECOMPOSITION_WORKING_BACKWARDS",
+      "action": "Identify the minimal non-trivial instance of 'Improve the engine so that its decompositions lead to solved problems, wit"
+    }
+  ],
+  "triz": [
+    {
+      "id": 1,
+      "name": "Segmentation"
+    },
+    {
+      "id": 26,
+      "name": "Copying"
+    },
+    {
+      "id": 27,
+      "name": "Cheap Short-Living Objects"
+    }
+  ],
+  "kt_boundary": {
+    "leading_cause": "a cause tied to 'mechanisms' (present in the IS regime, absent in IS-NOT)",
+    "n_candidates": 6
+  },
+  "abduct": [
+    "The super solver problem solving arises from unmodeled external environmental boundary conditions, g",
+    "The super solver problem solving is an observational artifact caused by unresolved contaminants, sel",
+    "The super solver problem solving is driven by a localized first-order structural phase transition, r",
+    "The super solver problem solving represents a genuine breakdown of standard theory, requiring fundam"
+  ],
+  "crucible": [
+    {
+      "hypothesis": "Add a solution-synthesis stage that proposes a concrete mechanism for each subproblem before retrieval",
+      "verdict": "SURVIVED_ROBUST",
+      "robustness": 1.0,
+      "survived": true
+    },
+    {
+      "hypothesis": "Retrieve and rank candidate solutions for the WHOLE problem, not per subproblem",
+      "verdict": "SURVIVED_ROBUST",
+      "robustness": 1.0,
+      "survived": true
+    },
+    {
+      "hypothesis": "Expand the vector corpus with solution ideas so retrieval generalizes beyond hand-authored cases",
+      "verdict": "SURVIVED_ROBUST",
+      "robustness": 1.0,
+      "survived": true
+    },
+    {
+      "hypothesis": "Leave decomposition as-is; the engine is a decomposition tool, not a solver",
+      "verdict": "SURVIVED_ROBUST",
+      "robustness": 1.0,
+      "survived": true
+    }
+  ],
+  "crucible_discriminates": false,
+  "crucible_limitation": "the crucible passes ALL good-faith engineering proposals at 1.00: it is a sanity filter (falsifies flawed math / self-contradictions), NOT an option ranker. Competing design proposals must be ranked by the Pareto resolver, not the tournament.",
+  "pareto": {
+    "pareto_front": [
+      "solution_synthesis_stage",
+      "whole_problem_solution_retrieval",
+      "expand_solution_corpus",
+      "status_quo_decomposition_only"
+    ],
+    "dominated": [],
+    "knee": "whole_problem_solution_retrieval",
+    "scalarized_ranking": [
+      {
+        "candidate": "status_quo_decomposition_only",
+        "score": 0.3333
+      },
+      {
+        "candidate": "whole_problem_solution_retrieval",
+        "score": 0.375
+      },
+      {
+        "candidate": "expand_solution_corpus",
+        "score": 0.4444
+      },
+      {
+        "candidate": "solution_synthesis_stage",
+        "score": 0.6667
+      }
+    ],
+    "conflicts": [
+      {
+        "a": "expected_impact",
+        "b": "implementation_effort",
+        "correlation": -0.9019
+      },
+      {
+        "a": "expected_impact",
+        "b": "regression_risk",
+        "correlation": -0.9304
+      }
+    ],
+    "ideal": {
+      "expected_impact": 1,
+      "implementation_effort": 0,
+      "regression_risk": 0
+    },
+    "nadir": {
+      "expected_impact": 9,
+      "implementation_effort": 8,
+      "regression_risk": 6
+    }
+  },
+  "agreement": {
+    "human_roadmap_item": "end-to-end solve loop / decomposition->solution link",
+    "engine_agrees_on_solution_link": true,
+    "engine_pareto_recommends": "whole_problem_solution_retrieval",
+    "engine_crucible_survivors": [
+      "Add a solution-synthesis stage that proposes a concrete mechanism for each subproblem before retrieval",
+      "Retrieve and rank candidate solutions for the WHOLE problem, not per subproblem",
+      "Expand the vector corpus with solution ideas so retrieval generalizes beyond hand-authored cases",
+      "Leave decomposition as-is; the engine is a decomposition tool, not a solver"
+    ]
+  }
+}
