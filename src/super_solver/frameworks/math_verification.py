@@ -39,6 +39,59 @@ from super_solver.core.types import (
     VerificationStatus,
 )
 
+# Barrier trigger keywords: the technical vocabulary that, when present in a
+# claim's technique and absent from the barrier's known evasion, indicates a
+# barrier violation. Embedder-independent robustness layer (see
+# audit_lemma_against_barriers).
+_BARRIER_KEYWORDS = {
+    "tardos_monotone_barrier": (
+        "monotone circuit", "monotone circuits", "monotone approximation",
+        "berg-ulfberg", "berg ulfberg", "monotone boolean", "clique lower bound",
+        "monotone clique",
+    ),
+    "baker_gill_solovay": (
+        "relativiz", "relativiz", "oracle", "diagonalization", "diagonalisation",
+    ),
+    "razborov_rudich": (
+        "natural proof", "natural proofs", "constructive property",
+        "combinatorial property", "pseudo-random", "pseudorandom",
+    ),
+    "selberg_parity_barrier": (
+        "sieve", "parity", "divisor sum", "selberg sieve",
+    ),
+    "scholze_stix_gap": (
+        "frobenioid", "theta-link", "theta link", "iutt", "inter-universal",
+        "log-theta",
+    ),
+    "conway_collatz_undecidability": (
+        "collatz", "3x+1", "3x + 1", "termination for all integers",
+        "undecidab",
+    ),
+}
+
+# Evasion keywords: naming these means the claim explicitly avoids the barrier.
+_BARRIER_EVASION_KEYWORDS = {
+    "tardos_monotone_barrier": (
+        "arithmetization", "arithmetisation", "non-monotone", "negation",
+        "interactive proof", "ip=pspace",
+    ),
+    "baker_gill_solovay": (
+        "non-relativizing", "nonrelativizing", "arithmetization", "circuit lower bound",
+    ),
+    "razborov_rudich": (
+        "non-natural", "non-natural proof", "cryptographic assumption",
+    ),
+    "selberg_parity_barrier": (
+        "bilinear", "bombieri", "vinogradov", "kloosterman", "spectral",
+    ),
+    "scholze_stix_gap": (
+        "metric distortion", "explicit distortion",
+    ),
+    "conway_collatz_undecidability": (
+        "2-adic", "density 1", "logarithmic drift", "renewal",
+    ),
+}
+
 
 class LakatosProofVerificationEngine:
     """Audits, verifies, or refutes unproven and controversial mathematical preprints."""
@@ -190,6 +243,7 @@ class LakatosProofVerificationEngine:
         self,
         lemma: MathematicalLemma,
         target_conjecture: str,
+        full_context: Optional[str] = None,
     ) -> List[MathematicalBarrier]:
         """Audits a lemma against all canonical mathematical barriers using continuous vector matching."""
         conflicts = []
@@ -201,6 +255,29 @@ class LakatosProofVerificationEngine:
             v_field = embedding_service.encode(barrier.field)
             field_relevance = embedding_service.cosine_similarity(v_context, v_field)
 
+            # --- Robust keyword trigger ---
+            # The vector gates below are calibrated for a specific embedder and
+            # can silently miss the RIGHT barrier (measured: a monotone-circuit
+            # P!=NP proof scored Tardos field_rel 0.20 < 0.28 gate and obs 0.295
+            # < 0.35 gate, so the audit rubber-stamped it). Barrier-specific
+            # technical keywords are a robust, embedder-independent complement:
+            # if the claim names the barrier's defining technique AND does not
+            # name its known evasion, it is a violation regardless of cosine.
+            low_ctx = v_context.lower() if isinstance(v_context, str) else (
+                (l_text + " " + target_conjecture).lower()
+            )
+            # Evasion keywords are checked against the FULL paper context when
+            # supplied: a paper often names its barrier-evasion technique in a
+            # LATER sentence than the lemma being audited (measured: Tao's
+            # Collatz paper names '2-adic'/'renewal' only after the first
+            # sentence, so a lemma-local evasion check wrongly flagged it).
+            evade_hay = (low_ctx + " " + (full_context or "").lower())
+            kw_hit = any(k in low_ctx for k in _BARRIER_KEYWORDS.get(bid, ()))
+            kw_evade = any(k in evade_hay for k in _BARRIER_EVASION_KEYWORDS.get(bid, ()))
+            if kw_hit and not kw_evade:
+                conflicts.append(barrier)
+                continue
+
             # Only audit barriers applicable to the target mathematical field / domain
             if field_relevance < 0.28:
                 continue
@@ -211,10 +288,13 @@ class LakatosProofVerificationEngine:
             sim_obs = embedding_service.cosine_similarity(v_lemma, v_obs)
             sim_eva = embedding_service.cosine_similarity(v_lemma, v_eva)
 
-            # A barrier is violated if the technique aligns with the obstruction manifold
-            # and lacks sufficient alignment with known barrier evasion mechanisms.
-            if sim_obs >= 0.35:
-                if sim_eva >= (sim_obs - 0.05) and sim_eva >= 0.38:
+            # A barrier is violated if the technique aligns with the obstruction
+            # manifold and lacks sufficient alignment with known barrier evasion
+            # mechanisms. Thresholds recalibrated DOWN from (0.35, 0.38) to
+            # (0.28, 0.34): the old gates let the correct barrier through at
+            # obs=0.295 (measured) and rubber-stamped every claim.
+            if sim_obs >= 0.28:
+                if sim_eva >= (sim_obs - 0.05) and sim_eva >= 0.34:
                     # Successfully evades barrier! Record evasion in lemma metadata
                     lemma.metadata.setdefault("evaded_barriers", []).append(barrier.name)
                 else:
@@ -295,7 +375,10 @@ class LakatosProofVerificationEngine:
         all_counterexamples = []
 
         for lem in lemmas:
-            conflicts = self.audit_lemma_against_barriers(lem, target_conjecture)
+            conflicts = self.audit_lemma_against_barriers(
+                lem, target_conjecture,
+                full_context=(paper_title + " " + abstract_text),
+            )
             if conflicts:
                 lem.barrier_conflicts = [b.barrier_id for b in conflicts]
                 for c in conflicts:

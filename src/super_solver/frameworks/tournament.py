@@ -137,10 +137,39 @@ class DialecticalTournamentEngine:
         rounds.append(r2)
 
         # Round 3: Boundary & Consistency Refutation
+        contradiction = None
         if max_rounds >= 3:
             advocate_claim = "Hypothesis holds under constraints with high explanatory coherence."
             refuter_response = "Refuter verifies internal constraint satisfaction."
             round_score = 0.90
+
+            # Internal contradiction check: a hypothesis asserting both a
+            # predicate and its opposite ('increase X and also reduce X') is
+            # self-refuting and must not survive. Without this the tournament
+            # rubber-stamped such claims at 1.00.
+            from super_solver.frameworks.problem_identification import (
+                _antonym_flip,
+            )
+
+            hyp_low = hypothesis.lower()
+            antonym_self = _antonym_flip(hypothesis, hypothesis)
+            both_dirs = any(
+                (a in hyp_low and b in hyp_low)
+                for a, b in (
+                    ("increase", "reduce"), ("increase", "decrease"),
+                    ("add", "remove"), ("raise", "lower"),
+                    ("enable", "disable"), ("always", "never"),
+                    ("maximize", "minimize"),
+                )
+            )
+            if antonym_self or both_dirs:
+                contradiction = (
+                    "Hypothesis asserts mutually exclusive predicates "
+                    "(both a claim and its opposite)"
+                )
+                current_robustness *= 0.20
+                refuter_response = f"Refuter exposes internal contradiction: {contradiction}."
+                round_score = 0.10
 
             if boundary_is_not:
                 b_vec = embedding_service.encode(boundary_is_not)
@@ -164,6 +193,10 @@ class DialecticalTournamentEngine:
             verdict = TournamentVerdict.FALSIFIED_BY_BARRIER
             survived = False
             summary = f"Refuted by Red Team: Violates {len(barrier_violations)} barrier(s) ({barrier_violations[0]})."
+        elif contradiction:
+            verdict = TournamentVerdict.WEAKENED_INCONSISTENT
+            survived = False
+            summary = f"Refuted by Red Team: {contradiction}."
         elif dead_end_warnings and current_robustness < 0.45:
             verdict = TournamentVerdict.CONCEDED_DEAD_END
             survived = False
