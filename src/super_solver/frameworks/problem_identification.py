@@ -1058,9 +1058,33 @@ def decompose(
         expected_slots = {"goal", "constraint", "success_criterion"}
     covered = len(slots_present & expected_slots)
 
+    # --- Retrieval bridge: attach candidate SOLUTION ideas, not just subproblems
+    # Subproblems are meta-level ("decompose the objective"), so on their own
+    # they never contain the problem-specific solution idea (measured: solution
+    # coverage ~0.07). The cross-domain primitive analogizer DOES retrieve real
+    # solution mechanisms, so surface them here to close the loop.
+    solution_ideas: List[Dict[str, object]] = []
+    try:
+        from super_solver.vectorize import vectorization_service
+
+        for h in vectorization_service.primitive_analogize(
+            specification, top_k=max(2, min(3, max_new))
+        ):
+            if h.get("empty_match"):
+                continue
+            solution_ideas.append({
+                "idea": h.get("content", ""),
+                "title": h.get("title", ""),
+                "mechanism": "structural_primitives",
+                "overlap": float(h.get("primitive_overlap", 0.0)),
+            })
+    except Exception:
+        pass
+
     return {
         "structure": structure.to_dict(),
         "subproblems": [s.to_dict() for s in new_kept + old_kept],
+        "solution_ideas": solution_ideas,
         "metrics": {
             "n_generated": len(new_kept),
             "n_known": len(old_kept),

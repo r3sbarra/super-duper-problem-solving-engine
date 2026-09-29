@@ -1,0 +1,118 @@
+{
+  "n_problems": 12,
+  "solution_coverage_at_1": 0.0,
+  "solution_coverage_at_3": 0.0,
+  "mean_best_recall": 0.067,
+  "solution_idea_coverage": 0.167,
+  "rows": [
+    {
+      "problem": "Shortest-path routing for a delivery fleet under time-window constraints.",
+      "best_recall": 0.182,
+      "best_rank": 4,
+      "covered": false,
+      "idea_best_recall": 0.182,
+      "idea_covered": false,
+      "best_subproblem": "Formulate the objective function and feasible region for 'time-window constraint"
+    },
+    {
+      "problem": "Reduce cache invalidation spikes in p99 latency.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.0,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'Reduce cache invalidation spikes in p99 latency.' into "
+    },
+    {
+      "problem": "Design a scheme so a message is processed exactly once despite retries.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.6,
+      "idea_covered": true,
+      "best_subproblem": "Decompose the objective 'Design a scheme so a message is processed exactly once "
+    },
+    {
+      "problem": "Detect duplicate invoices across two billing systems.",
+      "best_recall": 0.143,
+      "best_rank": 8,
+      "covered": false,
+      "idea_best_recall": 0.0,
+      "idea_covered": false,
+      "best_subproblem": "Find a structural analogue of 'duplicate invoices across' in another domain and "
+    },
+    {
+      "problem": "Prevent one slow backend from taking down the whole service.",
+      "best_recall": 0.167,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.667,
+      "idea_covered": true,
+      "best_subproblem": "Decompose the objective 'Prevent one slow backend from taking down the whole ser"
+    },
+    {
+      "problem": "Estimate how long a queue takes to drain after a traffic spike.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.0,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'Estimate how long a queue takes to drain after a traffi"
+    },
+    {
+      "problem": "Make a battery charge quickly without overheating.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.0,
+      "idea_covered": false,
+      "best_subproblem": "State the strongest necessary condition for 'battery charge' to hold, and check "
+    },
+    {
+      "problem": "Find the cheapest way to connect all offices with links so no cycles form.",
+      "best_recall": 0.111,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.333,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'Find the cheapest way to connect all offices with links"
+    },
+    {
+      "problem": "Prove that there are infinitely many primes.",
+      "best_recall": 0.2,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.1,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'Prove that there are infinitely many primes.' into inde"
+    },
+    {
+      "problem": "Explain why a recommendation engine becomes less diverse over time.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.0,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'Explain why a recommendation engine becomes less divers"
+    },
+    {
+      "problem": "Reduce the weight of a vehicle without weakening its frame.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.111,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'Reduce the weight of a vehicle without weakening its fr"
+    },
+    {
+      "problem": "Detect a data race that only fails sometimes.",
+      "best_recall": 0.0,
+      "best_rank": 1,
+      "covered": false,
+      "idea_best_recall": 0.0,
+      "idea_covered": false,
+      "best_subproblem": "Decompose the objective 'fails sometimes data race' into independent sub-goals w"
+    }
+  ],
+  "caveat": "lexical recall against a reference idea is a PROXY for 'decomposition pointed at the right thing'; it is not a proof of a solve"
+}
