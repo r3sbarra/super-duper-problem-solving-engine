@@ -702,6 +702,56 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "balance a chemical reaction so atoms are conserved",
         "solution_direction": "Set up conservation equations for each element and solve the linear system for the stoichiometric coefficients",
     },
+    # --- Bridged from suuri-chan's verified lemma vault (generic law bridge). ---
+    # Each solution text is machine-verified to strip to its target primitive.
+    {
+        "problem_context": "prove a complex-analysis identity symbolically",
+        "solution_direction": "Simplify the identity to canonical form and prove it symbolically: e^(i*pi) + 1 = 0 (Euler identity)",
+    },
+    {
+        "problem_context": "measure how many bits of information are needed to store or recall items",
+        "solution_direction": "Compute the Shannon entropy in bits of the probability distribution: exact recall of N facts requires at least log2(N) bits",
+    },
+    {
+        "problem_context": "find the nth term of a sequence defined by a recurrence from previous terms",
+        "solution_direction": "Use a dynamic programming recurrence where each term follows previous terms: a[n] = c1*a[n-1] + c2*a[n-2]",
+    },
+    {
+        "problem_context": "evaluate a continued fraction expansion of a constant",
+        "solution_direction": "Evaluate the expression by iterating the continued fraction to convergence: sqrt2 = GCF(a_n=2, b_n=1)",
+    },
+    {
+        "problem_context": "find the holonomic generating function closed form of a combinatorial sequence",
+        "solution_direction": "Simplify the identity to canonical form and prove it symbolically for the holonomic generating function: (a^2 - b^2) = (a-b)(a+b)",
+    },
+    {
+        "problem_context": "add up all the numbers in a series quickly using a closed-form sum",
+        "solution_direction": "Use the arithmetic series sum formula to add up the numbers in the series: sum of first n integers = n(n+1)/2",
+    },
+    {
+        "problem_context": "decide primality or count primes",
+        "solution_direction": "Run a primality test and prime sieve to count primes: pi(n) = number of primes <= n",
+    },
+    {
+        "problem_context": "compute the integral antiderivative of a function exactly",
+        "solution_direction": "Compute the integral antiderivative of the function exactly by Ostrogradsky-Hermite reduction or Risch integration",
+    },
+    {
+        "problem_context": "fit a line or curve through noisy data points",
+        "solution_direction": "Fit the best-fit line by least squares regression solving the normal equations for the slope and intercept",
+    },
+    {
+        "problem_context": "classify a knot or braid by computing a topological invariant",
+        "solution_direction": "Compute the Jones polynomial knot invariant to test chirality of the braid closure",
+    },
+    {
+        "problem_context": "find and isolate all real roots of a polynomial",
+        "solution_direction": "Isolate the real roots with Sturm theorem, counting sign changes along the Sturm chain to bracket every real root",
+    },
+    {
+        "problem_context": "find the eigenvalues of a matrix from its characteristic polynomial",
+        "solution_direction": "Find the eigenvalues from the characteristic polynomial det(lambda*I - A) via the Faddeev-LeVerrier algorithm",
+    },
 ]
 
 

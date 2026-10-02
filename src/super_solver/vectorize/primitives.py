@@ -90,7 +90,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"search.*\bsorted\b|binary search|halve.*range|middle element|find.*in.*\bsorted\b|search.*phone book", "binary_search"),
     (r"sort.*list|sort.*record|merge sort|split.*half|sorted halves|order.*items|sorted halves", "sorting"),
     (r"split.*half.*(sort|merge)|merge.*sorted|sorted halves", "merge"),
-    (r"look up.*key|hash table|hash function|constant time.*lookup|instant.*lookup|\bhash\b", "hashing"),
+    (r"look up.*key|look up.*(by|using) (id|a key)|hash table|hash function|constant time.*lookup|instant.*lookup|look up.*instant|\bhash\b|find.*by id instantly|looking up.*instantly", "hashing"),
     (r"longest common subsequence|prefix lengths|table.*cells|common subsequence", "dynamic_programming"),
     (r"traverse.*tree|depth-first|breadth-first|visited nodes|graph.*search|visit.*node|"
      r"reachable from|reachable from (a|the)|start.*(node|vertex|city|airport).*(reach|visit)|"
