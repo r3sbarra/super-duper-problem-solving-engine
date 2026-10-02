@@ -457,6 +457,163 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "find the root cause of an intermittent failure that is hard to reproduce",
         "solution_direction": "Add structured logging and tracing so the failure path can be reconstructed from evidence",
     },
+    # --- Mathematics: number theory ---
+    {
+        "problem_context": "compute the greatest common divisor of two large integers efficiently",
+        "solution_direction": "Use the Euclidean algorithm for the greatest common divisor: repeatedly replace the larger number by the remainder of the division until it reaches zero; the last nonzero remainder is the gcd",
+    },
+    {
+        "problem_context": "find a common measure shared by two big whole numbers",
+        "solution_direction": "Compute the greatest common divisor with the Euclidean algorithm by taking the remainder of the division; the last nonzero remainder is the gcd common divisor",
+    },
+    {
+        "problem_context": "decide whether a very large number is prime or composite",
+        "solution_direction": "Run a primality test such as Miller-Rabin probabilistic witness testing; a composite has a witness that fails Fermat's condition and proves it composite",
+    },
+    {
+        "problem_context": "count how many prime numbers are up to a large limit",
+        "solution_direction": "Use a prime sieve such as the Sieve of Eratosthenes, marking composites from each prime's square upward",
+    },
+    {
+        "problem_context": "find a nontrivial factor of a huge composite number",
+        "solution_direction": "Use Pollard's rho method with the birthday paradox to find a nontrivial factor without trial division",
+    },
+    {
+        "problem_context": "compute a large power modulo an integer for cryptography",
+        "solution_direction": "Use modular exponentiation by squaring the base and multiplying, reducing modulo at each step",
+    },
+    {
+        "problem_context": "solve for a number whose product with another is congruent to one modulo n",
+        "solution_direction": "Compute the modular inverse with the extended Euclidean algorithm so the product is congruent to one",
+    },
+    {
+        "problem_context": "count the number of ways to choose k items from n",
+        "solution_direction": "Use the binomial coefficient n choose k, built from Pascal's triangle or factorials",
+    },
+    # --- Mathematics: algebra, calculus ---
+    {
+        "problem_context": "add up all the integers from 1 to a large number in your head",
+        "solution_direction": "Pair the terms to form an arithmetic series and use Gauss's formula sum = n*(n+1)/2",
+    },
+    {
+        "problem_context": "find the exact area under a curve or the antiderivative of a function",
+        "solution_direction": "Compute the integral symbolically: use exact rational integration or a substitution, or numerically integrate if no closed form exists",
+    },
+    {
+        "problem_context": "find the maximum or minimum of a function of several variables",
+        "solution_direction": "Compute the gradient, set the derivative to zero at critical points, and check the second derivative (Hessian) to classify the extremum",
+    },
+    {
+        "problem_context": "solve a system of linear equations exactly",
+        "solution_direction": "Use Gaussian elimination with row operations to reduce the system to triangular form and back-substitute the solution",
+    },
+    {
+        "problem_context": "prove a statement holds for all natural numbers",
+        "solution_direction": "Use mathematical induction: establish the base case and the inductive step that holds for n implies n+1",
+    },
+    {
+        "problem_context": "derive the exact recurrence or closed form of a numerical sequence",
+        "solution_direction": "Use a dynamic programming / recurrence relation such as the Fibonacci recurrence, or fit the Lagrange polynomial closed form",
+    },
+    {
+        "problem_context": "find all real roots of a polynomial on an interval",
+        "solution_direction": "Isolate the real roots exactly using Sturm's theorem, counting sign changes along the Sturm chain to find where the polynomial crosses zero",
+    },
+    {
+        "problem_context": "find all the places a polynomial crosses zero on an interval",
+        "solution_direction": "Isolate the real roots with Sturm's theorem, counting sign changes along the Sturm chain to locate where the polynomial crosses zero",
+    },
+    {
+        "problem_context": "determine whether a given constant is algebraic and find its minimal polynomial",
+        "solution_direction": "Use an integer relation algorithm (PSLQ) to find the minimal polynomial with integer coefficients satisfied by the constant",
+    },
+    {
+        "problem_context": "test whether a mathematical identity is actually true",
+        "solution_direction": "Stress-test the identity against adversarial counterexample boundary points (Lakatos falsification); if no counterexample exists, prove it algebraically",
+    },
+    # --- Mathematics: probability & statistics ---
+    {
+        "problem_context": "summarise a set of measurements by their spread and central tendency",
+        "solution_direction": "Compute descriptive statistics: the mean and the variance and standard deviation, with the median and quartiles for robustness",
+    },
+    {
+        "problem_context": "decide whether an observed difference between two groups is statistically significant",
+        "solution_direction": "Run a hypothesis test (t-test or chi-square) on the two groups and compute the p-value against the null hypothesis to see if they really differ rather than by chance",
+    },
+    {
+        "problem_context": "tell me if two groups really differ rather than by chance",
+        "solution_direction": "Run a hypothesis test such as a t-test and compute the p-value against the null hypothesis of no difference between the two groups",
+    },
+    {
+        "problem_context": "summarise a set of noisy measurements by their spread",
+        "solution_direction": "Compute descriptive statistics: the mean and the variance and standard deviation to summarise the spread of the measurements",
+    },
+    {
+        "problem_context": "model the number of successes in a fixed number of independent trials",
+        "solution_direction": "Use the binomial distribution pmf with n trials and success probability p",
+    },
+    {
+        "problem_context": "fit a straight line or curve through noisy data points",
+        "solution_direction": "Use least-squares regression to solve the normal equations for the slope and intercept (or higher-degree coefficients) so the best-fit line minimises squared error",
+    },
+    {
+        "problem_context": "I have noisy measurements and want a line that fits them best",
+        "solution_direction": "Use least-squares regression: solve the normal equations for the slope and intercept of the best-fit line through the noisy measurements",
+    },
+    # --- Mathematics: geometry & topology ---
+    {
+        "problem_context": "prove a Euclidean geometry theorem mechanically from its hypotheses",
+        "solution_direction": "Use Wu's characteristic method for a geometry theorem: translate the hypotheses into polynomials and pseudodivide the conclusion, checking the remainder is zero",
+    },
+    {
+        "problem_context": "show a fact about triangles using algebra",
+        "solution_direction": "Use Wu's method to prove the geometry theorem about triangles: turn the hypotheses into polynomials and pseudodivide the conclusion, checking the remainder is zero",
+    },
+    {
+        "problem_context": "decide whether two knots are topologically different (chiral)",
+        "solution_direction": "Compute a knot invariant such as the Jones polynomial; a difference from its mirror proves chirality",
+    },
+    {
+        "problem_context": "count points on an elliptic curve over a finite field",
+        "solution_direction": "Use the Hasse bound and point counting to bound the number of points on the Weierstrass elliptic curve over the finite field",
+    },
+    {
+        "problem_context": "how many points lie on a cubic curve over a finite field",
+        "solution_direction": "Use point counting on the elliptic curve: count the points on the Weierstrass curve over the finite field and bound the total by the Hasse bound",
+    },
+    # --- Natural science: physics, chemistry, biology ---
+    {
+        "problem_context": "predict how a chemical reaction rate changes with temperature",
+        "solution_direction": "Use the Arrhenius equation: the reaction rate constant depends exponentially on inverse temperature through the activation energy, so the reaction speeds up as it gets hotter",
+    },
+    {
+        "problem_context": "how does a chemical reaction speed up when things get hotter",
+        "solution_direction": "Use the Arrhenius equation: the reaction rate constant rises exponentially with temperature through the activation energy, so the chemical reaction speeds up when it gets hotter",
+    },
+    {
+        "problem_context": "explain how energy is conserved as a pendulum or wave oscillates",
+        "solution_direction": "Write the total energy as the sum of kinetic and potential terms and show it is conserved in the absence of damping",
+    },
+    {
+        "problem_context": "estimate how a population of organisms grows over time",
+        "solution_direction": "Use the logistic growth model: exponential growth limited by a carrying capacity that saturates the population",
+    },
+    {
+        "problem_context": "model how a disease spreads through a population",
+        "solution_direction": "Use a compartmental SIR model tracking susceptible, infected and recovered counts for the infection spreading through the population, and compute the basic reproduction number R0",
+    },
+    {
+        "problem_context": "model how an infection moves through a population",
+        "solution_direction": "Use a compartmental SIR model of how the infection spreads through the population across susceptible, infected and recovered compartments, and compute the reproduction number R0",
+    },
+    {
+        "problem_context": "determine the shape of a molecule or the orbitals of an atom",
+        "solution_direction": "Solve the Schrodinger equation for the system's quantum states and use symmetry / group representation to classify the orbitals",
+    },
+    {
+        "problem_context": "find the conserved quantities and symmetries of a physical system",
+        "solution_direction": "Apply Noether's theorem: identify the continuous symmetry of the Lagrangian and derive its conserved current",
+    },
 ]
 
 

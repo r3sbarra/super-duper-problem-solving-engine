@@ -198,6 +198,98 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["specification"],
             },
         ),
+        types.Tool(
+            name="super_solver_smt_lra",
+            description="Checks satisfiability of linear real-arithmetic constraints (QF_LRA) with an exact Simplex/DPLL(T) verdict (SAT / UNSAT with conflict).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "constraints": {"type": "array", "items": {"type": "string"},
+                                    "description": "Linear constraints, e.g. ['x + y <= 10', 'x >= 0']"},
+                },
+                "required": ["constraints"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_smt_euf",
+            description="Checks satisfiability of equality logic with uninterpreted functions: congruences over equalities and disequalities.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "equalities": {"type": "array", "items": {"type": "array", "items": {"type": "string"}},
+                                   "description": "Pairs asserted equal, e.g. [['a','b'],['b','c']]"},
+                    "disequalities": {"type": "array", "items": {"type": "array", "items": {"type": "string"}},
+                                      "description": "Pairs asserted unequal, e.g. [['a','c']]"},
+                },
+                "required": ["equalities"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_tournament",
+            description="Runs an adversarial Red-Team vs Blue-Team dialectical debate tournament across candidate hypotheses and returns the surviving robust ones.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "candidate_hypotheses": {"type": "array", "items": {"type": "string"}},
+                    "context": {"type": "string"},
+                    "boundary_is_not": {"type": "string"},
+                    "top_k": {"type": "integer", "default": 2},
+                },
+                "required": ["candidate_hypotheses"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_coalesce_hypotheses",
+            description="Coalesces redundant or near-continuous candidate hypotheses into coarse equivalence classes via invariant-signature compression.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "hypotheses": {"type": "array", "items": {"type": "string"}},
+                    "domain_context": {"type": "string"},
+                },
+                "required": ["hypotheses"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_audit_boundaries",
+            description="Audits a candidate hypothesis or design against universal adversarial boundary regimes; returns resilience, fatal flaws and strengthening advice.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "candidate_description": {"type": "string"},
+                    "problem_specification": {"type": "string"},
+                    "domain_context": {"type": "string"},
+                },
+                "required": ["candidate_description", "problem_specification"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_verify_math_paper",
+            description="Audits, tests, and verifies or refutes an unverified mathematical preprint against its target conjecture via Lakatos falsification and proof search.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "paper_id": {"type": "string"},
+                    "paper_title": {"type": "string"},
+                    "abstract_text": {"type": "string"},
+                    "target_conjecture": {"type": "string"},
+                },
+                "required": ["paper_id", "paper_title", "abstract_text", "target_conjecture"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_self_audit",
+            description="Runs the engine's self-audit and optimization: DPLL invariant verification, health gate, and self-evaluation status.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        types.Tool(
+            name="super_solver_consolidate_memory",
+            description="Consolidates the episodic memory store, merging near-duplicate cases below a similarity threshold; returns count merged.",
+            inputSchema={
+                "type": "object",
+                "properties": {"similarity_threshold": {"type": "number", "default": 0.75}},
+            },
+        ),
     ]
 
 
@@ -281,6 +373,62 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         likelihoods = arguments.get("likelihood_matrix")
         ranked = engine.boed.rank_experiments(priors, designs, likelihoods)
         return [types.TextContent(type="text", text=json.dumps({"ranked_experiments": ranked}, indent=2, default=str))]
+
+    elif name == "super_solver_smt_lra":
+        result = engine.check_smt_lra(arguments["constraints"])
+        return [types.TextContent(type="text", text=json.dumps({"verdict": result.verdict, "is_sat": result.is_sat, "details": result.details}, indent=2, default=str))]
+
+    elif name == "super_solver_smt_euf":
+        eq = arguments.get("equalities", [])
+        neq = arguments.get("disequalities", [])
+        result = engine.check_smt_euf([tuple(e) for e in eq], [tuple(d) for d in neq])
+        return [types.TextContent(type="text", text=json.dumps({"verdict": result.verdict, "is_sat": result.is_sat, "details": result.details}, indent=2, default=str))]
+
+    elif name == "super_solver_tournament":
+        results = engine.run_tournament(
+            candidate_hypotheses=arguments["candidate_hypotheses"],
+            context=arguments.get("context"),
+            boundary_is_not=arguments.get("boundary_is_not"),
+            top_k=arguments.get("top_k", 2),
+        )
+        return [types.TextContent(type="text", text=json.dumps({"matches": [
+            {"hypothesis": m.hypothesis, "verdict": getattr(m.verdict, "value", str(m.verdict)),
+             "robustness_score": getattr(m, "robustness_score", None)}
+            for m in results
+        ]}, indent=2, default=str))]
+
+    elif name == "super_solver_coalesce_hypotheses":
+        classes = engine.coalesce_hypotheses(arguments["hypotheses"], arguments.get("domain_context"))
+        return [types.TextContent(type="text", text=json.dumps({"classes": classes}, indent=2, default=str))]
+
+    elif name == "super_solver_audit_boundaries":
+        report = engine.audit_adversarial_boundaries(
+            candidate_description=arguments["candidate_description"],
+            problem_specification=arguments["problem_specification"],
+            domain_context=arguments.get("domain_context"),
+        )
+        return [types.TextContent(type="text", text=json.dumps(report, indent=2, default=str))]
+
+    elif name == "super_solver_verify_math_paper":
+        result = engine.verify_math_paper(
+            paper_id=arguments["paper_id"],
+            paper_title=arguments["paper_title"],
+            abstract_text=arguments["abstract_text"],
+            target_conjecture=arguments["target_conjecture"],
+        )
+        return [types.TextContent(type="text", text=json.dumps({
+            "paper_id": getattr(result, "paper_id", arguments["paper_id"]),
+            "verdict": getattr(result, "verdict", None),
+            "details": getattr(result, "to_dict", lambda: result)() if hasattr(result, "to_dict") else str(result),
+        }, indent=2, default=str))]
+
+    elif name == "super_solver_self_audit":
+        result = engine.run_self_audit_and_optimization()
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+
+    elif name == "super_solver_consolidate_memory":
+        merged = engine.consolidate_memory(arguments.get("similarity_threshold", 0.75))
+        return [types.TextContent(type="text", text=json.dumps({"merged": merged}, indent=2, default=str))]
 
     raise ValueError(f"Unknown tool: {name}")
 

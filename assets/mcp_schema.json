@@ -19,6 +19,59 @@
       "type": "object"
     }
   },
+  "super_solver_audit_boundaries": {
+    "description": "Audits a candidate hypothesis or design against universal adversarial boundary regimes; returns resilience, fatal flaws and strengthening advice.",
+    "inputSchema": {
+      "properties": {
+        "candidate_description": {
+          "type": "string"
+        },
+        "domain_context": {
+          "type": "string"
+        },
+        "problem_specification": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidate_description",
+        "problem_specification"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_coalesce_hypotheses": {
+    "description": "Coalesces redundant or near-continuous candidate hypotheses into coarse equivalence classes via invariant-signature compression.",
+    "inputSchema": {
+      "properties": {
+        "domain_context": {
+          "type": "string"
+        },
+        "hypotheses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "hypotheses"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_consolidate_memory": {
+    "description": "Consolidates the episodic memory store, merging near-duplicate cases below a similarity threshold; returns count merged.",
+    "inputSchema": {
+      "properties": {
+        "similarity_threshold": {
+          "default": 0.75,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    }
+  },
   "super_solver_decompose": {
     "description": "Decomposes a difficult research or engineering problem into auxiliary angles. First IDENTIFIES the problem (type/entities/givens/unknowns/constraints/goal), then generates subproblems anchored on those slots via Polya heuristics and TRIZ inventive principles. Returns problem_structure, ranked auxiliary_angles, suggested_triz_operators and decomposition_metrics (slot coverage, relevance spread).",
     "inputSchema": {
@@ -190,6 +243,62 @@
       "type": "object"
     }
   },
+  "super_solver_self_audit": {
+    "description": "Runs the engine's self-audit and optimization: DPLL invariant verification, health gate, and self-evaluation status.",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    }
+  },
+  "super_solver_smt_euf": {
+    "description": "Checks satisfiability of equality logic with uninterpreted functions: congruences over equalities and disequalities.",
+    "inputSchema": {
+      "properties": {
+        "disequalities": {
+          "description": "Pairs asserted unequal, e.g. [['a','c']]",
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "equalities": {
+          "description": "Pairs asserted equal, e.g. [['a','b'],['b','c']]",
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "equalities"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_smt_lra": {
+    "description": "Checks satisfiability of linear real-arithmetic constraints (QF_LRA) with an exact Simplex/DPLL(T) verdict (SAT / UNSAT with conflict).",
+    "inputSchema": {
+      "properties": {
+        "constraints": {
+          "description": "Linear constraints, e.g. ['x + y <= 10', 'x >= 0']",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "constraints"
+      ],
+      "type": "object"
+    }
+  },
   "super_solver_suggest_paths": {
     "description": "Suggests next optimal exploratory or reasoning paths avoiding dead ends using continuous thought guidance.",
     "inputSchema": {
@@ -219,6 +328,33 @@
       "type": "object"
     }
   },
+  "super_solver_tournament": {
+    "description": "Runs an adversarial Red-Team vs Blue-Team dialectical debate tournament across candidate hypotheses and returns the surviving robust ones.",
+    "inputSchema": {
+      "properties": {
+        "boundary_is_not": {
+          "type": "string"
+        },
+        "candidate_hypotheses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "context": {
+          "type": "string"
+        },
+        "top_k": {
+          "default": 2,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "candidate_hypotheses"
+      ],
+      "type": "object"
+    }
+  },
   "super_solver_triz_solve": {
     "description": "Uses Altshuller's TRIZ contradiction matrix to resolve trade-offs between improving and worsening parameters.",
     "inputSchema": {
@@ -235,6 +371,32 @@
       "required": [
         "improving_parameter",
         "worsening_parameter"
+      ],
+      "type": "object"
+    }
+  },
+  "super_solver_verify_math_paper": {
+    "description": "Audits, tests, and verifies or refutes an unverified mathematical preprint against its target conjecture via Lakatos falsification and proof search.",
+    "inputSchema": {
+      "properties": {
+        "abstract_text": {
+          "type": "string"
+        },
+        "paper_id": {
+          "type": "string"
+        },
+        "paper_title": {
+          "type": "string"
+        },
+        "target_conjecture": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "paper_id",
+        "paper_title",
+        "abstract_text",
+        "target_conjecture"
       ],
       "type": "object"
     }
