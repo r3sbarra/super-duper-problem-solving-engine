@@ -614,6 +614,94 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "find the conserved quantities and symmetries of a physical system",
         "solution_direction": "Apply Noether's theorem: identify the continuous symmetry of the Lagrangian and derive its conserved current",
     },
+    # --- Applied mathematics: linear algebra algorithms ---
+    {
+        "problem_context": "compute the determinant of a large matrix exactly without floating-point error",
+        "solution_direction": "Use the Bareiss fraction-free elimination algorithm: a determinant computed in O(n^3) with exact integer arithmetic and no division round-off",
+    },
+    {
+        "problem_context": "find the eigenvalues and characteristic polynomial of a matrix",
+        "solution_direction": "Compute the characteristic polynomial det(lambda*I - A) and find its roots; the eigenvalues are the roots of the characteristic polynomial, obtained via the Faddeev-LeVerrier algorithm",
+    },
+    {
+        "problem_context": "solve a system of linear equations exactly",
+        "solution_direction": "Use Gaussian elimination with row operations to reduce the augmented matrix to triangular form, then back-substitute the exact solution",
+    },
+    {
+        "problem_context": "find the null space or rank of a matrix",
+        "solution_direction": "Row-reduce the matrix to reduced row echelon form; the rank is the number of pivots and the null space basis is read off the free columns",
+    },
+    # --- Applied mathematics: optimization ---
+    {
+        "problem_context": "solve a linear program with a linear objective and linear constraints",
+        "solution_direction": "Use the simplex method: move along the vertices of the feasible polytope, pivoting to improve the objective until the optimum is reached",
+    },
+    {
+        "problem_context": "find the best trade-off among several competing objectives",
+        "solution_direction": "Compute the Pareto frontier of non-dominated solutions and choose the knee point that balances the objectives",
+    },
+    # --- Discrete mathematics / graph theory ---
+    {
+        "problem_context": "decide whether a graph can be split into two groups with no edge inside a group",
+        "solution_direction": "Test bipartiteness by a two-coloring breadth-first traversal: color each node the opposite of its neighbour; a conflict edge proves the graph is not bipartite",
+    },
+    {
+        "problem_context": "find the shortest route that visits every city exactly once",
+        "solution_direction": "Use dynamic programming over subsets (Held-Karp) to find the optimal Hamiltonian path through the travelling salesman problem",
+    },
+    {
+        "problem_context": "find the maximum flow through a network with capacities",
+        "solution_direction": "Use the Ford-Fulkerson method: find augmenting paths from source to sink and increase flow until no augmenting path remains",
+    },
+    # --- Information theory / signal processing ---
+    {
+        "problem_context": "measure the uncertainty or information content of a probability distribution",
+        "solution_direction": "Compute the Shannon entropy H = -sum p_i log p_i in bits; it is maximized by the uniform distribution",
+    },
+    {
+        "problem_context": "decompose a signal into its frequency components",
+        "solution_direction": "Compute the Fourier transform, decomposing the signal into sine and cosine frequency components, via the FFT algorithm",
+    },
+    # --- Statistics / estimation ---
+    {
+        "problem_context": "estimate an unknown parameter from noisy observations",
+        "solution_direction": "Use maximum likelihood estimation: write the likelihood of the observations as a function of the parameter and maximize it (or use Bayes' rule for a posterior)",
+    },
+    {
+        "problem_context": "fit a model when the data are noisy and the model is nonlinear",
+        "solution_direction": "Use nonlinear least squares: minimize the sum of squared residuals by iterating Gauss-Newton or Levenberg-Marquardt updates",
+    },
+    # --- Logic / computability ---
+    {
+        "problem_context": "prove that a program or loop always terminates",
+        "solution_direction": "Exhibit a well-founded ranking measure (variant) that strictly decreases on every iteration and is bounded below, proving termination",
+    },
+    {
+        "problem_context": "decide whether a Boolean formula is satisfiable",
+        "solution_direction": "Use a SAT solver / DPLL search with unit propagation and conflict-driven clause learning to find a satisfying assignment or prove UNSAT",
+    },
+    # --- Symbolic / algebraic computation ---
+    {
+        "problem_context": "find a Groebner basis for a system of polynomial equations",
+        "solution_direction": "Run Buchberger's algorithm: repeatedly form S-polynomials of pairs and reduce them until every S-polynomial reduces to zero, giving the Groebner basis",
+    },
+    {
+        "problem_context": "decide whether a polynomial is irreducible over the rationals",
+        "solution_direction": "Certify irreducibility by checking the polynomial is square-free and has no rational root, then confirming it is irreducible modulo a prime",
+    },
+    {
+        "problem_context": "prove a polynomial identity symbolically",
+        "solution_direction": "Simplify both sides with an E-graph equality-saturation rewrite system until they reach a canonical form, certifying the identity",
+    },
+    # --- Science / engineering mathematics ---
+    {
+        "problem_context": "predict how a quantity decays over time",
+        "solution_direction": "Model the decay with an exponential law and fit its rate constant from the data by least squares on the log transform",
+    },
+    {
+        "problem_context": "balance a chemical reaction so atoms are conserved",
+        "solution_direction": "Set up conservation equations for each element and solve the linear system for the stoichiometric coefficients",
+    },
 ]
 
 
