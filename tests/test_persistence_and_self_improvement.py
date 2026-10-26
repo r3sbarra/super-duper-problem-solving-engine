@@ -17,11 +17,40 @@ def test_default_db_path_resolution(tmp_path, monkeypatch):
     monkeypatch.setenv("PYTEST_CURRENT_TEST", "test_foo")
     assert get_default_db_path() == ":memory:"
 
-    # 3. When running normally (not in pytest, no env var)
+    # 3. When running normally (not under pytest and no env var).
+    #
+    #    Deleting PYTEST_CURRENT_TEST is no longer enough to simulate that:
+    #    detection also checks sys.modules["pytest"], because env-var-only
+    #    detection depends on *when* the module was imported. A module imported
+    #    during collection bound its path to the real database, and a test that
+    #    then wrote to it destroyed the developer's index. Patch the predicate
+    #    to stand in for a genuinely non-pytest process.
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    monkeypatch.setattr(
+        "super_solver.memory.episodic_store._running_under_pytest", lambda: False
+    )
     default_path = get_default_db_path()
     assert ".super_solver_data" in default_path
     assert default_path.endswith("super_solver.db")
+
+
+def test_pytest_detection_does_not_depend_on_import_order():
+    """Regression for a real data-loss bug.
+
+    ``PYTEST_CURRENT_TEST`` is only set while a test executes. A module imported
+    during collection therefore resolved its DB path to the developer's real
+    index; a fixture that cleared the session-wide singleton then wiped it (a
+    738-row local index was lost exactly this way). Detection must not depend on
+    that env var alone.
+    """
+    import sys
+
+    from super_solver.memory.episodic_store import _running_under_pytest
+    from super_solver.vectorize.index import _running_under_pytest as vec_pred
+
+    assert "pytest" in sys.modules  # true for the whole run, incl. collection
+    assert _running_under_pytest() is True
+    assert vec_pred() is True
 
 
 def test_memory_persists_across_engine_instances(tmp_path):

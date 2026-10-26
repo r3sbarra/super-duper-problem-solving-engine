@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import sys
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -18,14 +19,41 @@ import numpy as np
 from super_solver.core.embeddings import embedding_service
 
 
+def _running_under_pytest() -> bool:
+    """True when the process is a pytest run, whatever the import order.
+
+    ``PYTEST_CURRENT_TEST`` is only set *while a test executes*, so checking it
+    alone is order-dependent: a module imported during collection bound its
+    DB path to the REAL database, and any test that then wrote to it -- or
+    cleared it -- destroyed the developer's index. That is not theoretical; a
+    test fixture clearing the session-wide vector-index singleton wiped a
+    738-row local index exactly this way. ``pytest`` is in ``sys.modules`` from
+    the moment the runner starts, so it closes the window.
+    """
+    return "PYTEST_CURRENT_TEST" in os.environ or "pytest" in sys.modules
+
+
 def get_default_db_path() -> str:
-    """Resolves the default database path with support for env vars and test isolation."""
+    """Resolve the episodic-store DB path (env-overridable, test-isolated).
+
+    The default lives under the PACKAGE ROOT's ``.super_solver_data``, NOT the
+    current working directory.  A CWD-relative path silently forks the memory
+    store: the session that ran from the repo root kept its dead ends in
+    ``<repo>/.super_solver_data/super_solver.db`` while a session started from
+    the home directory wrote to ``~/.super_solver_data/super_solver.db`` -- two
+    live stores, each invisible to the other (both exist on the dev machine).
+    For an agent tool that is the worst kind of failure: the dead ends it
+    recorded are simply not there next time, with no error.  This mirrors
+    ``vectorize.index.get_vector_db_path``, which was fixed for the same reason.
+    """
     env_path = os.environ.get("SUPER_SOLVER_DB_PATH")
     if env_path:
         return env_path
-    if "PYTEST_CURRENT_TEST" in os.environ:
+    if _running_under_pytest():
         return ":memory:"
-    data_dir = Path.cwd() / ".super_solver_data"
+    # Package root = .../src/super_solver/memory -> up 3 = repo root
+    repo_root = Path(__file__).resolve().parents[3]
+    data_dir = repo_root / ".super_solver_data"
     data_dir.mkdir(parents=True, exist_ok=True)
     return str(data_dir / "super_solver.db")
 

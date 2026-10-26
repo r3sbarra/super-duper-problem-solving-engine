@@ -63,12 +63,12 @@ class DPLLSolver:
         if re.search(r"\s+(?:OR|or)\s+", protected):
             lits = [get_var(x) for x in re.split(r"\s+(?:OR|or)\s+", protected) if x.strip()]
             if lits:
-                return [[-l for l in lits]]
+                return [[-lit for lit in lits]]
         # Conjunction at top level: NOT(A AND B) == -A OR -B == one clause
         if re.search(r"\s+(?:AND|and|\^|&|\u2227)\s+", protected):
             lits = [get_var(x) for x in re.split(r"\s+(?:AND|and|\^|&|\u2227)\s+", protected) if x.strip()]
             if len(lits) >= 2:
-                return [[-l for l in lits]]
+                return [[-lit for lit in lits]]
         # Negation: NOT(NOT A) == A
         m = re.match(r"^\s*(?:NOT|not|~|-|\u00ac)\s*(.+)$", protected)
         if m:
@@ -76,6 +76,135 @@ class DPLLSolver:
         # Atomic target
         return [[-get_var(target)]]
 
+    # ------------------------------------------------------------------
+    # Structural (precedence-aware) parsing
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _cnf_atoms_to_ints(cnf, get_var) -> List[List[int]]:
+        """Map a parser CNF (literals as ``(is_negated, atom_text)``) to int clauses."""
+        out: List[List[int]] = []
+        for clause in cnf:
+            ints: List[int] = []
+            for neg, atom in clause:
+                var = get_var(atom)
+                ints.append(-var if neg else var)
+            if ints:
+                out.append(ints)
+        return out
+
+    def _parse_structural(
+        self, premises: List[str], target_claim: str, get_var
+    ) -> Optional[Tuple[List[List[int]], List[List[int]]]]:
+        """Parse premises + negated target with the precedence-aware parser.
+
+        Returns ``(premise_clauses, negated_target_clauses)`` as integer clauses,
+        or ``None`` if the input is not a well-formed propositional formula (in
+        which case the caller falls back to the legacy regex layer, so ordinary
+        prose keeps behaving exactly as before).
+
+        This is the fix for the grouping bug: the legacy flat splits ignored
+        parentheses, so ``"(A AND B) -> C", "A", "B" |= "C"`` was parsed into the
+        atoms ``"(a"``/``"b)"``/``"c"`` and reported as ``COUNTERMODEL_EXISTS``
+        even though the argument is valid.
+
+        All formulas are parsed *before* any ``get_var`` call, so a parse failure
+        leaves the symbol table untouched for the fallback path.
+        """
+        try:
+            from super_solver.core.prop_parser import parse_cnf
+        except Exception:  # pragma: no cover - import guard
+            return None
+
+        try:
+            premise_cnfs = [parse_cnf(p) for p in premises if p.strip()]
+            # Negate the *whole* target structurally: NOT(target).  This replaces
+            # the hand-rolled De Morgan in _negated_target_to_cnf and, unlike it,
+            # respects parentheses.
+            target_cnf = parse_cnf(f"NOT ({target_claim})")
+        except Exception:
+            return None
+
+        clauses: List[List[int]] = []
+        for cnf in premise_cnfs:
+            clauses.extend(self._cnf_atoms_to_ints(cnf, get_var))
+        negated_goal = self._cnf_atoms_to_ints(target_cnf, get_var)
+        return clauses, negated_goal
+
+    def _parse_regex_fallback(
+        self, premises: List[str], target_claim: str, get_var
+    ) -> Tuple[List[List[int]], List[List[int]]]:
+        """Legacy flat-regex clause extraction, kept as the fallback path.
+
+        Handles the connectives that appear in scientific prose, emitting CNF
+        without needing the text to be a well-formed formula:
+
+          - conjunction       "A AND B"            -> one clause per conjunct
+          - biconditional     "A iff B" / "A <=> B" -> [-A,B] and [A,-B]
+          - implication       "A -> B" / "A => B"   -> [-A,B]
+          - disjunction       "A OR B ..."          -> [A,B,...]
+          - negation          "NOT A" / "~A" / "-A" -> [-A]
+
+        .. warning::
+           These splits ignore parentheses, so grouped formulas are mis-parsed.
+           That is precisely why :meth:`_parse_structural` runs first; this path
+           only sees inputs the structural parser rejected.
+        """
+        clauses: List[List[int]] = []
+
+        def _conjunct_clauses(conj: str):
+            conj = conj.strip()
+            # Biconditional: A <-> B  ==  (A -> B) AND (B -> A)
+            if (
+                " iff " in conj
+                or " <=> " in conj
+                or " <-> " in conj
+                or " if and only if " in conj
+                or "≡" in conj
+            ):
+                parts = re.split(r"\s+(?:iff|<=>|<->|if and only if|≡)\s+", conj)
+                ant = parts[0].strip()
+                cons = parts[-1].strip()
+                if ant and cons:
+                    a = get_var(ant)
+                    b = get_var(cons)
+                    return [[-a, b], [a, -b]]
+            # Implication: A -> B  ==  ¬A OR B
+            if "->" in conj or "=>" in conj:
+                parts = re.split(r"->|=>", conj, maxsplit=1)
+                ant = parts[0].strip()
+                cons = parts[1].strip()
+                if ant and cons:
+                    a = get_var(ant)
+                    b = get_var(cons)
+                    return [[-a, b]]
+            # Disjunction
+            if " OR " in conj:
+                lits = [get_var(part) for part in conj.split(" OR ") if part.strip()]
+                return [lits] if lits else []
+            # Negation
+            m = re.match(r"^\s*(?:NOT|~|-|¬)\s*(.+)$", conj)
+            if m:
+                return [[-get_var(m.group(1))]]
+            # Atomic literal
+            return [[get_var(conj)]] if conj else []
+
+        for p in premises:
+            p_clean = p.strip()
+            if not p_clean:
+                continue
+            # Protect "if and only if" so the conjunction splitter below does not
+            # break the biconditional phrase at its internal "and".
+            protected = re.sub(r"\bif and only if\b", self._IFF_PLACEHOLDER, p_clean)
+            # Split on top-level conjunction; each conjunct is its own clause(s).
+            conjuncts = re.split(r"\s+(?:AND|and|\^|&|∧)\s+", protected)
+            for conj in conjuncts:
+                # Restore the protected IFF phrase before parsing this conjunct.
+                restored = conj.replace(self._IFF_PLACEHOLDER, " if and only if ")
+                clauses.extend(_conjunct_clauses(restored))
+
+        negated_goal = self._negated_target_to_cnf(target_claim, get_var)
+        return clauses, negated_goal
 
     def __init__(self):
         pass
@@ -205,6 +334,8 @@ class DPLLSolver:
         rev_map: Dict[int, str] = {}
         clauses: List[List[int]] = []
         parser_used = "regex_propositional"
+        # CNF of NOT(target), when the structural parser produced one.
+        negated_goal_clauses: Optional[List[List[int]]] = None
 
         def get_var(name: str) -> int:
             clean = name.strip().lower().replace(" ", "_")
@@ -229,70 +360,17 @@ class DPLLSolver:
                     clauses.append(clause_ints)
             target_var = get_var(llm_data["target_var"])
         else:
-            # 2. Standard zero-daemon regex parsing.
-            #
-            # Handles the connectives that actually appear in scientific prose,
-            # emitting proper CNF clauses so the resolution-refutation engine can
-            # run (instead of silently degrading to an embedding-similarity guess):
-            #   - conjunction       "A AND B"            -> one clause per conjunct
-            #   - biconditional     "A iff B" / "A <=> B" -> [-A,B] and [A,-B]
-            #   - implication       "A -> B" / "A => B"   -> [-A,B]
-            #   - disjunction       "A OR B ..."          -> [A,B,...]
-            #   - negation          "NOT A" / "~A" / "-A" -> [-A]
-
-            def _conjunct_clauses(conj: str):
-                conj = conj.strip()
-                # Biconditional: A <-> B  ==  (A -> B) AND (B -> A)
-                if (
-                    " iff " in conj
-                    or " <=> " in conj
-                    or " <-> " in conj
-                    or " if and only if " in conj
-                    or "\u2261" in conj
-                ):
-                    parts = re.split(r"\s+(?:iff|<=>|<->|if and only if|\u2261)\s+", conj)
-                    ant = parts[0].strip()
-                    cons = parts[-1].strip()
-                    if ant and cons:
-                        a = get_var(ant)
-                        b = get_var(cons)
-                        return [[-a, b], [a, -b]]
-                # Implication: A -> B  ==  ¬A OR B
-                if "->" in conj or "=>" in conj:
-                    parts = re.split(r"->|=>", conj, maxsplit=1)
-                    ant = parts[0].strip()
-                    cons = parts[1].strip()
-                    if ant and cons:
-                        a = get_var(ant)
-                        b = get_var(cons)
-                        return [[-a, b]]
-                # Disjunction
-                if " OR " in conj:
-                    lits = [get_var(part) for part in conj.split(" OR ") if part.strip()]
-                    return [lits] if lits else []
-                # Negation
-                m = re.match(r"^\s*(?:NOT|~|-|\u00ac)\s*(.+)$", conj)
-                if m:
-                    return [[-get_var(m.group(1))]]
-                # Atomic literal
-                return [[get_var(conj)]] if conj else []
-
-            _IFF_PLACEHOLDER = "\u0001iff\u0001"  # protects "if and only if" from conjunction-splitting
-
-            for p in premises:
-                p_clean = p.strip()
-                if not p_clean:
-                    continue
-                # Protect "if and only if" so the conjunction splitter below does not
-                # break the biconditional phrase at its internal "and".
-                protected = re.sub(r"\bif and only if\b", _IFF_PLACEHOLDER, p_clean)
-                # Split on top-level conjunction; each conjunct is its own clause(s).
-                conjuncts = re.split(r"\s+(?:AND|and|\^|&|\u2227)\s+", protected)
-                for conj in conjuncts:
-                    # Restore the protected IFF phrase before parsing this conjunct.
-                    restored = conj.replace(_IFF_PLACEHOLDER, " if and only if ")
-                    clauses.extend(_conjunct_clauses(restored))
-
+            # 2. Zero-daemon structural parsing.
+            #    2a. Precedence-aware parser: understands parentheses and operator
+            #        precedence, so grouped formulas like "(A AND B) -> C" are no
+            #        longer split into garbage atoms "(a"/"b)".
+            #    2b. Legacy flat-regex fallback, used only when the input is not a
+            #        well-formed formula (e.g. ordinary prose), so prose behaviour
+            #        is unchanged.
+            structural = self._parse_structural(premises, target_claim, get_var)
+            if structural is None:
+                structural = self._parse_regex_fallback(premises, target_claim, get_var)
+            clauses, negated_goal_clauses = structural
             target_var = get_var(target_claim)
 
         # 3. Semantic fallback: if only trivial unit-clauses were extracted (one per premise,
@@ -311,8 +389,9 @@ class DPLLSolver:
         )
         if not has_structural_clauses and clauses and parser_used == "regex_propositional":
             try:
-                from super_solver.core.embeddings import embedding_service as _emb
                 import numpy as _np
+
+                from super_solver.core.embeddings import embedding_service as _emb
 
                 prem_vecs = [_emb.encode(p) for p in premises if p.strip()]
                 if prem_vecs:
@@ -376,6 +455,8 @@ class DPLLSolver:
         clauses_with_negated_goal = [list(c) for c in clauses]
         if parser_used == "optional_llm":
             clauses_with_negated_goal.append([-target_var])
+        elif negated_goal_clauses is not None:
+            clauses_with_negated_goal.extend(negated_goal_clauses)
         else:
             clauses_with_negated_goal.extend(
                 self._negated_target_to_cnf(target_claim, get_var)

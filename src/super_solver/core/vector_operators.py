@@ -9,7 +9,7 @@ Implements high-dimensional continuous operators for:
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -55,7 +55,12 @@ class VectorContradictionTensor:
 class NullSpaceAssumptionProjector:
     """Projects problem states into the orthogonal complement of unexamined domain assumptions."""
 
-    def __init__(self, assumption_vectors: List[np.ndarray], dim: int = 384):
+    def __init__(self, assumption_vectors: List[np.ndarray], dim: Optional[int] = None):
+        # Infer the working dimension from the assumptions themselves; a
+        # hardcoded 384 raised "shapes not aligned" as soon as the caller used
+        # any embedder whose dimension differed.
+        inferred = next((np.asarray(v).shape[0] for v in assumption_vectors), None)
+        dim = dim or inferred or 384
         self.dim = dim
         if assumption_vectors:
             # Stack into matrix A (dim x k)
@@ -102,8 +107,22 @@ class ContinuousBoundaryDiagnosticKernel:
     """Continuous max-margin boundary kernel for multi-dimensional root cause and failure analysis."""
 
     def __init__(
-        self, is_manifestations: List[np.ndarray], is_not_manifestations: List[np.ndarray]
+        self,
+        is_manifestations: List[np.ndarray],
+        is_not_manifestations: List[np.ndarray],
+        dim: Optional[int] = None,
     ):
+        # Dimension is inferred from the supplied vectors rather than hardcoded.
+        # The previous np.zeros(384) fallback crashed with a broadcast error
+        # ("shapes (256,) and (384,) not aligned") for every backend other than
+        # the 384-d polarity embedder -- rich (512), neural (256), ollama (768)
+        # and hybrid (1152) all failed. `dim` is only needed when BOTH sides are
+        # empty and there is nothing to infer from, so it is passed explicitly.
+        inferred = next(
+            (np.asarray(v).shape[0] for v in list(is_manifestations) + list(is_not_manifestations)),
+            None,
+        )
+        self.dim = dim or inferred or 384
         self.is_vectors = [
             v / (np.linalg.norm(v) + 1e-12) for v in is_manifestations if np.linalg.norm(v) > 0
         ]
@@ -116,13 +135,13 @@ class ContinuousBoundaryDiagnosticKernel:
             self.c_is = np.mean(self.is_vectors, axis=0)
             self.c_is = self.c_is / (np.linalg.norm(self.c_is) + 1e-12)
         else:
-            self.c_is = np.zeros(384)
+            self.c_is = np.zeros(self.dim)
 
         if self.is_not_vectors:
             self.c_not = np.mean(self.is_not_vectors, axis=0)
             self.c_not = self.c_not / (np.linalg.norm(self.c_not) + 1e-12)
         else:
-            self.c_not = np.zeros(384)
+            self.c_not = np.zeros(self.dim)
 
         # Normal separating vector
         w = self.c_is - self.c_not

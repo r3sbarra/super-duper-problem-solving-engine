@@ -3,7 +3,7 @@
 > **A Neurosymbolic Reasoning & Scientific Inquiry Engine**  
 > Unifying 8 historically proven scientific and cognitive problem-solving paradigms with continuous vector representations (latent guidance, VSA/HDC, potential-field manifolds, DPLL SAT, and SMT theories).
 
-[![Tests](https://img.shields.io/badge/tests-219%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-314%20passed-brightgreen.svg)]()
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-purple.svg)](LICENSE)
@@ -27,7 +27,7 @@ The engine serves as an intelligent, zero-daemon reasoning core for discovery pl
 | SCIENTIFIC INQUIRY                 | INVENTIVE & SYSTEMS ENGINEERING   | COGNITIVE & HEURISTIC     |
 +------------------------------------+-----------------------------------+---------------------------+
 | 1. Platt's Strong Inference (1964) | 4. Altshuller's TRIZ (40 Ops)     | 6. Polya's Heuristics     |
-|    - Alternative Hypotheses Tree   |    - 39x39 Contradiction Matrix   |    - Working Backwards    |
+|    - Alternative Hypotheses Tree   |    - Contradiction Matrix (subset)|    - Working Backwards    |
 |    - Crucial Exclusory Experiments |    - Trade-off Resolution Tensors |    - Auxiliary Reduction  |
 |                                    |                                   |                           |
 | 2. Peircean Discovery Cycle        | 5. Goldratt's Theory of           | 7. Gentner's Structure-   |
@@ -114,7 +114,7 @@ The engine can point its diagnostic tools at its own internal parameters. It aud
 
 ### 4. Altshuller’s TRIZ (40 Inventive Principles & Contradiction Matrix)
 - **Principle:** Eliminates engineering and scientific contradictions without compromise using 40 universal transformation operators.
-- **Vector Formulation:** Includes Altshuller's canonical 39x39 Contradiction Matrix (`CONTRADICTION_MATRIX`) and anti-symmetric contradiction tensors steering state vectors in latent space.
+- **Vector Formulation:** Includes a curated `CONTRADICTION_MATRIX` lookup covering **11 hand-checked parameter-conflict cells** — a *subset*, not the full 39x39 grid — plus anti-symmetric contradiction tensors steering state vectors in latent space. When a conflict pair is not in the table the engine falls back to principle matching (`suggest_principles`).
 
 ### 5. Goldratt’s Theory of Constraints (TOC) & "Evaporating Cloud"
 - **Principle:** Focuses on the primary bottleneck constraint and resolves conflicts between requirements by surfacing and invalidating hidden implicit assumptions.
@@ -322,6 +322,49 @@ python -m super_solver.cli vectorize primitive-analogize \
   "How to make a climbing pad that grips smooth vertical walls without glue"
 ```
 
+### 9. Teaching the Engine (write path + self-seeding)
+
+Retrieval is only as good as the index behind it, and until recently the engine
+was **query-only**: every tool could read and none could write, and
+`build_domain_knowledge_index` was called only from `scripts/`, never from the
+runtime or MCP path. Since the index lives in a gitignored directory, a fresh
+install therefore answered every `analogize` query with **nothing at all**
+(measured: 0 problems indexed, 0 hits returned). Two things fix that.
+
+**The engine now seeds itself** on first MCP use, from the committed
+domain-knowledge fact base (173 problem→solution pairs):
+
+```python
+from super_solver.vectorize import vectorization_service
+vectorization_service.ensure_seeded()   # idempotent; no-op on a populated index
+```
+
+**And it can be taught at runtime.** Two MCP tools close the loop:
+
+| Tool | Effect |
+|---|---|
+| `super_solver_remember_solution` | Records a solved problem + solution (and optional path) as a reusable analog for later `analogize` calls |
+| `super_solver_record_dead_end` | Records a failed approach in the persistent negative-manifold repulsor, so later sessions deflect it automatically |
+
+```python
+engine.remember_solution(
+    problem_specification="stop two workers running the same scheduled job",
+    solution="keyed distributed lock with a lease timeout",
+    path_steps=["identify the duplicate-execution race", "add a lease timeout"],
+)
+engine.record_dead_end("busy-poll the database to detect job completion")
+```
+
+Both are **persistent**: the dead-end store is reloaded when the engine next
+starts, and the analog index is file-backed. The store path resolves from the
+**package root**, not the current working directory — a CWD-relative path
+silently forked the memory in two (two live stores were found on the dev
+machine, each invisible to the other).
+
+> **Honest limit:** the shipped prior is 173 curated engineering/algorithm
+> entries. The engine is useful out of the box, but it is not a knowledge base —
+> retrieval quality on your domain tracks how much of your domain you teach it.
+
 ---
 
 ## 6. Optional Small LLM Integration (Zero-Daemon Fallback)
@@ -457,7 +500,7 @@ The engine provides direct plug-and-play integration with the `lab-ass` research
 .venv/bin/pytest -v tests/
 ```
 
-All **219 unit, integration, regression and property tests** pass in ~10 seconds
+All **314 unit, integration, regression and property tests** pass in ~27 seconds
 across mathematical, scientific, engineering, dialectical-debate, and
 meta-optimization domains. Test coverage is *not* claimed to be 100% — see
 `ROADMAP.md` T3.3 for the coverage-map workstream. The CI pipeline runs the full

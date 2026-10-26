@@ -2,12 +2,12 @@
   "self_description": {
     "n_subsystems": 27,
     "failing_subsystems": 0,
-    "solve_loop_idea_coverage": 0.167,
-    "subproblem_only_coverage": 0.0,
+    "solve_loop_idea_coverage": 0.583,
+    "subproblem_only_coverage": 0.5,
     "ood_scorer_car": 0.9231,
     "polarity_baseline_car": 0.5385
   },
-  "problem": "The super-solver problem-solving engine decomposes problems well but its decomposition covers almost none of the problem-specific solution idea (solution-idea coverage 0.167 vs subproblem coverage 0.0); it is a decomposer and mechanism-retriever, not yet an end-to-end solver. Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.",
+  "problem": "The super-solver problem-solving engine decomposes problems well but its decomposition covers almost none of the problem-specific solution idea (solution-idea coverage 0.583 vs subproblem coverage 0.5); it is a decomposer and mechanism-retriever, not yet an end-to-end solver. Improve the engine so that its decompositions lead to solved problems, without regressing its measured health (27 subsystems, 0 failing) or its retrieval accuracy.",
   "identify": {
     "type": "optimization",
     "entities": [
@@ -32,10 +32,12 @@
     ],
     "slot_coverage": 0.8,
     "solution_ideas": [
-      "<no structural primitives extracted>"
+      "Recursively split the list in half, sort each half, and merge the sorted halves (merge sort)",
+      "Embed microcapsules of healing agent or bacteria that precipitate calcium carbonate to seal cracks",
+      "Use lightweight aggregates and air-entraining agents to reduce the material's density below that of water"
     ]
   },
-  "self_retrieval_gap": "the engine CANNOT retrieve a solution idea for its own meta problem: the primitive matcher has no domain vocabulary for meta-engineering, so retrieval is corpus-bound (works for systems/math problems, not abstract self-improvement problems).",
+  "self_retrieval_gap": null,
   "suggest_paths": [
     {
       "title": "Active-Constraint Reduction",
@@ -79,8 +81,8 @@
   "abduct": [
     "The super solver problem solving arises from unmodeled external environmental boundary conditions, g",
     "The super solver problem solving is an observational artifact caused by unresolved contaminants, sel",
-    "The super solver problem solving is driven by a localized first-order structural phase transition, r",
-    "The super solver problem solving represents a genuine breakdown of standard theory, requiring fundam"
+    "The super solver problem solving represents a genuine breakdown of standard theory, requiring fundam",
+    "The super solver problem solving is driven by a localized first-order structural phase transition, r"
   ],
   "crucible": [
     {

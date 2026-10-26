@@ -7,6 +7,7 @@ dead-end manifolds, and logical consistency before expensive downstream explorat
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
@@ -50,6 +51,11 @@ class TournamentMatchResult:
     dead_end_warnings: List[str] = field(default_factory=list)
     counterexamples: List[str] = field(default_factory=list)
     summary: str = ""
+    # Which adversarial checks actually had traction on this hypothesis. A
+    # SURVIVED_ROBUST verdict with an empty list means "nothing tested it", not
+    # "it withstood testing" -- read alongside robustness_score, never alone.
+    checks_applied: List[str] = field(default_factory=list)
+    evidence_coverage: float = 0.0
 
 
 class DialecticalTournamentEngine:
@@ -80,9 +86,12 @@ class DialecticalTournamentEngine:
 
         hyp_vec = embedding_service.encode(hypothesis)
         current_robustness = 1.0
+        traction: List[str] = []
 
         # Round 1: Dead-End & Negative Manifold Audit (Quicksand Check)
         is_near, max_sim, closest_desc = self.repulsor.check_proximity(hyp_vec, threshold=0.62)
+        if self.repulsor.dead_ends:
+            traction.append("negative_manifold_audit")
         if is_near and closest_desc:
             dead_end_warnings.append(f"Near dead-end (sim={max_sim:.2f}): {closest_desc}")
             current_robustness *= 1.0 - max_sim * 0.7
@@ -134,6 +143,8 @@ class DialecticalTournamentEngine:
                 refuter_counter="Refuter verifies technique avoids canonical impossibility barriers.",
                 round_score=0.95,
             )
+        if lakatos_res.verdict != VerificationStatus.INCONCLUSIVE:
+            traction.append("barrier_audit")
         rounds.append(r2)
 
         # Round 3: Boundary & Consistency Refutation
@@ -149,12 +160,21 @@ class DialecticalTournamentEngine:
             # rubber-stamped such claims at 1.00.
             from super_solver.frameworks.problem_identification import (
                 _antonym_flip,
+                _antonym_variant_pattern,
             )
 
             hyp_low = hypothesis.lower()
             antonym_self = _antonym_flip(hypothesis, hypothesis)
+
+            def _present(word: str) -> bool:
+                # Inflection-aware: a plain `"increase" in hyp_low` misses
+                # "increases"/"increasing", so "Increasing the dose reduces
+                # survival" was NOT flagged as self-contradictory while the
+                # uninflected wording was.
+                return re.search(_antonym_variant_pattern(word), hyp_low) is not None
+
             both_dirs = any(
-                (a in hyp_low and b in hyp_low)
+                (_present(a) and _present(b))
                 for a, b in (
                     ("increase", "reduce"), ("increase", "decrease"),
                     ("add", "remove"), ("raise", "lower"),
@@ -178,6 +198,9 @@ class DialecticalTournamentEngine:
                     refuter_response = f"Refuter exposes boundary contamination: overlaps with IS NOT condition (sim={boundary_leak_sim:.2f})."
                     current_robustness *= 0.50
                     round_score = 0.35
+
+            if contradiction is not None or boundary_is_not:
+                traction.append("boundary_consistency")
 
             r3 = TournamentRound(
                 round_number=3,
@@ -210,7 +233,22 @@ class DialecticalTournamentEngine:
         else:
             verdict = TournamentVerdict.SURVIVED_ROBUST
             survived = True
-            summary = "Survived tournament: Resisted Red Team cross-examination across all rounds."
+            # A verdict may only claim what the checks actually established. When
+            # no check had traction the honest reading is "nothing tested this",
+            # not "this withstood testing" -- the earlier wording asserted the
+            # latter for a claim no round could engage with.
+            if traction:
+                summary = (
+                    f"Not falsified: survived {len(traction)}/{len(rounds)} adversarial "
+                    f"check(s) that had traction ({', '.join(traction)})."
+                )
+            else:
+                summary = (
+                    "NOT FALSIFIED, BUT UNTESTED: no adversarial check had traction "
+                    "(no dead ends registered, claim outside the barrier auditor's "
+                    "scope, no boundary condition supplied). Absence of evidence, "
+                    "not evidence of robustness."
+                )
 
         return TournamentMatchResult(
             hypothesis=hypothesis,
@@ -222,6 +260,8 @@ class DialecticalTournamentEngine:
             dead_end_warnings=dead_end_warnings,
             counterexamples=counterexamples,
             summary=summary,
+            checks_applied=traction,
+            evidence_coverage=round(len(traction) / max(1, len(rounds)), 3),
         )
 
     def run_tournament(

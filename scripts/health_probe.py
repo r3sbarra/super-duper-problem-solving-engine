@@ -103,6 +103,10 @@ def main():
 
     # --- vectorize / retrieval ---
     from super_solver.vectorize import vectorization_service
+    # Seed the committed fact base first: the retrieval probe is meaningless
+    # against an empty index (it reports DEGENERATE), and "empty" is the state
+    # of every fresh checkout. Seeding is idempotent.
+    vectorization_service.ensure_seeded()
     probe("vectorize.primitive_analogize", lambda: vectorization_service.primitive_analogize(
         "grip smooth vertical walls without glue", top_k=2))
 

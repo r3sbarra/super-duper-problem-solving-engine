@@ -121,3 +121,69 @@ def test_prm_reward_differentiates_dead_end_states():
     # Reward stays within [-1, 1].
     for r in (r_far, r_near):
         assert -1.0 <= r <= 1.0
+
+
+def test_mcts_path_is_independent_of_operator_list_order():
+    """Regression: MCTS used to expand operators in list order.
+
+    ``expand_one_child`` took the *first untried* operator rather than the
+    best-scoring one, and the extracted path broke visit-ties by list position,
+    so the PRM reward never decided the trajectory. Measured on a synthetic
+    10-operator task (2 goal-directed, 8 noise) with identical rewards, the
+    reported good-operator fraction was 1.000 when the good operators were
+    listed first and 0.000 when they were listed last -- i.e. the search was
+    reporting list position, not search quality. A reward-guided search must
+    return the same trajectory whatever order the operators arrive in.
+    """
+    import numpy as np
+
+
+    dim = 32
+    rng = np.random.default_rng(0)
+    goal = rng.standard_normal(dim).astype(np.float32)
+    goal /= np.linalg.norm(goal)
+    start = -goal.copy()
+
+    good = []
+    for i in range(2):
+        v = goal + 0.15 * rng.standard_normal(dim).astype(np.float32)
+        good.append((f"good_{i}", (v / np.linalg.norm(v)).astype(np.float32), 0.9))
+    noise = []
+    for i in range(8):
+        v = rng.standard_normal(dim).astype(np.float32)
+        noise.append((f"noise_{i}", (v / np.linalg.norm(v)).astype(np.float32), 0.3))
+
+    def run(ops):
+        mcts = LatentMCTSEngine(prm=ProcessRewardModel(repulsor=NegativeManifoldRepulsor()))
+        path = mcts.search_best_path(start, ops, goal, num_simulations=15)
+        assert path
+        return sum(1 for name, _, _ in path if name.startswith("good")) / len(path)
+
+    first = run(good + noise)
+    last = run(noise + good)
+    assert first == last, f"search depends on list order: first={first}, last={last}"
+    assert first > 0.5, f"search does not select the high-reward operators: {first}"
+
+
+def test_mcts_prefers_the_highest_reward_operator():
+    """The reward is the deciding signal, whatever the input order."""
+    import numpy as np
+
+    dim = 16
+    rng = np.random.default_rng(1)
+    start = rng.standard_normal(dim).astype(np.float32)
+    start /= np.linalg.norm(start)
+    goal = rng.standard_normal(dim).astype(np.float32)
+    goal /= np.linalg.norm(goal)
+
+    def vec():
+        v = rng.standard_normal(dim).astype(np.float32)
+        return v / np.linalg.norm(v)
+
+    ops = [("LOW", vec(), 0.0), ("HIGH", vec(), 0.95), ("MID", vec(), 0.5)]
+
+    for order in (ops, list(reversed(ops))):
+        mcts = LatentMCTSEngine(prm=ProcessRewardModel(repulsor=NegativeManifoldRepulsor()))
+        path = mcts.search_best_path(start, order, goal, num_simulations=6)
+        assert path
+        assert path[0][0] == "HIGH", f"picked {path[0][0]} for order {[o[0] for o in order]}"

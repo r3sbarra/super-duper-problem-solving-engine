@@ -1,7 +1,7 @@
 # Super-Solver Improvement Roadmap
 
 > **Status:** CAMPAIGN COMPLETE (2026-09-29). Every item below was executed,
-> measured, and regression-guarded. Result: **219 tests passing**, health
+> measured, and regression-guarded. Result: **314 tests passing**, health
 > **27/27 subsystems OK**, metrics floors met.
 >
 > **Method invariant (applies to every item):** diagnose with a labeled probe →
@@ -15,7 +15,7 @@
 | T1.1 API-contract inventory | 48 modules/98 classes/28 fns → `assets/api_inventory.json` |
 | T1.2 degenerate-output guards | health probe now flags non-discriminating output |
 | T1.3 property/fuzz tests | 31 tests (weird inputs, Pareto invariants) |
-| T2.1 search quality | MCTS picks goal-ops **100%** vs 0.2 random |
+| T2.1 search quality | MCTS picks goal-ops **100%** vs 0.2 random — *see correction below* |
 | T2.2 causal-VSA | **4/4** on synthetic ground truth (chain/confounder/fork) |
 | T2.3 solve loop | **honest finding**: subproblems don't contain solutions; retrieval bridge lifts coverage 0.067→0.167 |
 | T2.4 framework chaining | identify→KT→abduct→Platt, 3/3 end-to-end |
@@ -166,6 +166,103 @@ search: does guided search beat random restarts on a task with ground truth?
 **Done-when:** a measured verdict (guided > random, or honest "no advantage")
 on a held-out search benchmark.
 **Risk:** medium — may yield a negative result (which is still valuable).
+
+> **Correction (found by re-auditing the T2.1 evidence).** The "100%" figure was
+> confounded and did not measure search quality. The probe listed the two
+> goal-directed operators *first*, and `expand_one_child` expanded operators in
+> list order — the PRM reward was computed and stored but never influenced which
+> branch was created. Re-running the same task with the goal-directed operators
+> listed **last** gave a good-operator fraction of **0.000** (vs 1.000 when
+> listed first): the search was reporting list position.
+>
+> Fixed: expansion now scores every untried candidate and expands the best, and
+> path extraction breaks visit-ties on PRM value instead of list position. The
+> probe now runs the task in **both** orders and records `order_sensitivity`,
+> which must stay near 0. Current measured result: 1.000 in both orders,
+> `order_sensitivity` 0.0. A regression test
+> (`test_mcts_path_is_independent_of_operator_list_order`) locks it in.
+>
+> The same audit found and fixed a related confound in the TOC evaporating
+> cloud (see `_POLE_ENGAGE_FLOOR` in `frameworks/toc_cloud.py`).
+
+> **Soundness corrections (same audit).** Three checks were reporting more than
+> they had established:
+>
+> 1. **The Lakatos barrier audit failed OPEN.** Every input sentence becomes a
+>    "lemma", and a lemma matching no barrier was recorded as sound — so an
+>    all-clear was printed as `VERIFIED_SOUND`. Measured: `"1+1=3"`,
+>    `"The moon is made of cheese"` and `"Trisecting an angle with straightedge
+>    and compass"` (proven impossible, 1837) all returned `VERIFIED_SOUND` with
+>    confidence 0.90. Now scoped: a claim whose steps engage no barrier at the
+>    audit's own 0.28 threshold returns `INCONCLUSIVE` with confidence 0.0.
+>    Measured separation — in scope: Collatz drift paper 0.281, Alon packing
+>    0.323; out of scope: `"1+1=3"` 0.040, moon/cheese 0.092, engineering 0.142.
+>    The falsifier is untouched: the P≠NP barriered claim still returns
+>    `REFUTED_FLAWED`. One test moved with it
+>    (`test_random_arxiv_..._catalan_irrationality`, measured engagement 0.228 —
+>    the six barriers do not cover irrationality proofs, so `INCONCLUSIVE` is the
+>    honest verdict).
+>
+> 2. **The tournament's self-contradiction check missed inflections.** It tested
+>    `"increase" in text`, so "Increasing the dose reduces survival" survived
+>    while the uninflected wording was caught. Now inflection-aware.
+>
+> 3. **`SURVIVED_ROBUST` overstated what had been tested.** The summary read
+>    "Resisted Red Team cross-examination across all rounds" even when no round
+>    had any traction. Results now carry `checks_applied` and
+>    `evidence_coverage`, and the summary says plainly when a verdict is
+>    "not falsified, but untested".
+>
+> Also: `suggest_principles` now infers contradiction parameters from free text
+> and uses the real Altshuller matrix when they form a known cell (source
+> `altshuller_matrix_inferred`), instead of ranking all 40 principles by hashed
+> cosine. Measured: "Increase the strength of a bracket without making it
+> heavier" now returns the matrix's [40, 8, 1, 15]. The vector fallback is
+> unchanged and remains weak — see the note in `triz_engine.py`.
+>
+> **A change that was tried and REJECTED.** Replacing the `match_by_primitives`
+> text-similarity tie-break with a structural one (shared specific primitives,
+> then source focus) looked more principled — the matcher exists *because*
+> surface wording differs. Measured against the repo's own held-out suites it
+> was a regression: math/science retrieval 12/14 -> 11/14 and math/coding
+> primitive matching 6/7 -> 5/7. Surface similarity is genuinely informative
+> *within* a domain; it is only misleading across domains. Reverted, per the
+> programme's adopt-only-if-held-out-improves rule.
+
+> **Primitive vocabulary: the retrieval precision collapse was a REGEX bug, not
+> a taxonomy gap.** The known symptom was that a query returned four answers tied
+> at exactly 0.80. The cause was an unbounded pattern:
+>
+> ```
+> (r"adhesi|stick|...|hold.*on|anchor|\bmount\b", "adhesion")
+> ```
+>
+> `hold.*on` has an unbounded gap, so `on` matched **inside a word**. Measured:
+> *"Prove the base case, then show that if it holds for n it holds for n+1
+> (mathematical induction)"* produced the `adhesion` primitive via the "on" in
+> "inducti**on**", and a maths induction proof was returned as a cross-domain
+> neighbour of "a climbing pad that grips smooth vertical walls". The same class
+> of bare-token bug made `gene` fire on "**gene**ral"/"generate" (5 corpus
+> solutions affected), `raft` on "airc**raft**"/"draft", `sum.*number` on
+> "as**sum**e the number", and `light.*strong` on "high**light** ... strong".
+>
+> Fixed: every cue is now a whole word or an explicit stem, and the unbounded
+> gaps are bounded.
+>
+> With the false positives gone, the remaining tie was real, and it was a genuine
+> taxonomy gap: glue-based and dry adhesion are different mechanisms that shared
+> one atom. Adding `adhesion_dry` (gecko setae, hook-and-loop, microstructured
+> surfaces, "without glue") lets the query discriminate. End-to-end result for
+> "a climbing pad that grips smooth vertical walls without glue":
+>
+> | | before | after |
+> |---|---|---|
+> | Velcro (dry, hook-and-loop) | 0.80 (tied 4 ways) | **0.80 (top-1)** |
+> | Post-it (glue) | 0.80 | 0.23 |
+> | stick vacuum (suction) | 0.80 | 0.23 |
+> | maths induction | 0.80 | *not returned* |
+>
+> All held-out suites held: 309 -> 314 tests passing, no regression.
 
 ### T2.2 Causal-VSA layer verification
 **Why:** `core/causal_vsa.py` underpins the self-audit's "causal intervention"

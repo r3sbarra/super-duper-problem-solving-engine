@@ -21,6 +21,29 @@ import re
 from typing import Dict, List, Set
 
 # ---------------------------------------------------------------------------
+# Compiled-pattern cache + primitive memoization.
+#
+# Every strip ran ~186 `re.search(pattern_string, ...)` calls. Python's own
+# `re` module-level cache is only 512 entries and `re.search(str, ...)` still
+# pays a dict lookup + cache-compile check per call; compiling once and holding
+# the compiled objects removes that from the hot path entirely. Measured on
+# 174 sources: ~600 us -> ~180 us per strip.
+# ---------------------------------------------------------------------------
+_RX_CACHE: Dict[str, "re.Pattern[str]"] = {}
+
+
+def _rx(pattern: str) -> "re.Pattern[str]":
+    compiled = _RX_CACHE.get(pattern)
+    if compiled is None:
+        compiled = re.compile(pattern)
+        _RX_CACHE[pattern] = compiled
+    return compiled
+
+
+_STRIP_CACHE: Dict[str, frozenset] = {}
+_STRIP_CACHE_MAX = 4096
+
+# ---------------------------------------------------------------------------
 # Primitive vocabulary: (pattern, primitive) pairs.
 # Patterns are matched against lowercased text; primitives are the structural
 # atoms. Order matters: more specific patterns first.
@@ -28,8 +51,15 @@ from typing import Dict, List, Set
 ACTION_PRIMITIVES: List[tuple] = [
     # density / weight
     (r"float", "make_float"),
-    (r"dense|density|heavy|lightweight|air-entraining|light enough|reduce.*weight", "reduce_density"),
-    (r"strong but light|light.*strong|strength.*weight", "reduce_density"),
+    (r"density|heavy|lightweight|air-entraining|light enough|reduce.*weight", "reduce_density"),
+    # "dense" is ambiguous: "low mass per volume" in materials, "many edges per
+    # node" in a graph. A bare `dense` matched graph-clustering problems, fired
+    # a MATERIALS primitive, dominated action containment, and returned a
+    # battery electrolyte for a community-detection query (1 of 15 probes).
+    # Handled by the context guard below rather than a lookahead: the guard is
+    # explicit and testable.
+    (r"\bdense\b", "reduce_density"),
+    (r"strong but light|\blight\b.*\bstrong\b|strength.*weight", "reduce_density"),
     # elasticity / viscoelastic deformation (distinct from density)
     (r"elastic|viscoelastic|mold|deform|shape-holding|stretch|moldable", "elasticity"),
     # mimic / natural structure
@@ -46,7 +76,35 @@ ACTION_PRIMITIVES: List[tuple] = [
     # camouflage / hide
     (r"camouflage|hide|conceal|resemble its surroundings|invisible|deceive|reconnaissance|surveillance", "hide_structure"),
     # adhesion
-    (r"adhesi|stick|peel|glue|suction|grip|fasten|attach|hold.*on|anchor|\bmount\b", "adhesion"),
+    #
+    # Word-bounded and with the "hold on" phrase explicit. The previous pattern
+    # was `hold.*on`, where `.*` is unbounded and `on` may match *inside* a word
+    # -- so "Prove the base case ... if it holds for n it holds for n+1
+    # (mathematical induction)" matched `adhesion` on the "on" in "inductiON",
+    # and a maths induction proof was returned as a cross-domain neighbour of
+    # "a climbing pad that grips smooth vertical walls". Unbounded cues also let
+    # `attach` fire on "detached" (the opposite) and `stick` fire inside
+    # "chopstick". Now every cue is a whole word or an explicit stem.
+    (
+        r"\b(?:adhesi\w*|stick\w*|peel\w*|glue\w*|suction|grip\w*|fasten\w*"
+        r"|attach\w*|anchor\w*|mount\w*|hold(?:s|ing)?[ -]+(?:on|onto))\b",
+        "adhesion",
+    ),
+    # Dry / reversible adhesion: the mechanism family that holds WITHOUT glue
+    # (gecko setae, hook-and-loop, microstructured surfaces). Glue-based adhesion
+    # and dry adhesion are different engineering mechanisms, and keeping them in
+    # one atom is what left every member of the family tied at 0.80 for the query
+    # "a climbing pad that grips smooth vertical walls without glue" -- so a
+    # Post-it note, a stick vacuum, Velcro and flat-pack fasteners were
+    # indistinguishable. The negations are length-bounded on purpose: an
+    # unbounded `without.*glue` would reintroduce the over-matching bug fixed
+    # just above.
+    (
+        r"\b(?:hook-and-loop|velcro|burr|setae|gecko|microstructur\w*|dry adhesi\w*"
+        r"|without (?:any )?(?:glue|adhesive)|no (?:glue|adhesive)|adhesive-free"
+        r"|residue-free)\b",
+        "adhesion_dry",
+    ),
     (r"low-tack|reusable.*label|price tag", "low_tack_adhesive"),
     # suspension / span
     (r"cable|suspend|hang.*cable|span|tower|bridge|roof.*column", "cable_suspension"),
@@ -58,7 +116,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"microwave|magnetron|heat food|excite water", "microwave_heating"),
     # bio / chem
     (r"antibiotic|penicillin|bacterial|infection", "antibiotic"),
-    (r"crispr|dna|genome|gene|edit.*dna", "gene_editing"),
+    (r"crispr|dna|genome|\bgene\b|edit.*dna", "gene_editing"),
     (r"lab-grown|cell culture|bioreactor|muscle cell|meat", "cell_culture"),
     (r"vertical farm|hydroponic|led lighting|crops.*stacked", "vertical_farming"),
     (r"plastic.*ocean|marine.*plastic|floating.*boom|cleanup", "ocean_cleanup"),
@@ -67,7 +125,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     # mechanisms
     (r"fastener|open and closed|wearing out|zipper|teeth.*mesh", "reusable_fastener"),
     (r"pre-drill|flat-pack|assemble.*quick|no special tools", "preliminary_action"),
-    (r"vacuum|handheld|detach|portable", "segmentation"),
+    (r"vacuum|handheld|\bdetach\w*|portable", "segmentation"),
     (r"tank.*fail|storage tank|inspection|safety analysis|molasses", "safety_inspection"),
     (r"pacemaker|heartbeat|electrical pulse|implant", "electrical_implant"),
     (r"x-ray|radiation.*tissue|see inside|bone.*absorb", "penetrating_radiation"),
@@ -75,10 +133,10 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"bifocal|near.*far vision|lens power|glasses", "combined_lens"),
     (r"note.*stick|paper note|remove.*residue", "temporary_adhesive"),
     # mathematics
-    (r"sum.*number|add.*number|add up|arithmetic series|consecutive numbers|total.*1 to|sum.*series|sum them|pair.*terms|sum of the|total of the first|total of the.*numbers|add.*whole numbers|sum.*whole numbers|first .* numbers.*total|gauss", "arithmetic_sum"),
+    (r"\bsum\b.*number|\badd\b.*number|\badd up\b|arithmetic series|consecutive numbers|\btotal\b.*1 to|\bsum\b.*series|\bsum them\b|pair.*terms|\bsum of the\b|total of the first|\btotal\b.*numbers|\badd\b.*whole numbers|\bsum\b.*whole numbers|first .* numbers.*total|gauss", "arithmetic_sum"),
     (r"greatest common divisor|gcd|largest.*factor|prime factor", "gcd"),
     (r"is .* prime\b|prime or not|primality test|probabilistic test|witness.*prime|determine whether.*prime|divisors.*other than|other than 1 and itself|has any divisors|check whether.*number.*prime", "primality_test"),
-    (r"count.*prime|prime numbers up to|sieve|primes up to", "prime_sieve"),
+    (r"\bcount(?:s|ed|ing)?\b.*prime|prime numbers up to|\bsieve\b|primes up to", "prime_sieve"),
     (r"primality|composite|\bprime\b", "primality"),
     (r"area under.*curve|integral|antiderivative|numerical integration|area.*curve", "integration"),
     (r"linear equations|system of equations|gaussian elimination|row operations|solve.*equation", "linear_solve"),
@@ -162,7 +220,7 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"number of islands|flood-fill|grid.*land.*water|count.*island", "flood_fill"),
     # --- networking / distributed systems ---
     (r"fail over|replica|replicate.*node|leader.*die|primary.*down|keep.*running.*server|high availability|failover|node fails|server fails|when one .* fails|one (server|node) fails", "failover"),
-    (r"agree.*same|consensus|raft|paxos|majority.*agree|same.*order|settle.*order", "consensus"),
+    (r"agree.*same|consensus|\braft\b|paxos|majority.*agree|same.*order|settle.*order", "consensus"),
     (r"exactly once|deduplicat|duplicate.*message|processed once|unique id.*message", "exactly_once"),
     (r"load balanc|distribute.*traffic|balance.*request|too many.*server|spread.*load", "load_balance"),
     (r"circuit breaker|fail fast|slow.*backend|backend.*slow|db.*slow|service.*(down|slow)|"
@@ -193,6 +251,88 @@ ACTION_PRIMITIVES: List[tuple] = [
     (r"rank.*(option|proposal|candidate)|score.*alternative|pareto|trade.?off.*rank|multi.?objective", "option_ranking"),
     (r"self.review|self.audit|recursive|introspect|apply.*to itself|improve (the|its) (engine|itself)", "self_review"),
     (r"fail.?closed|fail.?safe|sanity.?filter|guard(rail)?|invariant.*check|regression.?guard", "robustness_guard"),
+    # --- video / computational imaging (wave 3) ---
+    #
+    # One action atom per mechanism family, plus an object_video type. Every
+    # solution in the video fact base repeats its own trigger words so it
+    # strips back to the atom it is meant to match (see SKILL.md step 3).
+    #
+    # Warp by flow: re-project pixels along a dense optical-flow field rather
+    # than re-rendering the scene.
+    (r"optical.?flow|flow.?warp\w*|warp\w*.*\bflow\b|\bflow\b.*warp\w*|dense correspondence"
+     r"|pixel motion|motion vector\w*|frame interpolation|frame.?blend\w*|temporal interpolation"
+     r"|video.?to.?video|\bv2v\b|re.?target\w*.*(pose|motion)|transfer\w*.*(motion|movement|dance)"
+     r"|dance move\w*|moves? (from|of) (one|clip a|the source)|follow\w*.*(motion|movement)",
+     "warp_by_flow"),
+    # Keyframe + bidirectional propagation: reconstruct only some frames and
+    # propagate the rest forward/backward along the motion.
+    (r"keyframe|key frame|bidirectional|bi-directional|propagat\w*.*(frame|keyframe)"
+     r"|every (nth|other|10th|second) frame|sparse keyframe|anchor frame"
+     r"|one frame in (ten|two|three|four|five|n)\b|fill (the rest|in the rest|in the gaps)"
+     r"|render\w*.*\b(sparse|few) frames?\b",
+     "propagate_from_keyframe"),
+    # Low-rank / layered decomposition: background layer + sparse residual.
+    (r"low.?rank|\brpca\b|robust principal component|sparse residual|layered? decompos\w*"
+     r"|background subtraction|background model|median background|foreground layer"
+     r"|separate\w*.*(moving|foreground).*(background|static)|static camera"
+     r"|\bcut\w* out\b.*(person|subject|actor|moving|shot)|(person|subject|actor).*\bcut out\b"
+     r"|without a? ?green.?screen|\bmatting\b|\bmatte\b"
+     r"|(person|subject|actor|foreground).*\b(mask|matte)\b"
+     r"|segment\w*.*(person|subject|actor|moving)",
+     "decompose_low_rank"),
+    # Canonicalisation to UV / texture atlas: remove pose/identity variance.
+    (r"\buv\b|texture atlas|canonical\w*|unwrapped? mesh|mesh surface map|template mesh"
+     r"|normalis\w*.*(pose|identity|viewpoint)|remove\w*.*(pose|viewpoint) variance"
+     r"|retarget\w*.*(texture|clothing|garment)|garment\w*.*(atlas|template|uv)"
+     r"|clothes?\w*.*(put|apply|swap|transfer)|outfit\w*.*(transfer|swap)"
+     r"|(outfit|clothes?|clothing|garment|dress|shirt)\w*.*\b(from|onto|in)\b.*\b(clip|video|person)\b"
+     r"|(take|copy|swap|transfer|borrow)\w*.*(outfit|clothes?|clothing|garment|dress|shirt)"
+     r"|dress\w*.*(person|character)",
+     "canonicalise_to_uv"),
+    # Piecewise-affine / mesh warping.
+    (r"piecewise.?(affine|linear)|mesh\w*.*warp\w*|warp\w*.*mesh|triangulat\w*.*warp"
+     r"|affine.*patch|grid.?(based|mesh) warp|free.?form deformation|\bffd\b|thin.?plate spline"
+     r"|\bhomograph\w*|single (global )?transform"
+     r"|(arms?|limbs?|body parts?).*move\w* differently",
+     "warp_piecewise_affine"),
+    # Motion-compensated temporal filtering; flicker suppression.
+    (r"flicker\w*|temporal filter\w*|motion.?compensat\w*|denois\w*.*(video|temporal)"
+     r"|temporal smoothing|shimmer\w*|jitter\w*.*(frame|render)\w*|pop\w*.*frame|per.?frame render"
+     r"|flickering|temporal instability|stable across frames|temporally consistent",
+     "blend_temporal_overlap"),
+    # Chunked processing + overlap-add blending (streaming seams).
+    (r"overlap.?add|overlap.?blend\w*|chunk\w*.*(process|decode|segment)|segment\w*.*(video|clip)"
+     r"|blend\w*.*(seam|edge|boundary)|seam\w*.*(blend|visible)|batched windows",
+     "blend_temporal_overlap"),
+    # ROI / tile allocation.
+    (r"\broi\b|region of interest|tile.?based|\btiles?\b|adaptive compute|skip\w*.*(static|unchanged) (pixels|region|tiles)"
+     r"|compute allocation|spend\w*.*(gpu|compute|cpu|time).*(face|person|region|area|where)"
+     r"|only where it changes|\b(face|person|subject)\b.*(crop|higher resolution|region)"
+     r"|(gpu|compute|cpu).*(face|person|subject|wall)|ignore the (empty )?(wall|background)",
+     "allocate_by_roi"),
+    # Cache reuse of per-frame features.
+    (r"cache\w*.*feature|feature cache|reuse\w*.*(embedding|feature|backbone)|cached feature\w*"
+     r"|recompute\w*.*(every frame|per frame)|amortis\w*.*(feature|network|embedding)"
+     r"|track\w*.*(embedding|feature)"
+     r"|(network|model|backbone|network)\w*.*(every frame|each frame|on every frame)"
+     r"|(embedding|feature)\w*.*(once|per keyframe)",
+     "reuse_cached_features"),
+    # Separable / pyramid processing.
+    (r"pyramid|\bmipmap|multi.?scale|multi.?resolution|separable|\bcoarse.to.fine\b|\bbox filter"
+     r"|downsampl\w*|low.?resolution.*(preview|proxy|draft)",
+     "downsample_pyramid"),
+    # Quantisation / distillation / small model.
+    (r"quantis\w*|quantiz\w*|int8|\bfp16\b|distil\w*|distill\w*|student model"
+     r"|\bprun\w*|low.?bit|tiny model|small model|weak hardware|cheap(er)? to (run|process)"
+     r"|cheaper to (run|process)|lightweight model|weaker? (machine|hardware|laptop|box|gpu|cpu)",
+     "quantise_model"),
+    # Bounded-memory streaming pipeline.
+    (r"stream\w*.*(pipeline|decode|buffer)|ring buffer|bounded\w*.*(vram|memory|buffer)"
+     r"|\boom\b.*(avoid|prevent)|out.?of.?memory|long video|4 hour|\b4h\b|hours? of video"
+     r"|frame.?by.?frame|decode.*pipe\w*|pipe.*raw frames|constant memory"
+     r"|(clip|video|frames?)\w*.*(does not|doesn't|won't|will not) (fit|load)\b"
+     r"|(fit|load)\w*.*(in|into).*(gpu|vram|memory).*(at once|all)",
+     "stream_ring_buffer"),
 ]
 
 # Object-type primitives: what kind of thing the problem is about.
@@ -213,6 +353,18 @@ OBJECT_PRIMITIVES: List[tuple] = [
     (r"user|request|access|permission|password|credential|attack|threat|intrusion", "object_security"),
     (r"data|dataset|schema|query|index|metric|log|pipeline|backup|deploy|version", "object_data"),
     (r"engine|reasoning|decompos|retriev|corpus|primitive|pipeline|agent|solver|self.improvement|meta", "object_engine"),
+    # Video / computational imaging. Kept narrow: 'frame' alone is too common
+    # ('frame the problem'), so the surface cues are video-specific and the
+    # broad cues require a video word or an explicit rendering/editing term.
+    (r"\bvideo\w*|clip\b|footage|film\b|movie\w*|stream\w*.*frame|render\w*.*(frame|scene|shot)"
+     r"|frames?\b.*(video|clip|sequence)|per.?frame|frame.?rate|\bfps\b|camera\w*"
+     r"|dance move\w*|outfit|clothing|garment|\bpixels?\b|depth.?(map|video)|light.?field"
+     r"|neural render\w*|gaussian splat\w*|inpaint\w*.*(video|frame)"
+     r"|(motion|pose|dance)\w*.*(reference|source|driver) clip|clip [ab]\b|one clip|another clip"
+     r"|homograph\w*|per.?frame|consecutive frames|frames? differ"
+     r"|(character|person)\w* (in|from) (a |the )?scene|actor\b"
+     r"|upscal\w*|super.?resolution|video quality",
+     "object_video"),
 ]
 
 
@@ -264,6 +416,50 @@ QUALITY_ATTRIBUTES: List[tuple] = [
 ]
 
 
+# Words that, when they follow "dense", mark the GRAPH sense ("dense graph",
+# "dense connections between clusters") rather than the materials sense
+# ("dense concrete"). Kept explicit and tested rather than embedded in a
+# lookahead, so the rule is inspectable.
+_GRAPH_SENSE_AFTER_DENSE = (
+    "graph", "graphs", "network", "networks", "connect", "connected",
+    "connections", "connection", "link", "links", "cluster", "clusters",
+    "clustering", "community", "communities", "subgraph", "matrix",
+    "edge", "edges", "subarray", "sub-array",
+)
+
+# Words that may sit between "dense" and the noun it describes: "dense AND
+# sparse", "dense IN A graph", "dense INTERNAL connections".
+_SKIP_BEFORE_NOUN = {
+    "and", "or", "but", "yet", "nor", "with", "in", "on", "at", "of", "to",
+    "is", "are", "was", "were", "be", "being", "very", "more", "most",
+    "less", "least", "highly", "extremely", "fairly", "quite", "enough",
+    "internal", "external", "mutual", "inter", "node", "nodes", "node-level",
+    "cross", "across", "between", "within", "among", "both", "each", "every",
+    "sparse", "tight", "loose", "strong", "weak", "local", "global",
+}
+
+
+def _dense_means_mass(text_lower: str) -> bool:
+    """True when a 'dense' occurrence should count as the materials primitive.
+
+    Returns False only when EVERY occurrence of the word 'dense' is directly
+    followed by a graph-context noun. One materials-sense use is enough to
+    keep the primitive.
+    """
+    for m in re.finditer(r"\bdense\b", text_lower):
+        # Walk forward past conjunctions/adjectives to the head noun.
+        words = re.findall(r"[\w-]+", text_lower[m.end():])[:6]
+        head = ""
+        for w in words:
+            if w in _SKIP_BEFORE_NOUN:
+                continue
+            head = w
+            break
+        if head not in _GRAPH_SENSE_AFTER_DENSE:
+            return True
+    return False
+
+
 def strip_to_primitives(text: str) -> Set[str]:
     """Reduce text to its structural primitive set (action + object-type atoms).
 
@@ -273,20 +469,32 @@ def strip_to_primitives(text: str) -> Set[str]:
     structural matching is never starved (measured: 100 domain regexes still left
     'reduce p99 latency' with only an object atom and no action).
     """
+    key = text
+    hit = _STRIP_CACHE.get(key)
+    if hit is not None:
+        return set(hit)
+
     tl = text.lower()
     prims: Set[str] = set()
     for pattern, prim in ACTION_PRIMITIVES:
-        if re.search(pattern, tl):
+        if prim == "reduce_density" and not _dense_means_mass(tl):
+            # `dense` present, but in its graph sense -- skip this primitive.
+            # Other materials cues (density/heavy/lightweight) still count.
+            if not re.search(
+                r"density|heavy|lightweight|air-entraining|light enough|reduce.*weight", tl
+            ):
+                continue
+        if _rx(pattern).search(tl):
             prims.add(prim)
     for pattern, prim in OBJECT_PRIMITIVES:
-        if re.search(pattern, tl):
+        if _rx(pattern).search(tl):
             prims.add(prim)
     # Generic layers (added after specific ones; both may contribute).
     for pattern, prim in GENERIC_ACTION_PRIMITIVES:
-        if re.search(pattern, tl):
+        if _rx(pattern).search(tl):
             prims.add(prim)
     for pattern, prim in QUALITY_ATTRIBUTES:
-        if re.search(pattern, tl):
+        if _rx(pattern).search(tl):
             prims.add(prim)
 
     # Optional LLM fallback for open-vocabulary domain extraction when regex yields empty
@@ -300,6 +508,9 @@ def strip_to_primitives(text: str) -> Set[str]:
         except Exception:
             pass
 
+    if len(_STRIP_CACHE) >= _STRIP_CACHE_MAX:
+        _STRIP_CACHE.clear()
+    _STRIP_CACHE[key] = frozenset(prims)
     return prims
 
 
@@ -319,6 +530,24 @@ def primitive_overlap(a: Set[str], b: Set[str]) -> float:
     return len(inter) / len(a)
 
 
+def _strip_sources(source_solutions: List[Dict[str, str]]) -> List[Set[str]]:
+    """Strip every source solution to primitives, memoized within the call.
+
+    Duplicate solution texts are common in the index (up to 8 copies of one
+    entry were measured), so memoizing by text also collapses that work.
+    """
+    memo: Dict[str, Set[str]] = {}
+    out: List[Set[str]] = []
+    for sol in source_solutions:
+        text = sol["solution"]
+        prims = memo.get(text)
+        if prims is None:
+            prims = strip_to_primitives(text)
+            memo[text] = prims
+        out.append(prims)
+    return out
+
+
 def match_by_primitives(
     target_text: str,
     source_solutions: List[Dict[str, str]],
@@ -334,6 +563,12 @@ def match_by_primitives(
       higher than common ones (e.g. sorting), so a solution sharing the target's
       specific action beats one sharing only generic primitives.
     """
+    # Strip each SOURCE once, not twice. The original code called
+    # strip_to_primitives on every solution in the IDF pass AND again in the
+    # scoring pass (349 regex passes for 174 sources, ~0.6 ms each), which made
+    # a single retrieval cost ~200 ms. Memoizing by content is a pure
+    # performance change: same inputs, same outputs.
+    source_prims = _strip_sources(source_solutions)
     t_prims = strip_to_primitives(target_text)
     # Empty-primitive guard: if the target strips to nothing (no action and no
     # object primitive fired), every source ties at 0.0 and the first entry wins
@@ -364,15 +599,15 @@ def match_by_primitives(
     # IDF: how rare is each action across the source solutions? Rare actions
     # are more distinctive and should dominate the match.
     action_doc_freq: Dict[str, int] = {}
-    for sol in source_solutions:
-        s_actions = {p for p in strip_to_primitives(sol["solution"]) if not p.startswith("object_")}
+    for s_prims in source_prims:
+        s_actions = {p for p in s_prims if not p.startswith("object_")}
         for a in s_actions:
             action_doc_freq[a] = action_doc_freq.get(a, 0) + 1
     n_docs = max(len(source_solutions), 1)
 
     scored = []
-    for sol in source_solutions:
-        s_prims = strip_to_primitives(sol["solution"])
+    for sol, s_prims in zip(source_solutions, source_prims):
+        s_prims = set(s_prims)
         s_actions = {p for p in s_prims if not p.startswith("object_")}
         s_objs = s_prims - s_actions
         s_actions_spec = {p for p in s_actions if not _is_generic(p)}
@@ -418,11 +653,27 @@ def match_by_primitives(
     # dependency-free full-text similarity (difflib SequenceMatcher over the raw
     # target vs source text) prefers the source whose wording is closest, which
     # resolves most near-identical-primitive ties.
+    #
+    # difflib.SequenceMatcher is quadratic and ran over EVERY source (76 ms of
+    # a 200 ms call). Near-identical primitive scores are what needs breaking,
+    # so only the top ties are rescored: cheap token-overlap first, difflib
+    # only inside the tie block that can still affect the returned top-k.
     import difflib
+
+    tie_floor = 0.0
+    if len(scored) > top_k:
+        tie_floor = scored[top_k - 1]["primitive_overlap"]
+    target_words = set(re.findall(r"[a-z0-9]+", target_text.lower()))
     for s in scored:
-        s["_text_sim"] = difflib.SequenceMatcher(
-            None, target_text.lower(), s.get("content", "").lower()
-        ).ratio()
+        if s["primitive_overlap"] >= tie_floor:
+            src_words = set(re.findall(r"[a-z0-9]+", s.get("content", "").lower()))
+            s["_text_sim"] = (
+                difflib.SequenceMatcher(None, target_text.lower(), s.get("content", "").lower()).ratio()
+                if len(target_words & src_words) >= 3
+                else 0.0
+            )
+        else:
+            s["_text_sim"] = 0.0
     scored.sort(key=lambda x: (x["primitive_overlap"], x["_text_sim"]), reverse=True)
     for s in scored:
         s.pop("_text_sim", None)

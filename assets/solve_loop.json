@@ -3,7 +3,7 @@
   "solution_coverage_at_1": 0.333,
   "solution_coverage_at_3": 0.5,
   "mean_best_recall": 0.436,
-  "solution_idea_coverage": 0.583,
+  "solution_idea_coverage": 0.75,
   "rows": [
     {
       "problem": "Shortest-path routing for a delivery fleet under time-window constraints.",
@@ -19,8 +19,8 @@
       "best_recall": 0.398,
       "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.349,
-      "idea_covered": false,
+      "idea_best_recall": 1.0,
+      "idea_covered": true,
       "best_subproblem": "Characterize the boundary/special cases of 'Reduce cache invalidation spikes in "
     },
     {
@@ -37,8 +37,8 @@
       "best_recall": 0.475,
       "best_rank": 8,
       "covered": true,
-      "idea_best_recall": 0.337,
-      "idea_covered": false,
+      "idea_best_recall": 1.0,
+      "idea_covered": true,
       "best_subproblem": "Find a structural analogue of 'duplicate invoices across' in another domain and "
     },
     {
@@ -55,7 +55,7 @@
       "best_recall": 0.377,
       "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.346,
+      "idea_best_recall": 0.337,
       "idea_covered": false,
       "best_subproblem": "Characterize the boundary/special cases of 'Estimate how long a queue takes to d"
     },
@@ -73,7 +73,7 @@
       "best_recall": 0.457,
       "best_rank": 3,
       "covered": true,
-      "idea_best_recall": 0.597,
+      "idea_best_recall": 0.8,
       "idea_covered": true,
       "best_subproblem": "Characterize the boundary/special cases of 'Find the cheapest way to connect all"
     },
@@ -82,7 +82,7 @@
       "best_recall": 0.52,
       "best_rank": 1,
       "covered": true,
-      "idea_best_recall": 0.438,
+      "idea_best_recall": 0.4,
       "idea_covered": true,
       "best_subproblem": "Decompose the objective 'Prove that there are infinitely many primes.' into inde"
     },
@@ -91,7 +91,7 @@
       "best_recall": 0.4,
       "best_rank": 3,
       "covered": false,
-      "idea_best_recall": 0.355,
+      "idea_best_recall": 0.377,
       "idea_covered": false,
       "best_subproblem": "Characterize the boundary/special cases of 'Explain why a recommendation engine "
     },
@@ -109,7 +109,7 @@
       "best_recall": 0.4,
       "best_rank": 5,
       "covered": true,
-      "idea_best_recall": 0.37,
+      "idea_best_recall": 0.35,
       "idea_covered": false,
       "best_subproblem": "Relax or remove the constraint 'Detect a data race that only fails sometimes.' a"
     }

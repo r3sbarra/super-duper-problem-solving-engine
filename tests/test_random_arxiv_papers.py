@@ -30,8 +30,22 @@ def test_verify_random_arxiv_zhi_wei_sun_catalan_irrationality():
 
     # Must dynamically extract lemmas without stubs
     assert len(result.sound_lemmas) >= 1
-    assert result.confidence >= 0.70
-    assert result.verdict in [VerificationStatus.VERIFIED_SOUND, VerificationStatus.GAP_DETECTED]
+
+    # Verdict corrected: this must be INCONCLUSIVE, not VERIFIED_SOUND.
+    #
+    # The auditor's barriers are Tardos, Baker-Gill-Solovay, Razborov-Rudich,
+    # Selberg parity, Scholze-Stix and Conway-Collatz; none of them covers proofs
+    # of irrationality. Measured maximum engagement between this abstract's lemma
+    # steps and any barrier's obstruction manifold is 0.228, below the audit's own
+    # 0.28 engagement gate -- so the screen never applied to this claim at all.
+    #
+    # Previously a lemma matching no barrier was recorded as "sound", so an
+    # all-clear was reported as VERIFIED_SOUND. That is fail-open, and it is how
+    # "1+1=3" and "The moon is made of cheese" also came back VERIFIED_SOUND. The
+    # honest report for a claim outside the auditor's scope is INCONCLUSIVE with
+    # zero confidence -- absence of a barrier match is not evidence of soundness.
+    assert result.verdict == VerificationStatus.INCONCLUSIVE
+    assert result.confidence == 0.0
 
     # Check that technique extracted matches the paper's sentence
     assert any("weights" in s.lower() or "irrationality" in s.lower() for s in result.sound_lemmas)

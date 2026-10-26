@@ -28,7 +28,7 @@
     {
       "subsystem": "triz.principles",
       "status": "OK",
-      "detail": "[{'principle_id': 38, 'name': 'Strong Oxidants', 'description': 'Replace normal environment with enriched or active field/reaction (e.g. oxygen-enrich"
+      "detail": "[{'principle_id': 28, 'name': 'Mechanics Substitution', 'description': 'Replace a mechanical means with sensory, optical, acoustic, or electromagnetic"
     },
     {
       "subsystem": "kt.boundary",
@@ -53,7 +53,7 @@
     {
       "subsystem": "toc.evaporate",
       "status": "OK",
-      "detail": "{'resolved': False, 'winning_injection': 'automate testing', 'evaporation_score': 0.0274253211915493, 'rankings': [{'injection': 'automate testing', '"
+      "detail": "{'resolved': False, 'winning_injection': None, 'evaporation_score': 0.0, 'rankings': [{'injection': 'automate testing', 'score': 0.0274253211915493, '"
     },
     {
       "subsystem": "problem_id.decompose",
@@ -63,12 +63,12 @@
     {
       "subsystem": "vectorize.primitive_analogize",
       "status": "OK",
-      "detail": "[{'content': 'Use a low-tack adhesive that was originally a failed super-strong glue (Post-it)', 'title': 'make a paper note that sticks temporarily a"
+      "detail": "[{'content': 'Mimic the hook-and-loop structure of burrs that stick to fabric (Velcro)', 'title': 'make a fastener that can be opened and closed repea"
     },
     {
       "subsystem": "search.negative_manifold",
       "status": "OK",
-      "detail": "(True, 1.0000001192092896, 'Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): Consolidated Hazard Cluster (2 items): Conso"
+      "detail": "(True, 1.0000001192092896, 'add a cache in front of the database')"
     },
     {
       "subsystem": "search.mcts.best_path",
@@ -78,7 +78,7 @@
     {
       "subsystem": "latent.coconut.bfs",
       "status": "OK",
-      "detail": "[[('add_cache', array([-7.55911582e-03, -1.05073423e-02,  1.43189626e-01, -4.42528923e-03,\n       -6.85695239e-03,  1.09959543e-02,  1.10655206e-02, -"
+      "detail": "[[('add_cache', array([ 8.05500957e-03,  1.33541529e-02,  1.17524501e-01, -1.89322768e-02,\n       -6.33643833e-03,  1.62841761e-02, -2.23583239e-02, -"
     },
     {
       "subsystem": "latent.dot.denoise",
@@ -88,7 +88,7 @@
     {
       "subsystem": "tournament.match",
       "status": "OK",
-      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.WEAKENED_INCONSISTENT: 'WEAKENED_INCONSISTENT'>, robustn"
+      "detail": "[TournamentMatchResult(hypothesis='add a cache to reduce latency', verdict=<TournamentVerdict.SURVIVED_ROBUST: 'SURVIVED_ROBUST'>, robustness_score=1."
     },
     {
       "subsystem": "math.verify_flawed",
@@ -118,12 +118,12 @@
     {
       "subsystem": "meta.self_diagnostic",
       "status": "OK",
-      "detail": "{'total_registered_dead_ends': 36, 'total_episodic_cases': 11, 'active_parameters': {'proximity_threshold': 0.38, 'guidance_scale': 1.4082446110538984"
+      "detail": "{'total_registered_dead_ends': 1, 'total_episodic_cases': 0, 'active_parameters': {'proximity_threshold': 0.45, 'guidance_scale': 0.8777704720790105, "
     },
     {
       "subsystem": "memory.consolidate",
       "status": "OK",
-      "detail": "1"
+      "detail": "0"
     },
     {
       "subsystem": "code.synthesize",
@@ -138,7 +138,7 @@
     {
       "subsystem": "suggest_paths",
       "status": "OK",
-      "detail": "[SuggestedPath(path_id='path_platt_crucial_assay', strategy_type='PLATT_STRONG_INFERENCE_ASSAY', title='High-Resolution Differential Crucial Experimen"
+      "detail": "[SuggestedPath(path_id='path_gentner_analogy', strategy_type='ANALOGICAL_STRUCTURAL_TRANSFER', title='Cross-Domain Relational Structure Mapping', desc"
     }
   ]
 }

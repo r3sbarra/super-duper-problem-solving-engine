@@ -752,6 +752,152 @@ DOMAIN_KNOWLEDGE: List[Dict[str, str]] = [
         "problem_context": "find the eigenvalues of a matrix from its characteristic polynomial",
         "solution_direction": "Find the eigenvalues from the characteristic polynomial det(lambda*I - A) via the Faddeev-LeVerrier algorithm",
     },
+    # --- Coverage-gap fill (measured 2026-10-19). Each entry below corresponds
+    #     to a probe query the primitive matcher MISSED because the concept was
+    #     absent from the fact base entirely (not a ranking failure): a grep for
+    #     "community", "scheduling", "spanning", "bloom" and "suffix" over all
+    #     174 stored solutions returned zero rows. ---
+    {
+        "problem_context": "partition a network into communities or clusters so that internal links are dense and links between clusters are sparse",
+        "solution_direction": "Detect communities by maximizing modularity: Louvain greedily merges nodes into communities while modularity increases, then aggregates the graph and repeats (hierarchical clustering)",
+    },
+    {
+        "problem_context": "find groups of similar nodes in a graph without being told how many groups there are",
+        "solution_direction": "Cluster the graph by modularity optimization or by the leading eigenvectors of the graph Laplacian (spectral clustering), letting the number of communities emerge from the structure",
+    },
+    {
+        "problem_context": "schedule jobs on a single machine to minimise the total weighted completion time",
+        "solution_direction": "Order the jobs by Smith's rule: sequence them in decreasing ratio of weight to processing time (weighted shortest processing time), which minimises total weighted completion time",
+    },
+    {
+        "problem_context": "sequence tasks on one machine to minimise the average time a job waits",
+        "solution_direction": "Use shortest processing time first: run the jobs in increasing processing time to minimise average waiting time and mean flow time (SPT scheduling rule)",
+    },
+    {
+        "problem_context": "connect every node of a network with the cheapest possible set of new links without creating a cycle",
+        "solution_direction": "Build a minimum spanning tree: Kruskal's algorithm repeatedly adds the cheapest edge that does not form a cycle (union-find), or Prim's algorithm grows the tree from one node",
+    },
+    {
+        "problem_context": "test cheaply whether an item is definitely absent from a huge set without storing every element",
+        "solution_direction": "Use a Bloom filter: hash each item to several bit positions in a fixed-size bitmap; a zero bit proves absence while all-ones gives a bounded false-positive probability",
+    },
+    {
+        "problem_context": "search a huge static text or genome for patterns without decompressing or loading it all",
+        "solution_direction": "Index the text with a compressed full-text index such as the suffix array, FM-index or Burrows-Wheeler transform so patterns are found by backward search over compressed data",
+    },
+    {
+        "problem_context": "find all occurrences of many different patterns in one long document quickly",
+        "solution_direction": "Build an Aho-Corasick automaton over the pattern set and scan the document once, reporting every match from a single pass",
+    },
+    {
+        "problem_context": "estimate the probability of a rare event with as few samples as possible",
+        "solution_direction": "Use importance sampling: draw samples from a tilted proposal distribution that makes the rare event common, then reweight each sample by the likelihood ratio to stay unbiased",
+    },
+    {
+        "problem_context": "estimate an integral or expectation in high dimension where grid sampling fails",
+        "solution_direction": "Use Monte Carlo integration: average the integrand over random samples, with variance reduced by stratification, control variates or antithetic sampling",
+    },
+    {
+        "problem_context": "detect duplicate records across two very large lists without comparing every pair",
+        "solution_direction": "Hash a canonical key for each record into a set and join on the hash: build a hash set of one list and probe it with the other in linear time (merge or hash join)",
+    },
+    {
+        "problem_context": "make a model or service answer in under a millisecond",
+        "solution_direction": "Reduce per-request work: batch requests into one vectorized operation, cache results for repeated inputs, and precompute a static fused matrix so inference is a single small matrix multiply",
+    },
+    {
+        "problem_context": "prove that every even integer greater than two is the sum of two primes",
+        "solution_direction": "Goldbach's conjecture: verify the strong Goldbach decomposition n = p + q over primes for a range and attempt a proof by strong induction or the circle method",
+    },
+    {
+        "problem_context": "count how many numbers up to n share no factor with n",
+        "solution_direction": "Compute Euler's totient phi(n) from the prime factorisation as n * product(1 - 1/p) over the distinct prime factors p of n",
+    },
+    {
+        "problem_context": "find the k-th smallest or largest element of an unsorted list without sorting the whole list",
+        "solution_direction": "Use quickselect: partition around a pivot and recurse only into the side that contains the k-th element, giving linear expected time",
+    },
+    {
+        "problem_context": "explain why a set of probabilities must sum to one",
+        "solution_direction": "Normalise the distribution: divide every weight by the total so the probabilities sum to one, which follows from the axioms of probability and the law of total probability",
+    },
+    {
+        "problem_context": "decode a message that was scrambled by permuting its characters",
+        "solution_direction": "Invert the permutation or search the permutation space: use frequency analysis and anagram matching, or recover the cipher permutation from known plaintext",
+    },
+    {
+        "problem_context": "find a short route between two locations on a road network",
+        "solution_direction": "Run Dijkstra's algorithm on the weighted graph or A* with an admissible distance heuristic to find the shortest path",
+    },
+    # --- Video / computational imaging (added wave 3).
+    #     Each solution_direction repeats the trigger words of its own primitive
+    #     (see SKILL.md step 3): the problem and the solution are phrased in
+    #     different vocabularies, so a solution that does not name its own
+    #     mechanism strips to empty and can never be retrieved. ---
+    {
+        "problem_context": "apply the dance moves of a performer in one video clip onto a different person in another video",
+        "solution_direction": "Estimate dense optical flow (pixel motion) from source to target and warp the source video pixels along that flow field onto the target's body, instead of regenerating the frames from scratch",
+    },
+    {
+        "problem_context": "reduce the cost of a video-to-video edit that regenerates every frame with a diffusion model",
+        "solution_direction": "Render only sparse keyframes and propagate the result forward and backward to neighbouring frames with bidirectional flow warping, regenerating a small fraction of frames",
+    },
+    {
+        "problem_context": "separate a moving person from a static filmed background so only the subject is edited",
+        "solution_direction": "Decompose the clip into a low-rank background layer plus a sparse residual foreground layer (RPCA / robust PCA, temporal-median background subtraction) instead of per-pixel thresholding",
+    },
+    {
+        "problem_context": "take the outfit or clothing from one clip and put it on the person in another clip with a different pose and shape",
+        "solution_direction": "Canonicalise the body to a UV texture atlas: unwrap both meshes to the same template UV map, retarget the garment texture in the atlas, then re-project to the target pose",
+    },
+    {
+        "problem_context": "warp one image or video frame onto another when the motion is not a single global transform",
+        "solution_direction": "Fit a mesh of triangles over the video frame and apply a piecewise-affine warp per triangle (or a thin-plate spline), so locally different motions are handled separately",
+    },
+    {
+        "problem_context": "stop a per-frame neural render from flickering and shimmering between consecutive frames",
+        "solution_direction": "Apply motion-compensated temporal filtering to the video: warp the previous output frame into the current frame with flow, then blend it with overlap so texture is stable across frames and the flicker is suppressed",
+    },
+    {
+        "problem_context": "process a long video in a streaming loop without visible seams or joints between batches",
+        "solution_direction": "Process the clip in overlapping chunks and blend the overlap-add region with a feathering weight, so the seam between segment boundaries is invisible",
+    },
+    {
+        "problem_context": "make a video pipeline fast enough on weak hardware by spending compute only where it matters",
+        "solution_direction": "Allocate compute by ROI and tile: run the expensive network only on the region of interest of the video frame (the face and body tiles) at full resolution and skip static tiles",
+    },
+    {
+        "problem_context": "a per-frame network re-extracts the same identity and appearance features on every frame and is too slow",
+        "solution_direction": "Reuse cached features across frames of the video clip: extract the backbone embedding once per keyframe, cache it, and track it to later frames instead of recomputing every frame",
+    },
+    {
+        "problem_context": "process high-resolution video on a machine without enough memory for a full-resolution pipeline",
+        "solution_direction": "Use a downsample pyramid: run a separable box filter at low resolution to get a coarse result (coarse-to-fine, multi-scale), then refine only the region of interest at higher resolution",
+    },
+    {
+        "problem_context": "make a 4 hour video cheaper and faster to process on weak hardware with no GPU",
+        "solution_direction": "Quantise and distil the model (int8 / fp16 quantisation, pruning) so a small student model runs on CPU, cutting the cost per frame without retraining from scratch",
+    },
+    {
+        "problem_context": "a long video exhausts VRAM or runs out of memory when decoded all at once",
+        "solution_direction": "Run a streaming pipeline with a bounded VRAM ring buffer: decode frame by frame through a pipe of raw frames, keep only a small window in memory, and write each processed chunk out before reading the next",
+    },
+    {
+        "problem_context": "upscale or sharpen video footage to a higher resolution without a heavy model per frame",
+        "solution_direction": "Do a separable multi-scale pass: run the cheap edge-aware filter on the downsample pyramid coarse level first, then apply the residual only where the difference is large (coarse-to-fine upsampling)",
+    },
+    {
+        "problem_context": "transfer motion from a reference clip to a generated character while keeping its identity and clothing stable",
+        "solution_direction": "Two-stage transfer: canonicalise the character to a UV texture atlas so identity and clothing stay fixed, then warp the body piecewise-affine (mesh) by the optical flow sampled from the reference clip's skeleton motion",
+    },
+    {
+        "problem_context": "edit only the actor in a scene and leave the background and other objects untouched",
+        "solution_direction": "Decompose the frame into background and foreground layers with low-rank plus sparse residual, build a foreground mask by background subtraction, and composite the edited layer back with feathered mask edges",
+    },
+    {
+        "problem_context": "a video processing job produces a jittery, popping result when run frame by frame with an independent model",
+        "solution_direction": "Add temporal consistency: motion-compensated flow warping of the previous output with overlap blending and bidirectional propagation from keyframes, so the model output is temporally filtered rather than independent per frame",
+    },
 ]
 
 

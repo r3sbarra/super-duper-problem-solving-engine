@@ -38,6 +38,36 @@ class VectorizationService:
         self.path_vec = PathVectorizer(self.backend)
         self.index = VectorIndex(db_path=db_path, backend=self.backend)
 
+    def ensure_seeded(self, force: bool = False) -> Dict[str, Any]:
+        """Seed the committed domain-knowledge fact base into an empty index.
+
+        The engine shipped with an empty brain: ``build_domain_knowledge_index``
+        was only ever called from ``scripts/`` and tests, never from the runtime
+        or MCP path, and the index itself lives in a gitignored directory.  So a
+        fresh install answered every ``analogize``/``primitive_analogize`` query
+        with nothing at all, and the only indexes that ever had content were
+        built ad hoc by offline scripts (which is why the one on the dev machine
+        held 738 rows of coding/DB/self-improvement work and no other domain).
+
+        This makes the committed fact base the default prior.  Idempotent:
+        entries are stored under content-derived ids, so re-running replaces
+        rather than duplicates.  Returns a small JSON-safe report.
+        """
+        if self.index.db_path != ":memory:" or force:
+            if force or self.index.count("problem") == 0:
+                from super_solver.vectorize.domain_knowledge import (
+                    build_domain_knowledge_index,
+                )
+
+                build_domain_knowledge_index(self)
+                return {
+                    "seeded": True,
+                    "problems": self.index.count("problem"),
+                    "solutions": self.index.count("solution"),
+                }
+        existing = self.index.count("problem")
+        return {"seeded": False, "reason": "index already populated", "problems": existing}
+
     # -- encode -------------------------------------------------------------
 
     def encode_problem(
@@ -221,6 +251,12 @@ class VectorizationService:
                 "primitive_overlap": h["primitive_overlap"],
                 "target_primitives": h["target_primitives"],
                 "source_primitives": h["source_primitives"],
+                # Propagate the no-structural-signal sentinel flag. Dropping it
+                # here made every downstream `if h.get("empty_match"): continue`
+                # guard dead code, so a pseudo-hit whose content is the literal
+                # "<no structural primitives extracted>" was reported as if it
+                # were a retrieved analog (see problem_identification.py).
+                "empty_match": bool(h.get("empty_match", False)),
             }
             for h in hits[:top_k]
             if h["primitive_overlap"] >= min_overlap

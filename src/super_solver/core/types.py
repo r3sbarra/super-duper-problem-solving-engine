@@ -170,6 +170,8 @@ class ProofVerificationResult(BaseModel):
     sound_lemmas: List[str] = Field(default_factory=list)
     reasoning_trace: List[str] = Field(default_factory=list)
     formal_summary: str
+    formal_certificate: Optional[Dict[str, Any]] = None
+    lcf_verified: bool = False
 
 
 class SuggestedPath(BaseModel):

@@ -31,6 +31,8 @@ def test_all_mcp_tools_listed():
         "super_solver_next_experiment",
         "super_solver_primitive_analogize",
         "super_solver_pareto",
+        "super_solver_remember_solution",
+        "super_solver_record_dead_end",
     ]:
         assert expected in names
 
@@ -55,6 +57,14 @@ def test_all_mcp_tools_listed():
                            {"name": "cost", "direction": "minimize"}],
             "candidates": [{"name": "a", "values": {"latency": 10, "cost": 90}},
                            {"name": "b", "values": {"latency": 90, "cost": 10}}],
+        }),
+        ("super_solver_remember_solution", {
+            "problem_specification": "smoke: avoid duplicate scheduled job execution",
+            "solution": "keyed distributed lock with a lease timeout",
+            "title": "smoke case",
+        }),
+        ("super_solver_record_dead_end", {
+            "description": "smoke: busy-poll the database for job completion",
         }),
     ],
 )

@@ -6,6 +6,7 @@ to resolve engineering and scientific trade-offs without compromise.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -176,7 +177,13 @@ TRIZ_PRINCIPLES: Dict[int, Dict[str, str]] = {
 }
 
 
-# Canonical Altshuller Contradiction Lookup Table for classic parameter conflicts
+# Curated Altshuller contradiction lookup for classic parameter conflicts.
+#
+# NOTE: this is an 11-cell SUBSET, not the full canonical 39x39 matrix (1521
+# cells).  It is deliberately small and hand-checked: a larger auto-parsed
+# corpus exists (see scripts/build_triz_corpus.py, ~1212 cells) but its source
+# spreadsheet is not vendored into the repo, so it is not wired in here.
+# Pairs absent from this table fall back to TRIZEngine.suggest_principles.
 CONTRADICTION_MATRIX: Dict[Tuple[str, str], List[int]] = {
     ("strength", "weight"): [40, 8, 1, 15],
     ("weight", "strength"): [8, 40, 1, 35],
@@ -194,6 +201,25 @@ CONTRADICTION_MATRIX: Dict[Tuple[str, str], List[int]] = {
 
 class TRIZEngine:
     """TRIZ Inventive Operator Matcher and Contradiction Resolver."""
+
+    # Synonyms used to spot a contradiction-matrix parameter in free text. Kept
+    # to whole-word matches so "heavy" does not fire inside "heavily".
+    _PARAM_SYNONYMS: Dict[str, Tuple[str, ...]] = {
+        "strength": ("stronger", "strong", "durability", "durable"),
+        "weight": ("heavier", "heavy", "lighter", "light", "mass"),
+        "speed": ("faster", "slower", "quickly"),
+        "accuracy": ("accurate", "precision", "precise"),
+        "capacity": ("throughput", "bandwidth"),
+        "volume": ("bulk", "size"),
+        "power": ("wattage", "horsepower"),
+        "energy_loss": ("energy loss", "friction", "inefficiency", "losses"),
+        "complexity": ("complex", "complicated", "intricate"),
+        "reliability": ("reliable", "dependable"),
+        "stability": ("stable", "wobble"),
+        "temperature": ("heat", "thermal", "overheat"),
+        "information": ("data", "signal"),
+        "noise": ("interference", "distortion"),
+    }
 
     def __init__(self):
         self.principle_vectors: Dict[int, np.ndarray] = {}
@@ -228,12 +254,66 @@ class TRIZEngine:
             )
         return results
 
+    def infer_contradiction_parameters(self, text: str) -> List[str]:
+        """Parameter names from the contradiction matrix that the text mentions.
+
+        Returned in order of first appearance, so the earlier parameter is the one
+        being improved. Matching is whole-word and case-insensitive, on the
+        parameter name plus a small synonym set.
+        """
+        low = text.lower()
+        found: List[Tuple[int, str]] = []
+        for param, synonyms in self._PARAM_SYNONYMS.items():
+            best = None
+            for syn in (param.replace("_", " "),) + synonyms:
+                m = re.search(rf"\b{re.escape(syn)}\b", low)
+                if m and (best is None or m.start() < best):
+                    best = m.start()
+            if best is not None:
+                found.append((best, param))
+        found.sort()
+        return [p for _, p in found]
+
     def suggest_principles(
         self,
         contradiction_description: str,
         top_k: int = 4,
     ) -> List[Dict[str, Any]]:
-        """Matches a problem contradiction to the most relevant TRIZ Inventive Principles."""
+        """Matches a problem contradiction to the most relevant TRIZ Inventive Principles.
+
+        Tries the real Altshuller matrix first: if the text names two parameters
+        that form a known contradiction cell, that cell's principles are returned
+        (source ``altshuller_matrix_inferred``). Measured example: "Increase the
+        strength of a bracket without making it heavier" infers (strength, weight)
+        and returns the matrix's [40, 8, 1, 15].
+
+        Only when no parameter pair is recognised does this fall back to vector
+        similarity over the principle descriptions. That fallback is weak by
+        construction -- the descriptions share almost no vocabulary with problem
+        statements (measured: content-word overlap is 0.0 for nearly every
+        principle) and the dense scores it produces sit in a narrow band
+        (0.17-0.35) with no reliable ordering. Treat those results as brainstorming
+        seeds, not as recommendations; the principled fix is to widen
+        CONTRADICTION_MATRIX, not to re-weight the fallback.
+        """
+        params = self.infer_contradiction_parameters(contradiction_description)
+        for i, improving in enumerate(params):
+            for worsening in params[i + 1 :]:
+                for pair in ((improving, worsening), (worsening, improving)):
+                    principle_ids = CONTRADICTION_MATRIX.get(pair)
+                    if principle_ids:
+                        return [
+                            {
+                                "principle_id": pid,
+                                "name": TRIZ_PRINCIPLES[pid]["name"],
+                                "description": TRIZ_PRINCIPLES[pid]["desc"],
+                                "similarity_score": 1.0,
+                                "source": "altshuller_matrix_inferred",
+                                "matched_parameters": list(pair),
+                            }
+                            for pid in principle_ids[:top_k]
+                        ]
+
         v_contra = embedding_service.encode(contradiction_description)
         scores = []
 

@@ -601,13 +601,29 @@ _ANTONYMS: Tuple[Tuple[str, str], ...] = (
 )
 
 
+def _antonym_variant_pattern(word: str) -> str:
+    """Regex for an antonym word plus its common inflections.
+
+    A plain ``\\bincrease\\b`` misses "increases"/"increasing", so a hypothesis
+    that asserts a predicate and its opposite in inflected form ("Increasing the
+    dose reduces survival") slipped past the self-contradiction check while the
+    uninflected wording was caught. Both stems are allowed because English drops
+    a trailing "e" before -ing/-ed ("increase" -> "increas").
+    """
+    escaped = re.escape(word)
+    stems = [escaped]
+    if word.endswith("e"):
+        stems.append(re.escape(word[:-1]))
+    return rf"\b(?:{'|'.join(stems)})(?:s|es|d|ed|ing)?\b"
+
+
 def _antonym_flip(parent: str, child: str) -> bool:
     """True when the child states the opposite of a parent predicate."""
     pl = parent.lower()
     cl = child.lower()
 
     def has(text, w):
-        return re.search(rf"\b{re.escape(w)}\b", text) is not None
+        return re.search(_antonym_variant_pattern(w), text) is not None
 
     for a, b in _ANTONYMS:
         # parent says A, child says B (or vice versa) -> opposite. The antonym

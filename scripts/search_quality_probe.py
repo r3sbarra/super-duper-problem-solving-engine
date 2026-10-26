@@ -26,20 +26,27 @@ TRIALS = 20
 SEED = 7
 
 
-def make_problem(rng):
+def make_problem(rng, good_last: bool = False):
+    """Build a 10-operator navigation task: 2 goal-directed, 8 noise.
+
+    ``good_last`` puts the goal-directed operators at the END of the list.  That
+    matters: expansion used to follow list order, so with the good operators
+    listed first this probe measured list position rather than search quality
+    (measured then: good ops first -> 1.000, good ops last -> 0.000).  The probe
+    now reports both orderings so a reward-blind search cannot pass it.
+    """
     goal = rng.standard_normal(DIM).astype(np.float32)
     goal /= np.linalg.norm(goal)
-    # 10 operators: 2 move toward goal, 8 are noise/away.
-    ops = []
+    good, noise = [], []
     for i in range(2):
         v = goal + 0.15 * rng.standard_normal(DIM).astype(np.float32)
         v /= np.linalg.norm(v)
-        ops.append((f"good_{i}", v, 0.9))
+        good.append((f"good_{i}", v, 0.9))
     for i in range(8):
         v = rng.standard_normal(DIM).astype(np.float32)
         v /= np.linalg.norm(v)
-        ops.append((f"noise_{i}", v, 0.3))
-    return goal, ops
+        noise.append((f"noise_{i}", v, 0.3))
+    return goal, (noise + good if good_last else good + noise)
 
 
 def guided_value(mcts, start, goal, ops, rng):
@@ -76,29 +83,37 @@ def main():
     from super_solver.search.mcts_prm import LatentMCTSEngine
 
     mcts = LatentMCTSEngine()
-    rng = np.random.default_rng(SEED)
 
-    guided, random_ = [], []
-    guided_goodfrac, random_goodfrac = [], []
-    for _ in range(TRIALS):
-        goal, ops = make_problem(rng)
-        start = -goal.copy()  # start far from goal
-        gp, gf = guided_value(mcts, start, goal, ops, rng)
-        guided.append(gp)
-        guided_goodfrac.append(gf)
-        # random baseline: expected good-op fraction = 2/10 = 0.2
-        random_.append(random_value(start, goal, ops, rng))
-        random_goodfrac.append(2 / 10)
+    def run(good_last: bool):
+        rng = np.random.default_rng(SEED)
+        guided, random_, goodfrac, wins = [], [], [], 0
+        for _ in range(TRIALS):
+            goal, ops = make_problem(rng, good_last=good_last)
+            start = -goal.copy()  # start far from goal
+            gp, gf = guided_value(mcts, start, goal, ops, rng)
+            rv = random_value(start, goal, ops, rng)
+            guided.append(gp)
+            goodfrac.append(gf)
+            random_.append(rv)
+            wins += 1 if gp > rv else 0
+        return (
+            float(np.mean(guided)),
+            float(np.mean(random_)),
+            float(np.mean(goodfrac)),
+            wins / TRIALS,
+        )
 
-    g_mean = float(np.mean(guided))
-    r_mean = float(np.mean(random_))
-    g_good = float(np.mean(guided_goodfrac))
-    r_good = float(np.mean(random_goodfrac))
-    wins = sum(1 for g, r in zip(guided, random_, strict=False) if g > r)
-    # The decisive capability signal is operator-selection accuracy vs the
-    # 0.2 random baseline.
-    if g_good > r_good + 0.15 and g_mean > r_mean:
+    g_mean, r_mean, g_good, win_rate = run(good_last=False)
+    _, _, g_good_last, _ = run(good_last=True)
+    # A search that actually uses its reward model is insensitive to where the
+    # good operators happen to sit in the input list.
+    order_sensitivity = abs(g_good - g_good_last)
+    r_good = 2 / 10
+
+    if g_good > r_good + 0.15 and g_mean > r_mean and order_sensitivity <= 0.15:
         verdict = "GUIDED_BEATS_RANDOM"
+    elif order_sensitivity > 0.15:
+        verdict = "ORDER_ARTIFACT"
     elif abs(g_good - r_good) <= 0.15:
         verdict = "NO_ADVANTAGE"
     else:
@@ -109,11 +124,15 @@ def main():
         "guided_mean_proximity": round(g_mean, 4),
         "random_mean_proximity": round(r_mean, 4),
         "guided_good_op_fraction": round(g_good, 4),
+        "guided_good_op_fraction_good_ops_last": round(g_good_last, 4),
+        "order_sensitivity": round(order_sensitivity, 4),
         "random_good_op_fraction": round(r_good, 4),
-        "guided_win_rate": round(wins / TRIALS, 4),
+        "guided_win_rate": round(win_rate, 4),
         "verdict": verdict,
-        "note": "proximity is step-size-confounded; good-op fraction is the \
-capability signal (random baseline 0.2)",
+        "note": "proximity is step-size-confounded; good-op fraction is the capability signal "
+        "(random baseline 0.2). The same task is run with the goal-directed operators "
+        "listed first and last: a reward-guided search returns the same fraction either "
+        "way, so order_sensitivity must stay near 0.",
     }
     path = os.path.join(os.path.dirname(__file__), "..", "assets", "search_quality.json")
     json.dump(out, open(path, "w"), indent=2)

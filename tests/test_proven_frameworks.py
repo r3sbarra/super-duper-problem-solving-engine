@@ -81,7 +81,16 @@ def test_triz_contradiction_matching():
     )
     principles = engine.suggest_principles(contradiction, top_k=5)
 
-    assert len(principles) == 5
+    # This text names two parameters that form a known Altshuller cell
+    # (strength, weight) -> [40, 8, 1, 15], so the result now comes from the real
+    # matrix rather than from vector similarity over the principle descriptions.
+    # A matrix cell carries its own principle count, so the length is the cell
+    # size (4 here) and not necessarily top_k.
+    assert principles, "no principles returned"
+    assert len(principles) <= 5
+    assert principles[0]["source"] == "altshuller_matrix_inferred"
+    assert principles[0]["matched_parameters"] == ["strength", "weight"]
+
     principle_names = [p["name"] for p in principles]
     assert any(
         p

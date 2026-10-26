@@ -6,11 +6,12 @@ aligning relational structures while abstracting away surface entities.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel
 
+from super_solver.core.embeddings import embedding_service
 from super_solver.core.vsa import VSAEngine
 
 
@@ -38,6 +39,32 @@ class StructureMappingEngine:
             self.symbol_table[name] = v / (np.linalg.norm(v) + 1e-12)
         return self.symbol_table[name]
 
+    @staticmethod
+    def _mapping_compatible(
+        b_stmt: RelationalStatement,
+        t_stmt: RelationalStatement,
+        mapping: Dict[str, str],
+        reverse: Dict[str, str],
+    ) -> bool:
+        """Whether this candidate match respects the one-to-one constraint.
+
+        Gentner's structure-mapping requires a *consistent, injective* mapping:
+        one base entity maps to exactly one target entity, and no two base
+        entities share a target entity. Without this check the previous
+        implementation simply overwrote entries, so ``sun`` could be bound to
+        two different targets in the same alignment and the reported mapping was
+        just whichever statement happened to be processed last.
+        """
+        for base_ent, target_ent in (
+            (b_stmt.entity_a, t_stmt.entity_a),
+            (b_stmt.entity_b, t_stmt.entity_b),
+        ):
+            if base_ent in mapping and mapping[base_ent] != target_ent:
+                return False  # base entity already committed elsewhere
+            if target_ent in reverse and reverse[target_ent] != base_ent:
+                return False  # target entity already claimed (injectivity)
+        return True
+
     def align_systems(
         self,
         base_domain_relations: List[RelationalStatement],
@@ -45,7 +72,12 @@ class StructureMappingEngine:
     ) -> Dict[str, Any]:
         """Aligns relational structures between base and target domains (Gentner SME).
 
-        Evaluates relational correspondence and induces entity bindings.
+        Evaluates relational correspondence and induces entity bindings under
+        the one-to-one constraint: each target statement is consumed by at most
+        one base statement, and the induced entity map stays consistent and
+        injective. A candidate that would contradict an established binding is
+        rejected rather than silently overwriting it, so the alignment does not
+        depend on statement order.
         """
         if not base_domain_relations or not target_domain_relations:
             return {
@@ -56,33 +88,47 @@ class StructureMappingEngine:
 
         matches = []
         entity_mappings: Dict[str, str] = {}
+        reverse_mappings: Dict[str, str] = {}
+        used_target: set = set()
         relational_scores = []
 
         for b_stmt in base_domain_relations:
             v_b_rel = self._get_symbol_vector(b_stmt.relation)
-            best_target = None
+            best_idx = None
             best_sim = -1.0
 
-            for t_stmt in target_domain_relations:
+            for t_idx, t_stmt in enumerate(target_domain_relations):
+                if t_idx in used_target:
+                    continue  # one-to-one: a target statement matches once
                 v_t_rel = self._get_symbol_vector(t_stmt.relation)
                 # Compare relational predicates (identical relations have sim=1.0)
                 sim = self.vsa.similarity(v_b_rel, v_t_rel)
+                if sim <= 0.40:
+                    continue
+                if not self._mapping_compatible(
+                    b_stmt, t_stmt, entity_mappings, reverse_mappings
+                ):
+                    continue
                 if sim > best_sim:
                     best_sim = sim
-                    best_target = t_stmt
+                    best_idx = t_idx
 
-            if best_target and best_sim > 0.40:
+            if best_idx is not None:
+                t_stmt = target_domain_relations[best_idx]
+                used_target.add(best_idx)
                 relational_scores.append(best_sim)
                 matches.append(
                     {
                         "base_relation": f"{b_stmt.relation}({b_stmt.entity_a}, {b_stmt.entity_b})",
-                        "target_relation": f"{best_target.relation}({best_target.entity_a}, {best_target.entity_b})",
+                        "target_relation": f"{t_stmt.relation}({t_stmt.entity_a}, {t_stmt.entity_b})",
                         "relational_match_score": float(best_sim),
                     }
                 )
-                # Induce entity correspondences
-                entity_mappings[b_stmt.entity_a] = best_target.entity_a
-                entity_mappings[b_stmt.entity_b] = best_target.entity_b
+                # Induce entity correspondences (now guaranteed consistent).
+                entity_mappings[b_stmt.entity_a] = t_stmt.entity_a
+                entity_mappings[b_stmt.entity_b] = t_stmt.entity_b
+                reverse_mappings[t_stmt.entity_a] = b_stmt.entity_a
+                reverse_mappings[t_stmt.entity_b] = b_stmt.entity_b
 
         avg_score = sum(relational_scores) / len(relational_scores) if relational_scores else 0.0
         return {

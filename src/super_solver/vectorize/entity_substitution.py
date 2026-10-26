@@ -90,17 +90,33 @@ def substitute_entity(
     result = source_solution
     tgt_ent = None
     # Try known substitutions first (source entity -> target entity).
+    #
+    # Two corrections here, both measured against the shipped adapter:
+    #  * Substitution is word-bounded. A bare `re.sub("gas", "hydrogen", ...)`
+    #    rewrote "gasket" as "hydrogenket" -- the entity being replaced has to
+    #    be a whole word.
+    #  * Only the FIRST applicable substitution is applied. The loop used to
+    #    run over every known mapping, so a solution could be rewritten by
+    #    several unrelated entries at once ("deck"->"roof", "material"->"panel",
+    #    "gas"->"hydrogen" all firing in one pass), producing a sentence about a
+    #    different problem than the one being translated.
     for src_ent, tgt_map in KNOWN_SUBSTITUTIONS.items():
-        if src_ent in result.lower():
-            # Find which target entity appears in the target problem.
-            for tgt_ent_cand in tgt_map:
-                if tgt_ent_cand in target_problem.lower():
-                    # Substitute the source entity with the target entity.
-                    result = re.sub(
-                        re.escape(src_ent), tgt_ent_cand, result, flags=re.IGNORECASE
-                    )
-                    tgt_ent = tgt_ent_cand
-                    break
+        if not re.search(rf"\b{re.escape(src_ent)}\b", result, re.IGNORECASE):
+            continue
+        # Find which target entity appears in the target problem.
+        for tgt_ent_cand in tgt_map:
+            if re.search(rf"\b{re.escape(tgt_ent_cand)}\b", target_problem, re.IGNORECASE):
+                # Substitute the source entity with the target entity.
+                result = re.sub(
+                    rf"\b{re.escape(src_ent)}\b",
+                    lambda _m, rep=tgt_ent_cand: rep,
+                    result,
+                    flags=re.IGNORECASE,
+                )
+                tgt_ent = tgt_ent_cand
+                break
+        if tgt_ent is not None:
+            break
 
     # Fallback: extract target entity and substitute for source entity.
     if tgt_ent is None:
@@ -108,7 +124,10 @@ def substitute_entity(
         src_ent = extract_source_entity(result)
         if tgt_ent and src_ent and src_ent.lower() != tgt_ent.lower():
             result = re.sub(
-                re.escape(src_ent), tgt_ent, result, flags=re.IGNORECASE
+                rf"\b{re.escape(src_ent)}\b",
+                lambda _m, rep=tgt_ent: rep,
+                result,
+                flags=re.IGNORECASE,
             )
 
     return _fix_grammar(result, tgt_ent)

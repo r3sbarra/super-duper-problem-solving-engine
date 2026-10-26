@@ -104,6 +104,38 @@ class LabAssSuperSolverBridge:
             "deflected": bool(is_near),
         }
 
+    def record_dead_end(self, description: str, category: str = "agent") -> Dict[str, Any]:
+        """Persist a failed approach so future sessions deflect it automatically.
+
+        Unlike ``check_dead_end_deflection``'s ``known_dead_ends`` argument --
+        which the caller had to re-supply on every call -- this is written to
+        the episodic store and reloaded when the engine next starts.
+        """
+        return self.engine.record_dead_end(description, category=category)
+
+    def remember_solution(
+        self,
+        problem_specification: str,
+        solution: str,
+        title: str = "",
+        method: str = "",
+        domain: str = "",
+        path_steps: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Teach the engine a solved case so later analogize calls can reuse it.
+
+        Stored as a problem row linked to its solution (and optional path), so
+        it surfaces through ``super_solver_analogize`` as a full analog.
+        """
+        return self.engine.remember_solution(
+            problem_specification=problem_specification,
+            solution=solution,
+            title=title,
+            method=method,
+            domain=domain,
+            path_steps=path_steps,
+        )
+
     def suggest_paths(
         self,
         problem_specification: str,
@@ -506,6 +538,7 @@ class LabAssSuperSolverBridge:
         analogical completion decodable against a candidate set.
         """
         import numpy as np
+
         from super_solver.core.embeddings import embedding_service
         from super_solver.core.vsa import VSAEngine
 
@@ -823,6 +856,8 @@ class LabAssSuperSolverBridge:
         agent_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Runs Kepner-Tregoe 4D diagnosis on a failure and logs finding to lab-ass."""
+        from super_solver.lab_ass_bridge.client import LabAssClient
+
         report = self.engine.diagnose(error_log_or_description)
         client = LabAssClient()
 

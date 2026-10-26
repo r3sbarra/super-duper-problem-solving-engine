@@ -76,3 +76,35 @@ def test_gentner_structure_mapping_engine():
     assert res["isomorphic_transfer_viable"] is True
     assert res["systematic_match_count"] == 2
     assert res["structural_alignment_score"] > 0.35
+
+
+def test_sme_retrieve_analogs_survives_zero_structural_alignment():
+    """Regression: the embedding fallback in ``retrieve_analogs`` referenced an
+    ``embedding_service`` that was never imported, so any candidate whose
+    relation names did not match the target raised
+    ``NameError: name 'embedding_service' is not defined`` instead of falling
+    back to surface similarity.
+    """
+    sme = StructureMappingEngine()
+    candidates = [
+        {
+            "name": "NonMatching",
+            "domain": "other",
+            "relations": [
+                {
+                    "relation": "blocks",
+                    "entity_a": "a",
+                    "entity_b": "b",
+                    "domain": "other",
+                }
+            ],
+        }
+    ]
+    # "blocks" shares no relation name with the target's extracted relations,
+    # so the structural score is exactly 0.0 and the embedding fallback runs.
+    results = sme.retrieve_analogs(
+        "Quantum entanglement in a photonic crystal",
+        candidate_systems=candidates,
+    )
+    assert len(results) == 1
+    assert isinstance(results[0]["score"], float)

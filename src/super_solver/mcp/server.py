@@ -22,6 +22,16 @@ def get_engine() -> SuperDuperProblemSolvingEngine:
     global _engine
     if _engine is None:
         _engine = SuperDuperProblemSolvingEngine()
+        # Give the engine a usable prior before the first query. Without this an
+        # agent's very first analogize call hits an empty index and gets
+        # nothing back, because the fact base was only ever seeded by offline
+        # scripts. Idempotent, and a no-op against a non-persistent index.
+        try:
+            from super_solver.vectorize import vectorization_service
+
+            vectorization_service.ensure_seeded()
+        except Exception:
+            pass  # seeding is best-effort; never block tool serving on it
     return _engine
 
 
@@ -290,6 +300,128 @@ async def list_tools() -> list[types.Tool]:
                 "properties": {"similarity_threshold": {"type": "number", "default": 0.75}},
             },
         ),
+        types.Tool(
+            name="super_solver_remember_solution",
+            description=(
+                "Record a problem you have SOLVED, with its solution (and optionally the "
+                "discovery path), into the engine's persistent analogical memory. Later "
+                "`super_solver_analogize` calls will retrieve it as a reusable precedent. "
+                "Use this after solving something, so the engine accumulates experience "
+                "instead of starting from an empty index every session."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "problem_specification": {
+                        "type": "string",
+                        "description": "The problem as stated, in the same style you would query with.",
+                    },
+                    "solution": {
+                        "type": "string",
+                        "description": "The solution or mechanism that actually worked.",
+                    },
+                    "title": {"type": "string", "description": "Short label for the case"},
+                    "method": {"type": "string", "description": "Method/framework used, e.g. 'binary search'"},
+                    "domain": {"type": "string", "description": "Domain tag, e.g. 'distributed-systems'"},
+                    "path_steps": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional ordered steps of the discovery path",
+                    },
+                },
+                "required": ["problem_specification", "solution"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_record_dead_end",
+            description=(
+                "Record an approach that conclusively FAILED, so that future sessions "
+                "geometrically deflect it automatically (negative-manifold repulsor). "
+                "The record persists across restarts, unlike the known_dead_ends list "
+                "that had to be re-supplied on every `super_solver_deflect` call."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "The failed approach and, ideally, why it failed.",
+                    },
+                    "category": {"type": "string", "default": "agent"},
+                },
+                "required": ["description"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_reflex_route",
+            description=(
+                "System-1 (EC-DT) reflex routing: choose the best super-solver tool for an "
+                "intent in sub-millisecond time with an exact conformal coverage guarantee. "
+                "Returns the target tool, an EXECUTE_SYSTEM_1 or ESCALATE_TO_SYSTEM_2 action, "
+                "set size, confidence and latency. When it escalates, do NOT guess the "
+                "runner-up - reason with System 2 instead."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "intent": {
+                        "type": "string",
+                        "description": "What the agent wants to do, in natural language.",
+                    },
+                    "task": {
+                        "type": "string",
+                        "enum": ["solver_mcp", "sandbox"],
+                        "default": "solver_mcp",
+                        "description": (
+                            "Catalog to route over: solver_mcp (the super_solver_* tools) or "
+                            "sandbox (executable registry tools)."
+                        ),
+                    },
+                },
+                "required": ["intent"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_reflex_status",
+            description=(
+                "Report EC-DT reflex backend availability (torch/ec_dt), per-catalog router "
+                "health, conformal quantiles, cache hit rate, and calibration-ledger coverage."
+            ),
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        types.Tool(
+            name="super_solver_reflex_feedback",
+            description=(
+                "Close the calibration loop: report whether a recorded reflex decision was "
+                "correct, so later recalibration uses real outcomes instead of assumptions."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "decision_id": {"type": "string"},
+                    "correct": {"type": "boolean"},
+                    "true_target": {"type": "string"},
+                    "task": {"type": "string", "default": "sandbox"},
+                },
+                "required": ["decision_id", "correct"],
+            },
+        ),
+        types.Tool(
+            name="super_solver_reflex_recalibrate",
+            description=(
+                "Refit a router's conformal threshold from closed ledger outcomes (alpha = "
+                "allowed error rate). Refuses (refit=false) until min_samples decisions are "
+                "closed, rather than fabricating a guarantee."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "task": {"type": "string", "default": "sandbox"},
+                    "alpha": {"type": "number", "default": 0.05},
+                    "min_samples": {"type": "integer", "default": 20},
+                },
+            },
+        ),
     ]
 
 
@@ -429,6 +561,58 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
     elif name == "super_solver_consolidate_memory":
         merged = engine.consolidate_memory(arguments.get("similarity_threshold", 0.75))
         return [types.TextContent(type="text", text=json.dumps({"merged": merged}, indent=2, default=str))]
+
+    elif name == "super_solver_remember_solution":
+        result = bridge.remember_solution(
+            problem_specification=arguments["problem_specification"],
+            solution=arguments["solution"],
+            title=arguments.get("title", ""),
+            method=arguments.get("method", ""),
+            domain=arguments.get("domain", ""),
+            path_steps=arguments.get("path_steps"),
+        )
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+
+    elif name == "super_solver_record_dead_end":
+        result = bridge.record_dead_end(
+            description=arguments["description"],
+            category=arguments.get("category", "agent"),
+        )
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+
+    # ------------------------------------------------------------------
+    # System-1 reflex (EC-DT)
+    # ------------------------------------------------------------------
+    elif name == "super_solver_reflex_route":
+        result = engine.route_tool(
+            intent=arguments["intent"],
+            task=arguments.get("task", "solver_mcp"),
+        )
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
+
+    elif name == "super_solver_reflex_status":
+        return [types.TextContent(type="text", text=json.dumps(engine.reflex_status(), indent=2, default=str))]
+
+    elif name == "super_solver_reflex_feedback":
+        decision_id = arguments["decision_id"]
+        engine.reflex_ledger.record_outcome(
+            decision_id,
+            correct=bool(arguments["correct"]),
+            true_target=arguments.get("true_target"),
+        )
+        return [types.TextContent(type="text", text=json.dumps({
+            "recorded": True,
+            "decision_id": decision_id,
+            "coverage": engine.reflex_ledger.coverage(arguments.get("task", "sandbox")),
+        }, indent=2, default=str))]
+
+    elif name == "super_solver_reflex_recalibrate":
+        result = engine.calibrate_reflex(
+            task=arguments.get("task", "sandbox"),
+            alpha=arguments.get("alpha", 0.05),
+            min_samples=arguments.get("min_samples", 20),
+        )
+        return [types.TextContent(type="text", text=json.dumps(result, indent=2, default=str))]
 
     raise ValueError(f"Unknown tool: {name}")
 

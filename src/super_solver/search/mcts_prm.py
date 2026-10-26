@@ -7,7 +7,7 @@ Platt exclusory information gain, and negative manifold hazard penalties.
 from __future__ import annotations
 
 import math
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 
@@ -114,40 +114,64 @@ class LatentMCTSEngine:
         candidate_actions: List[Tuple[str, np.ndarray, float]],
         goal_vector: np.ndarray,
     ) -> Optional[MCTSNode]:
-        """Expands exactly ONE unexplored operator child from the candidate list.
+        """Expands the highest-value unexplored operator child from the candidate list.
 
-        Picks the first operator not yet tried from this node (in original order).
-        Returns the new child, or None if all operators have been expanded.
+        Picks the untried operator with the best PRM-estimated transition value,
+        not the first untried one, and returns the new child (or None if every
+        operator has been expanded).
+
+        Why this is value-ordered rather than list-ordered: expansion order was
+        previously the order the caller happened to list the operators in, and
+        the extracted path then broke visit-ties by list position too.  The PRM
+        reward was computed and stored but never influenced which branch was
+        created, so the search returned whichever operators came first.  Measured
+        on a synthetic 10-operator task (2 goal-directed, 8 noise) with identical
+        rewards in both runs:
+
+            goal ops listed FIRST -> good-operator fraction 1.000
+            goal ops listed LAST  -> good-operator fraction 0.000
+
+        i.e. the reported "guided search picks the goal operators" result was an
+        artifact of list position, not search quality.  Scoring every untried
+        candidate and expanding the best one makes the reward the deciding
+        signal.  Ties keep the earliest index, so behaviour stays deterministic.
         """
+        best: Optional[Tuple] = None
         for idx, (op_name, op_vec, exclusory_gain) in enumerate(candidate_actions):
             if idx in node._expanded_op_indices:
                 continue
-            # Expand this operator
-            node._expanded_op_indices.add(idx)
             next_state = 0.7 * node.state_vector + 0.3 * op_vec
             norm = np.linalg.norm(next_state)
             if norm > 0:
                 next_state = next_state / norm
-
-            child = MCTSNode(
-                state_vector=next_state,
-                step_index=node.step_index + 1,
-                operator_name=op_name,
-                parent=node,
-                op_vec=op_vec,
-                exclusory_gain=exclusory_gain,
-            )
             reward = self.prm.score_transition(
                 node.state_vector,
                 next_state,
                 goal_vector,
                 exclusory_gain=exclusory_gain,
             )
-            child.prm_step_score = reward
-            child.total_value = reward
-            child.visits = 1
-            node.children.append(child)
-            return child
+            # Strict '>' keeps the earliest index on ties (deterministic).
+            if best is None or reward > best[0]:
+                best = (reward, idx, op_name, op_vec, exclusory_gain, next_state)
+
+        if best is None:
+            return None
+
+        reward, idx, op_name, op_vec, exclusory_gain, next_state = best
+        node._expanded_op_indices.add(idx)
+        child = MCTSNode(
+            state_vector=next_state,
+            step_index=node.step_index + 1,
+            operator_name=op_name,
+            parent=node,
+            op_vec=op_vec,
+            exclusory_gain=exclusory_gain,
+        )
+        child.prm_step_score = reward
+        child.total_value = reward
+        child.visits = 1
+        node.children.append(child)
+        return child
 
         return None  # All operators already expanded from this node
 
@@ -212,11 +236,13 @@ class LatentMCTSEngine:
                 best = max(curr.children, key=lambda c: c.prm_step_score)
                 self.backpropagate(best, best.prm_step_score)
 
-        # Extract best path by following highest-visited children
+        # Extract best path by following highest-visited children, breaking ties
+        # on PRM value.  Without the tie-break, children that are equally visited
+        # (the common case) resolve by list position, which is arbitrary.
         path = []
         curr = root
         while curr.children:
-            best_child = max(curr.children, key=lambda c: c.visits)
+            best_child = max(curr.children, key=lambda c: (c.visits, c.prm_step_score))
             path.append(
                 (best_child.operator_name, best_child.state_vector, best_child.prm_step_score)
             )

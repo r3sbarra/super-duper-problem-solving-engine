@@ -62,6 +62,11 @@ class SuperDuperProblemSolvingEngine:
     def __init__(self, db_path: Optional[str] = None):
         self.store = EpisodicVectorStore(db_path=db_path)
         self.harvester = CaseHarvester(store=self.store)
+        # System-1 reflex layer (EC-DT). Built lazily: constructing a router
+        # compiles a small EC-DT engine, and most engine use never routes a
+        # tool call. `reflex_router()` builds and caches on first use.
+        self._reflex_routers: Dict[str, Any] = {}
+        self._reflex_ledger = None
 
         self.platt = StrongInferenceEngine()
         self.kt = KepnerTregoeEngine()
@@ -102,8 +107,10 @@ class SuperDuperProblemSolvingEngine:
         self.diagnostician = AutomatedDiagnostician(client=llm_client, kt_engine=self.kt)
         self.ingenuity = UniversalIngenuityEngine()
         from super_solver.frameworks import pareto as _pareto
+        from super_solver.frameworks.solution_synthesis import SolutionMechanismSynthesizer
 
         self.pareto = _pareto
+        self.mechanism_synthesizer = SolutionMechanismSynthesizer()
 
     def program(
         self,
@@ -127,6 +134,21 @@ class SuperDuperProblemSolvingEngine:
             error_log_or_description=error_log_or_description,
             context=context,
             candidate_causes=candidate_causes,
+        )
+
+    def synthesize_solution_mechanisms(
+        self,
+        problem_specification: str,
+        subproblems: Optional[List[Dict[str, Any]]] = None,
+        max_mechanisms_per_subproblem: int = 2,
+    ) -> List[Dict[str, Any]]:
+        """Synthesizes concrete design and algorithmic mechanisms for a problem or its subproblems."""
+        if subproblems is None:
+            subproblems = self.polya.generate_auxiliary_problems(problem_specification, max_new=4)
+        return self.mechanism_synthesizer.synthesize_for_decomposition(
+            problem_specification=problem_specification,
+            subproblems=subproblems,
+            max_per_subproblem=max_mechanisms_per_subproblem,
         )
 
     def run_agentic_tool_loop(
@@ -1048,6 +1070,29 @@ class SuperDuperProblemSolvingEngine:
         except Exception:
             pass
 
+        # Solution Mechanism Synthesis fallback: only when no domain-knowledge
+        # concrete claims were found AND the synthesizer actually recognises the
+        # problem's category.
+        #
+        # The mechanism templates are domain-specific (LRU cache, lock-free ring
+        # buffer, branch-and-bound, ...), so injecting them into a problem the
+        # synthesizer does not recognise yields incoherent filler.  Measured
+        # before this gate: the concrete-canoe problem returned
+        #   "Characterize the boundary/special cases of '...canoe hull' ...
+        #    to prune non-optimal subtrees in branch-and-bound"
+        # which is nonsense.  When the category is unrecognised we leave
+        # concrete_claims empty and keep the TRIZ-grounded abduction path, which
+        # is coherent, instead of dressing up filler as a breakthrough.
+        if not concrete_claims and (
+            self.mechanism_synthesizer.infer_category(specification) != "generic"
+        ):
+            try:
+                subproblems = self.polya.generate_auxiliary_problems(specification, max_new=3)
+                synth = self.mechanism_synthesizer.synthesize_for_decomposition(specification, subproblems)
+                concrete_claims = [s["mechanism"] for s in synth[:concrete_top_k]]
+            except Exception:
+                pass
+
         return self.deduce_discovery_path(
             problem=prob,
             candidate_hypotheses=candidates,
@@ -1084,6 +1129,80 @@ class SuperDuperProblemSolvingEngine:
         return self.self_improver.consolidate_synaptic_memory(
             similarity_threshold=similarity_threshold
         )
+
+    # ------------------------------------------------------------------
+    # Learning interface: letting a caller TEACH the engine.
+    #
+    # Until these existed the engine was query-only from an agent's point of
+    # view: the 18 MCP tools could all read, and none could write, so the
+    # analogical index only ever grew from offline scripts and the dead-end
+    # repulsor only from lab-ass events.  That is why the shipped index held
+    # 738 rows of coding/DB/self-improvement work and returned nothing for any
+    # other domain (see labass_supersolver_deepdive.md).  These two methods close
+    # the loop: an agent that solves something can record it, and an agent that
+    # conclusively fails at something can record that too, so the next session
+    # starts from the accumulated experience rather than from zero.
+    # ------------------------------------------------------------------
+
+    def remember_solution(
+        self,
+        problem_specification: str,
+        solution: str,
+        title: str = "",
+        method: str = "",
+        domain: str = "",
+        path_steps: Optional[List[str]] = None,
+        source: str = "agent",
+    ) -> Dict[str, Any]:
+        """Records a solved problem (+ solution and optional path) in the analogical index.
+
+        Stores the solution and path first, then links them from the problem
+        row's metadata, which is how :meth:`VectorIndex.analogize` resolves a
+        retrieved problem to its solution -- so a case recorded here shows up
+        as a full problem->solution analog for later queries.
+
+        Returns the stored ids plus the resulting index size.
+        """
+        from super_solver.vectorize import vectorization_service as _vsvc
+
+        short_title = title or problem_specification.strip()[:80]
+        solution_id = _vsvc.store_solution(
+            solution, method=method, domain=domain, title=short_title
+        )
+        metadata: Dict[str, Any] = {"solution_id": solution_id, "source": source}
+        if domain:
+            metadata["domain"] = domain
+        path_id = None
+        if path_steps:
+            path_id = _vsvc.store_path(
+                list(path_steps), final_breakthrough=solution, title=short_title
+            )
+            metadata["path_id"] = path_id
+        problem_id = _vsvc.store_problem(
+            problem_specification, title=short_title, metadata=metadata
+        )
+        return {
+            "problem_id": problem_id,
+            "solution_id": solution_id,
+            "path_id": path_id,
+            "index_size": _vsvc.index.count(),
+        }
+
+    def record_dead_end(self, description: str, category: str = "agent") -> Dict[str, Any]:
+        """Persists a failed approach so future sessions deflect it automatically.
+
+        Registered in the negative-manifold repulsor, which persists to the
+        episodic store and is reloaded on construction -- so this survives
+        process restarts, unlike the caller-supplied list the ``deflect`` tool
+        takes (which a caller had to re-send on every call).
+        """
+        self.repulsor.register_dead_end(description)
+        return {
+            "recorded": True,
+            "description": description,
+            "category": category,
+            "total_dead_ends": len(self.repulsor.dead_ends),
+        }
 
     def audit_adversarial_boundaries(
         self,
@@ -1203,3 +1322,105 @@ class SuperDuperProblemSolvingEngine:
     ) -> SMTResult:
         """Verifies satisfiability of equality with uninterpreted functions."""
         return self.smt.check_euf_satisfiability(equalities, disequalities)
+
+    # ------------------------------------------------------------------
+    # System-1 reflex layer (EC-DT)
+    # ------------------------------------------------------------------
+    def reflex_router(self, task: str = "solver_mcp") -> Any:
+        """Return (and cache) a calibrated EC-DT router for a tool catalog.
+
+        ``task`` selects the catalog: ``"solver_mcp"`` for the 20 MCP tools or
+        ``"sandbox"`` for the executable tool registry. Routers are built once
+        per engine and calibrated at construction from the committed
+        calibration set, so a cold call costs ~1 s and every later call is
+        sub-millisecond (or ~2 us on a repeated intent).
+        """
+        router = self._reflex_routers.get(task)
+        if router is None:
+            from super_solver.core import reflex as _reflex
+
+            router = _reflex.default_tool_router(task)
+            self._reflex_routers[task] = router
+        return router
+
+    def route_tool(self, intent: str, task: str = "solver_mcp") -> Dict[str, Any]:
+        """System-1 decision for a single intent.
+
+        Returns the decision dict plus ``reflexed``/``escalate`` convenience
+        flags. Callers should treat ``action == "ESCALATE_TO_SYSTEM_2"`` as
+        "ask the LLM" rather than guessing the runner-up.
+        """
+        decision = self.reflex_router(task).decide(intent)
+        out = decision.to_dict()
+        out["task"] = task
+        return out
+
+    def route_agentic_step(
+        self,
+        goal: str,
+        current_state: Optional[str] = None,
+        task: str = "sandbox",
+        allow_reflex: bool = True,
+    ) -> Dict[str, Any]:
+        """Route ONE step of the agentic tool loop.
+
+        This is the integration point for :meth:`run_agentic_tool_loop`: when
+        the reflex is certified and invariant-safe, the loop can execute the
+        tool without calling the LLM at all. Otherwise the caller must fall
+        back to the model.
+
+        Returns a dict with ``use_reflex``, ``tool``, ``decision`` and the
+        policy the caller must honour.
+        """
+        from super_solver.core.reflex_tools import policy_for
+
+        query = goal if not current_state else f"{current_state}\nNext step toward: {goal}"
+        decision = self.reflex_router(task).decide(query)
+        policy = policy_for(decision.target) if decision.target else None
+        use_reflex = bool(allow_reflex and decision.is_reflex and policy is not None)
+        return {
+            "use_reflex": use_reflex,
+            "tool": decision.target if use_reflex else None,
+            "policy": policy,
+            "decision": decision.to_dict(),
+        }
+
+    @property
+    def reflex_ledger(self):
+        """Append-only conformal calibration ledger (created on first use)."""
+        if self._reflex_ledger is None:
+            from super_solver.core.reflex import CalibrationLedger
+
+            self._reflex_ledger = CalibrationLedger()
+        return self._reflex_ledger
+
+    def reflex_status(self) -> Dict[str, Any]:
+        """Report backend availability and per-task router health."""
+        from super_solver.core import reflex as _reflex
+
+        out: Dict[str, Any] = {"backend": _reflex.ec_dt_status(), "routers": {}}
+        for task, router in self._reflex_routers.items():
+            out["routers"][task] = router.report()
+        out["ledger"] = {
+            "path": self.reflex_ledger.path,
+            "decisions": len(self.reflex_ledger.entries),
+            "coverage_sandbox": self.reflex_ledger.coverage("sandbox"),
+        }
+        return out
+
+    def calibrate_reflex(self, task: str = "sandbox", alpha: float = 0.05,
+                         min_samples: int = 20) -> Dict[str, Any]:
+        """Refit a router's conformal threshold from closed real outcomes.
+
+        Returns ``{"refit": bool, "calibrator": ...}``. Nothing happens until
+        ``reflex_ledger.record_outcome`` has closed at least ``min_samples``
+        decisions -- a threshold fitted to zero outcomes would be a fabricated
+        guarantee.
+        """
+        router = self.reflex_router(task)
+        cal = self.reflex_ledger.refit(router, task=task, alpha=alpha, min_samples=min_samples)
+        return {
+            "refit": cal is not None,
+            "calibrator": cal.to_dict() if cal else None,
+            "coverage": self.reflex_ledger.coverage(task),
+        }
